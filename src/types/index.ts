@@ -1,0 +1,209 @@
+// Core type definitions for the PokéBattle engine
+
+export type PokemonType =
+  | 'Normal' | 'Fire' | 'Water' | 'Electric' | 'Grass' | 'Ice'
+  | 'Fighting' | 'Poison' | 'Ground' | 'Flying' | 'Psychic' | 'Bug'
+  | 'Rock' | 'Ghost' | 'Dragon' | 'Dark' | 'Steel' | 'Fairy';
+
+export type StatusCondition = 'burn' | 'paralysis' | 'sleep' | 'poison' | 'toxic' | 'freeze';
+export type VolatileStatus = 'confusion' | 'flinch' | 'leech-seed' | 'trapped' | 'substitute' | 'encore' | 'taunt' | 'torment' | 'disable';
+
+export type Weather = 'sun' | 'rain' | 'sandstorm' | 'hail' | 'none';
+export type Terrain = 'none';
+
+export type StatName = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
+export type BoostableStat = 'atk' | 'def' | 'spa' | 'spd' | 'spe' | 'accuracy' | 'evasion';
+
+export type MoveCategory = 'Physical' | 'Special' | 'Status';
+export type Tier = 1 | 2 | 3 | 4;
+export type Nature =
+  | 'Hardy' | 'Lonely' | 'Brave' | 'Adamant' | 'Naughty'
+  | 'Bold' | 'Docile' | 'Relaxed' | 'Impish' | 'Lax'
+  | 'Timid' | 'Hasty' | 'Serious' | 'Jolly' | 'Naive'
+  | 'Modest' | 'Mild' | 'Quiet' | 'Bashful' | 'Rash'
+  | 'Calm' | 'Gentle' | 'Sassy' | 'Careful' | 'Quirky';
+
+export interface BaseStats {
+  hp: number;
+  atk: number;
+  def: number;
+  spa: number;
+  spd: number;
+  spe: number;
+}
+
+export interface MoveData {
+  name: string;
+  type: PokemonType;
+  category: MoveCategory;
+  power: number | null;       // null for status moves
+  accuracy: number | null;    // null = always hits
+  pp: number;
+  priority: number;
+  flags: MoveFlags;
+  effects?: MoveEffect[];
+  target: MoveTarget;
+  description?: string;
+}
+
+export interface MoveFlags {
+  contact?: boolean;
+  sound?: boolean;
+  bullet?: boolean;
+  punch?: boolean;
+  bite?: boolean;
+  pulse?: boolean;
+  recoil?: number;          // fraction of damage dealt (e.g., 0.33)
+  drain?: number;           // fraction of damage drained (e.g., 0.5)
+  multiHit?: [number, number]; // [min, max] hits
+  charge?: boolean;         // two-turn move
+  protect?: boolean;        // blocked by Protect
+  mirror?: boolean;         // reflected by Mirror Move
+  defrost?: boolean;        // thaws user if frozen
+}
+
+export type MoveTarget = 'normal' | 'self' | 'allAdjacentFoes' | 'allAdjacent' | 'allyTeam' | 'foeSide' | 'allySide' | 'all';
+
+export interface MoveEffect {
+  type: 'status' | 'boost' | 'weather' | 'hazard' | 'heal' | 'flinch' | 'recoil' | 'drain' | 'custom';
+  chance?: number;        // % chance (100 = guaranteed)
+  status?: StatusCondition;
+  stat?: BoostableStat;
+  stages?: number;
+  target?: 'self' | 'target';
+  weather?: Weather;
+  hazard?: string;
+  amount?: number;
+  handler?: string;       // name of custom handler
+}
+
+export interface PokemonSpecies {
+  id: string;             // lowercase hyphenated (e.g., 'garchomp')
+  name: string;           // display name
+  dexNum: number;
+  types: [PokemonType] | [PokemonType, PokemonType];
+  baseStats: BaseStats;
+  abilities: string[];    // possible abilities
+  bestAbility: string;    // competitive best ability
+  tier: Tier;
+  generation: number;
+  movePool: string[];     // all learnable moves
+  sets: PokemonSet[];     // competitive sets
+}
+
+export interface PokemonSet {
+  moves: string[];
+  ability: string;
+  item: string;
+  nature: Nature;
+  evs: Partial<BaseStats>;
+}
+
+export interface BattlePokemon {
+  species: PokemonSpecies;
+  nickname?: string;
+  level: number;
+  set: PokemonSet;
+  stats: BaseStats;       // calculated stats with EVs/IVs/Nature
+  currentHp: number;
+  maxHp: number;
+  status: StatusCondition | null;
+  volatileStatuses: Set<VolatileStatus>;
+  boosts: Record<BoostableStat, number>;
+  moves: BattleMove[];
+  item: string | null;     // null if consumed/knocked off
+  ability: string;
+  isAlive: boolean;
+  toxicCounter: number;    // increments each turn for toxic
+  sleepTurns: number;
+  confusionTurns: number;
+  substituteHp: number;
+  lastMoveUsed: string | null;
+  choiceLocked: string | null;  // move name if choice-locked
+  hasMovedThisTurn: boolean;
+  timesHit: number;        // for tracking
+}
+
+export interface BattleMove {
+  data: MoveData;
+  currentPp: number;
+  maxPp: number;
+  disabled: boolean;
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  team: BattlePokemon[];
+  activePokemonIndex: number;
+  itemMode: 'competitive' | 'casual';
+  hasMegaEvolved: boolean;
+}
+
+export type ActionType = 'move' | 'switch' | 'forfeit';
+
+export interface MoveAction {
+  type: 'move';
+  playerId: string;
+  moveIndex: number;
+}
+
+export interface SwitchAction {
+  type: 'switch';
+  playerId: string;
+  pokemonIndex: number;
+}
+
+export interface ForfeitAction {
+  type: 'forfeit';
+  playerId: string;
+}
+
+export type BattleAction = MoveAction | SwitchAction | ForfeitAction;
+
+export interface BattleState {
+  id: string;
+  turn: number;
+  players: [Player, Player];
+  weather: Weather;
+  weatherTurnsRemaining: number;
+  fieldEffects: {
+    player1Side: SideEffects;
+    player2Side: SideEffects;
+  };
+  status: 'waiting' | 'team_preview' | 'active' | 'finished';
+  winner: string | null;
+  rngSeed: number;
+  log: BattleEvent[];
+}
+
+export interface SideEffects {
+  stealthRock: boolean;
+  spikesLayers: number;       // 0-3
+  toxicSpikesLayers: number;  // 0-2
+  reflect: number;            // turns remaining
+  lightScreen: number;        // turns remaining
+  tailwind: number;           // turns remaining
+}
+
+export interface BattleEvent {
+  type: string;
+  turn: number;
+  timestamp: string;
+  data: Record<string, unknown>;
+}
+
+export interface DamageCalcResult {
+  damage: number;
+  basePower: number;
+  attackStat: number;
+  defenseStat: number;
+  stab: boolean;
+  typeEffectiveness: number;
+  weatherModifier: number;
+  abilityModifier: number;
+  itemModifier: number;
+  criticalHit: boolean;
+  randomFactor: number;
+  finalDamage: number;
+}
