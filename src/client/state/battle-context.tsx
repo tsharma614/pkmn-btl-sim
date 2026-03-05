@@ -168,6 +168,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   const selectForceSwitch = useCallback((pokemonIndex: number) => {
     if (connectionRef.current) {
       submitForceSwitch(connectionRef.current, pokemonIndex);
+      dispatch({ type: 'ACTION_SUBMITTED' });
     }
   }, []);
 

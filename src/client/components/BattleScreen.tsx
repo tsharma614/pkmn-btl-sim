@@ -77,6 +77,7 @@ export function BattleScreen() {
     oppActive?.species.name ?? null,
     active ? { current: active.currentHp, max: active.maxHp } : null,
     oppActive ? { current: oppActive.currentHp, max: oppActive.maxHp } : null,
+    state.yourPlayerIndex,
   );
 
   // Pokemon info modal state (must be before early returns)

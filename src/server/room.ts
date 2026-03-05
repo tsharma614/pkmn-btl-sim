@@ -25,6 +25,10 @@ export class Room {
   rematchRequested: [boolean, boolean];
   /** Generation filter: only use Pokemon from gen <= maxGen (null = all gens) */
   maxGen: number | null;
+  /** Lock to prevent double-processing turns */
+  isProcessingTurn: boolean;
+  /** Accumulated events from force switches (both players) */
+  forceSwitchEvents: import('../types').BattleEvent[];
   createdAt: number;
   rng: SeededRNG;
 
@@ -39,6 +43,8 @@ export class Room {
     this.pendingForceSwitch = [false, false];
     this.rematchRequested = [false, false];
     this.maxGen = null;
+    this.isProcessingTurn = false;
+    this.forceSwitchEvents = [];
     this.createdAt = Date.now();
     this.rng = new SeededRNG(seed);
   }
@@ -177,6 +183,7 @@ export class Room {
 
   /** Returns true if both players have submitted their actions and no force switches are pending. */
   bothActionsReady(): boolean {
+    if (this.isProcessingTurn) return false;
     if (this.pendingForceSwitch[0] || this.pendingForceSwitch[1]) return false;
     return this.pendingActions[0] !== null && this.pendingActions[1] !== null;
   }
@@ -186,6 +193,8 @@ export class Room {
     if (!this.battle || !this.pendingActions[0] || !this.pendingActions[1]) {
       return [];
     }
+    this.isProcessingTurn = true;
+    this.forceSwitchEvents = [];
 
     const events = this.battle.processTurn(this.pendingActions[0], this.pendingActions[1]);
 
@@ -203,9 +212,15 @@ export class Room {
     this.pendingForceSwitch[0] = this.battle.needsSwitch(0) || this.battle.needsSelfSwitch(0);
     this.pendingForceSwitch[1] = this.battle.needsSwitch(1) || this.battle.needsSelfSwitch(1);
 
+    // Release processing lock if no force switches needed
+    if (!this.pendingForceSwitch[0] && !this.pendingForceSwitch[1]) {
+      this.isProcessingTurn = false;
+    }
+
     // Check for battle end
     if (this.battle.state.status === 'finished') {
       this.status = 'finished';
+      this.isProcessingTurn = false;
     }
 
     return events;
@@ -241,6 +256,9 @@ export class Room {
     }
     this.pendingForceSwitch[playerIndex] = false;
 
+    // Accumulate force switch events for both players
+    this.forceSwitchEvents.push(...events);
+
     // Update scouted Pokemon
     const activeIdx = this.battle.state.players[playerIndex].activePokemonIndex;
     this.scoutedPokemon[1 - playerIndex].add(activeIdx);
@@ -253,6 +271,7 @@ export class Room {
     // Check for battle end
     if (this.battle.state.status === 'finished') {
       this.status = 'finished';
+      this.isProcessingTurn = false;
     }
 
     return {
@@ -263,7 +282,11 @@ export class Room {
 
   /** Returns true if all required force switches have been resolved. */
   allForceSwitchesResolved(): boolean {
-    return !this.pendingForceSwitch[0] && !this.pendingForceSwitch[1];
+    const resolved = !this.pendingForceSwitch[0] && !this.pendingForceSwitch[1];
+    if (resolved) {
+      this.isProcessingTurn = false;
+    }
+    return resolved;
   }
 
   /** Handle forfeit by a player. */

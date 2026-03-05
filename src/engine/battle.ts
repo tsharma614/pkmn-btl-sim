@@ -846,6 +846,17 @@ export class Battle {
       this.addEvent(events, 'ability_trigger', { pokemon: attacker.species.name, ability: 'Moxie' });
     }
 
+    // Soul-Heart: +1 SpA when any Pokémon on the field faints
+    if (!defender.isAlive) {
+      for (let i = 0; i < 2; i++) {
+        const active = this.getActivePokemon(i);
+        if (active.isAlive && active.ability === 'Soul-Heart') {
+          this.applyBoost(active, 'spa', 1, events);
+          this.addEvent(events, 'ability_trigger', { pokemon: active.species.name, ability: 'Soul-Heart' });
+        }
+      }
+    }
+
     // Beast Boost: +1 to highest stat when KOing opponent
     if (!defender.isAlive && attacker.isAlive && attacker.ability === 'Beast Boost') {
       const stats = attacker.stats;
@@ -1251,17 +1262,27 @@ export class Battle {
 
     // Type immunities
     const types = pokemon.species.types as PokemonType[];
-    if (status === 'burn' && types.includes('Fire')) return false;
-    if (status === 'paralysis' && types.includes('Electric')) return false;
-    if ((status === 'poison' || status === 'toxic') && (types.includes('Poison') || types.includes('Steel'))) return false;
-    if (status === 'freeze' && types.includes('Ice')) return false;
+    const typeImmune =
+      (status === 'burn' && types.includes('Fire')) ||
+      (status === 'paralysis' && types.includes('Electric')) ||
+      ((status === 'poison' || status === 'toxic') && (types.includes('Poison') || types.includes('Steel'))) ||
+      (status === 'freeze' && types.includes('Ice'));
+    if (typeImmune) {
+      this.addEvent(events, 'status_fail', { pokemon: pokemon.species.name, status, reason: 'type_immunity' });
+      return false;
+    }
 
     // Ability immunities
-    if (status === 'burn' && (pokemon.ability === 'Water Veil' || pokemon.ability === 'Water Bubble')) return false;
-    if (status === 'paralysis' && pokemon.ability === 'Limber') return false;
-    if ((status === 'poison' || status === 'toxic') && pokemon.ability === 'Immunity') return false;
-    if (status === 'freeze' && pokemon.ability === 'Magma Armor') return false;
-    if (status === 'sleep' && (pokemon.ability === 'Insomnia' || pokemon.ability === 'Vital Spirit')) return false;
+    const abilityImmune =
+      (status === 'burn' && (pokemon.ability === 'Water Veil' || pokemon.ability === 'Water Bubble')) ||
+      (status === 'paralysis' && pokemon.ability === 'Limber') ||
+      ((status === 'poison' || status === 'toxic') && pokemon.ability === 'Immunity') ||
+      (status === 'freeze' && pokemon.ability === 'Magma Armor') ||
+      (status === 'sleep' && (pokemon.ability === 'Insomnia' || pokemon.ability === 'Vital Spirit'));
+    if (abilityImmune) {
+      this.addEvent(events, 'status_fail', { pokemon: pokemon.species.name, status, reason: 'ability_immunity' });
+      return false;
+    }
 
     pokemon.status = status;
 

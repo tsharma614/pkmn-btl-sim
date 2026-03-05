@@ -378,9 +378,9 @@ describe('Online Multiplayer Flow', () => {
       client1.emit('forfeit');
       await be1;
 
-      // Both request rematch — server emits battle_start (not team_preview)
-      const bs1 = waitForEvent<BattleStartPayload>(client1, 'battle_start');
-      const bs2 = waitForEvent<BattleStartPayload>(client2, 'battle_start');
+      // Both request rematch — server emits team_preview for lead selection
+      const bs1 = waitForEvent<BattleStartPayload>(client1, 'team_preview');
+      const bs2 = waitForEvent<BattleStartPayload>(client2, 'team_preview');
 
       client1.emit('rematch_request');
       client2.emit('rematch_request');

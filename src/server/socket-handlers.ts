@@ -240,16 +240,23 @@ export function registerSocketHandlers(
         return;
       }
 
-      // If battle ended from the switch
+      // If battle ended from the switch (e.g., hazard KO on switch-in killed last Pokemon)
       if (room.status === 'finished') {
+        // Broadcast the accumulated force switch events so clients see the final faint
+        const allEvents = [...room.forceSwitchEvents];
+        room.forceSwitchEvents = [];
+        if (allEvents.length > 0) {
+          broadcastTurnResult(io, room, allEvents);
+        }
         broadcastBattleEnd(io, room, 'all_fainted');
         return;
       }
 
-      // If all force switches are resolved, send turn results
+      // If all force switches are resolved, send turn results with ALL accumulated switch events
       if (room.allForceSwitchesResolved()) {
-        console.log(`[${room.code}] All force switches resolved, broadcasting`);
-        broadcastTurnResult(io, room, result.events);
+        console.log(`[${room.code}] All force switches resolved, broadcasting ${room.forceSwitchEvents.length} accumulated events`);
+        broadcastTurnResult(io, room, room.forceSwitchEvents);
+        room.forceSwitchEvents = [];
       }
     });
 
@@ -274,14 +281,13 @@ export function registerSocketHandlers(
 
       const bothReady = room.requestRematch(playerData.index);
       if (bothReady) {
-        // Both want rematch — send new teams
+        // Both want rematch — send new teams for team preview
         for (let i = 0; i < 2; i++) {
           const p = room.players[i as 0 | 1]!;
           const targetSocket = io.sockets.sockets.get(p.socketId);
           if (targetSocket) {
-            // Send team preview data (same as battle_start but for team preview phase)
-            const startPayload = buildBattleStartPayload(room, i as 0 | 1);
-            targetSocket.emit('battle_start', startPayload);
+            const previewPayload = buildBattleStartPayload(room, i as 0 | 1);
+            targetSocket.emit('team_preview', previewPayload);
           }
         }
         console.log(`[rematch] Rematch started in room ${room.code}`);

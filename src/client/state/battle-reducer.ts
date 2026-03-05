@@ -184,6 +184,7 @@ function accumulateStats(
   prev: BattleStats,
   events: BattleEvent[],
   playerTeamNames: Set<string>,
+  yourPlayerIndex: 0 | 1 = 0,
 ): BattleStats {
   const stats = { ...prev, pokemonDamage: { ...prev.pokemonDamage }, pokemonKOs: { ...prev.pokemonKOs } };
   let lastMoveUser: string | null = null;
@@ -267,7 +268,11 @@ function accumulateStats(
       }
       case 'faint': {
         const faintedName = d.pokemon as string;
-        if (playerTeamNames.has(faintedName)) {
+        // Use player index from event when available (avoids name collision when both teams share a species)
+        const isPlayerMon = d.player !== undefined
+          ? (d.player as number) === yourPlayerIndex
+          : playerTeamNames.has(faintedName);
+        if (isPlayerMon) {
           stats.opponentKOs++; // opponent scored a KO on us
         } else {
           stats.playerKOs++; // we scored a KO
@@ -315,7 +320,7 @@ function eventsToLogLines(events: BattleEvent[]): string[] {
         if ((d.effectiveness as number) === 0) parts.push('immune');
         if (d.isCritical) parts.push('critical hit');
         const suffix = parts.length > 0 ? ` (${parts.join(', ')})` : '';
-        lines.push(`  ${d.target} took ${d.damage} damage${suffix} [${d.remainingHp}/${d.maxHp} HP]`);
+        lines.push(`  ${d.defender || d.target} took ${d.damage} damage${suffix} [${d.remainingHp}/${d.maxHp} HP]`);
         break;
       }
       case 'miss':
@@ -333,6 +338,13 @@ function eventsToLogLines(events: BattleEvent[]): string[] {
         break;
       case 'status':
         lines.push(`  ${d.pokemon} was ${d.status === 'burn' ? 'burned' : d.status === 'poison' ? 'poisoned' : d.status === 'paralysis' ? 'paralyzed' : d.status === 'sleep' ? 'put to sleep' : d.status === 'freeze' ? 'frozen' : d.status === 'toxic' ? 'badly poisoned' : 'afflicted with ' + d.status}!`);
+        break;
+      case 'status_fail':
+        if (d.reason === 'type_immunity' || d.reason === 'ability_immunity') {
+          lines.push(`  It doesn't affect ${d.pokemon}...`);
+        } else {
+          lines.push(`  ${d.pokemon} is already statused!`);
+        }
         break;
       case 'status_damage':
         lines.push(`  ${d.pokemon} took ${d.damage} damage from ${d.status}!`);
@@ -529,7 +541,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         (state.yourState?.team || state.yourTeam).map(p => p.species.name)
       );
       const updatedStats = hasEvents
-        ? accumulateStats(state.battleStats, action.payload.events, playerNames)
+        ? accumulateStats(state.battleStats, action.payload.events, playerNames, state.yourPlayerIndex)
         : state.battleStats;
       const updatedLog = hasEvents
         ? [...state.battleLog, ...eventsToLogLines(action.payload.events)]

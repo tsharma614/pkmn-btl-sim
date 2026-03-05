@@ -123,6 +123,15 @@ const ENEMY_MISS_REACTIONS = [
   "Nice aim dipshit", "Air ball",
 ];
 
+// Hazard reactions — when opponent takes entry hazard damage
+const HAZARD_REACTIONS = [
+  "Spikes?? LMAO", "Should've worn boots", "Entry hazard diff",
+  "Walk it off", "That's gotta sting", "Free damage babyyy",
+  "Welcome to the field, bitch", "Surprise!", "Eat rocks idiot",
+  "Hazard tax collected", "The floor is lava", "That's what you get for switching",
+  "Step on a Lego", "Nice entrance dipshit",
+];
+
 // Faint reactions — when opponent's Pokemon faints
 const FAINT_REACTIONS = [
   "LMAO BYE", "GET THAT OUTTA HERE", "REST IN PISS",
@@ -294,6 +303,13 @@ export function formatEventMessage(event: BattleEvent): { text: string; segments
     case 'status':
       text = `${d.pokemon} was ${statusText(d.status as string)}!`;
       break;
+    case 'status_fail':
+      if (d.reason === 'type_immunity' || d.reason === 'ability_immunity') {
+        text = `It doesn't affect ${d.pokemon}...`;
+      } else {
+        text = `${d.pokemon} is already statused!`;
+      }
+      break;
     case 'status_damage':
       text = `${d.pokemon} took damage from ${d.status}!`;
       break;
@@ -431,6 +447,7 @@ export function useEventQueue(
   opponentPokemonName: string | null,
   initialPlayerHp?: { current: number; max: number } | null,
   initialOpponentHp?: { current: number; max: number } | null,
+  yourPlayerIndex: 0 | 1 = 0,
 ): {
   messages: EventMessage[];
   isProcessing: boolean;
@@ -476,10 +493,21 @@ export function useEventQueue(
   const initialOpponentHpRef = useRef(initialOpponentHp);
   initialOpponentHpRef.current = initialOpponentHp;
 
-  // Clear stale overrides when the real active Pokemon changes outside of event
-  // processing (e.g., new battle started). Without this, name/sprite from the
-  // previous game's last event leaks into the next game.
+  // Clear all stale state when both pokemon names become null (game reset).
+  // Without this, messages and overrides from the previous game leak into the next.
   useEffect(() => {
+    if (yourPokemonName === null && opponentPokemonName === null) {
+      setMessages([]);
+      setPlayerNameOverride(null);
+      setPlayerSpriteOverride(null);
+      setOpponentNameOverride(null);
+      setOpponentSpriteOverride(null);
+      setDamageReaction(null);
+      setPlayerHpOverride(null);
+      setOpponentHpOverride(null);
+      lastEventsRef.current = [];
+      return;
+    }
     if (isProcessing) return; // don't clear mid-animation
     if (playerNameOverride && yourPokemonName && playerNameOverride !== yourPokemonName) {
       setPlayerNameOverride(null);
@@ -538,7 +566,7 @@ export function useEventQueue(
 
       // Trigger sprite animations based on event type
       if (event.type === 'use_move') {
-        const isPlayer = event.data.player === 0;
+        const isPlayer = event.data.player === yourPlayerIndex;
         if (isPlayer) {
           setAnimations(prev => ({ ...prev, playerAttack: prev.playerAttack + 1 }));
         } else {
@@ -655,6 +683,53 @@ export function useEventQueue(
         else if (pokemon === yourNameRef.current) setPlayerIndicator(ind);
       }
 
+      // Hazard damage (Spikes, Stealth Rock, Toxic Spikes)
+      if (event.type === 'hazard_damage') {
+        const pokemon = event.data.pokemon as string;
+        const dmg = event.data.damage as number;
+        const hazard = event.data.hazard as string;
+        indicatorKeyRef.current++;
+        const ind: IndicatorData = { text: `-${dmg} ${hazard}`, color: '#B8860B', key: indicatorKeyRef.current };
+        if (pokemon === oppNameRef.current) {
+          setAnimations(prev => ({ ...prev, opponentDamage: prev.opponentDamage + 1 }));
+          setOpponentIndicator(ind);
+          setDamageReaction(pickReaction(HAZARD_REACTIONS));
+        } else if (pokemon === yourNameRef.current) {
+          setAnimations(prev => ({ ...prev, playerDamage: prev.playerDamage + 1 }));
+          setPlayerIndicator(ind);
+        }
+      }
+
+      // Status damage (burn, poison, toxic)
+      if (event.type === 'status_damage') {
+        const pokemon = event.data.pokemon as string;
+        const dmg = event.data.damage as number;
+        indicatorKeyRef.current++;
+        const ind: IndicatorData = { text: `-${dmg}`, color: '#A33EA1', key: indicatorKeyRef.current };
+        if (pokemon === oppNameRef.current) {
+          setAnimations(prev => ({ ...prev, opponentDamage: prev.opponentDamage + 1 }));
+          setOpponentIndicator(ind);
+        } else if (pokemon === yourNameRef.current) {
+          setAnimations(prev => ({ ...prev, playerDamage: prev.playerDamage + 1 }));
+          setPlayerIndicator(ind);
+        }
+      }
+
+      // Weather damage
+      if (event.type === 'weather_damage') {
+        const pokemon = event.data.pokemon as string;
+        const dmg = event.data.damage as number;
+        indicatorKeyRef.current++;
+        const ind: IndicatorData = { text: `-${dmg}`, color: '#B8860B', key: indicatorKeyRef.current };
+        if (pokemon === oppNameRef.current) {
+          setAnimations(prev => ({ ...prev, opponentDamage: prev.opponentDamage + 1 }));
+          setOpponentIndicator(ind);
+        } else if (pokemon === yourNameRef.current) {
+          setAnimations(prev => ({ ...prev, playerDamage: prev.playerDamage + 1 }));
+          setPlayerIndicator(ind);
+        }
+      }
+
       // Healing (heal, item_heal, ability_heal, drain)
       if (event.type === 'heal' || event.type === 'item_heal' || event.type === 'ability_heal' || event.type === 'drain') {
         const amount = (event.data.amount as number) || 0;
@@ -712,7 +787,7 @@ export function useEventQueue(
         const speciesId = event.data.speciesId as string;
         const hp = event.data.currentHp as number;
         const maxHp = event.data.maxHp as number;
-        if (player !== 0) {
+        if (player !== yourPlayerIndex) {
           // Opponent
           oppNameRef.current = name;
           setOpponentSpriteOverride(speciesId);

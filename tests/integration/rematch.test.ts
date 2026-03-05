@@ -96,9 +96,9 @@ describe('Rematch', () => {
     client1.emit('forfeit');
     await Promise.all([be1, be2]);
 
-    // Both request rematch — listen for battle_start (team preview)
-    const rs1 = waitForEvent<BattleStartPayload>(client1, 'battle_start');
-    const rs2 = waitForEvent<BattleStartPayload>(client2, 'battle_start');
+    // Both request rematch — listen for team_preview (not battle_start)
+    const rs1 = waitForEvent<BattleStartPayload>(client1, 'team_preview');
+    const rs2 = waitForEvent<BattleStartPayload>(client2, 'team_preview');
     client1.emit('rematch_request');
     client2.emit('rematch_request');
     const [rematch1, rematch2] = await Promise.all([rs1, rs2]);
