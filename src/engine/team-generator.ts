@@ -5,10 +5,17 @@ import pokedexData from '../data/pokedex.json';
 
 const pokedex = pokedexData as Record<string, PokemonSpecies>;
 
-// Group Pokemon by tier
+// Pokemon without animated sprites on Showdown CDN — exclude from generation
+const NO_SPRITE: Set<string> = new Set([
+  'ironleaves', 'okidogi', 'munkidori', 'fezandipiti',
+  'ironboulder', 'ironcrown', 'terapagos', 'pecharunt',
+]);
+
+// Group Pokemon by tier, excluding those without sprites
 const TIERS: Record<Tier, PokemonSpecies[]> = { 1: [], 2: [], 3: [], 4: [] };
 
 for (const species of Object.values(pokedex)) {
+  if (NO_SPRITE.has(species.id)) continue;
   const tier = species.tier as Tier;
   if (TIERS[tier]) {
     TIERS[tier].push(species);

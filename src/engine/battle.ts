@@ -13,6 +13,8 @@ export class Battle {
   state: BattleState;
   rng: SeededRNG;
   logger: BattleLogger;
+  /** Flags set during turn when a selfSwitch move (U-Turn etc.) needs a switch after the turn */
+  pendingSelfSwitch: [boolean, boolean] = [false, false];
 
   constructor(
     player1: Player,
@@ -76,8 +78,18 @@ export class Battle {
     });
 
     // Reset per-turn state
-    this.getActivePokemon(0).hasMovedThisTurn = false;
-    this.getActivePokemon(1).hasMovedThisTurn = false;
+    this.pendingSelfSwitch = [false, false];
+    const active0 = this.getActivePokemon(0);
+    const active1 = this.getActivePokemon(1);
+    // Track if Protect was used last turn (for consecutive failure)
+    active0.protectedLastTurn = active0.volatileStatuses.has('protect');
+    active1.protectedLastTurn = active1.volatileStatuses.has('protect');
+    active0.volatileStatuses.delete('protect');
+    active1.volatileStatuses.delete('protect');
+    active0.hasMovedThisTurn = false;
+    active1.hasMovedThisTurn = false;
+    active0.tookDamageThisTurn = false;
+    active1.tookDamageThisTurn = false;
 
     // Handle forfeits
     if (action1.type === 'forfeit') {
@@ -162,6 +174,18 @@ export class Battle {
   getAvailableMoves(playerIndex: number): number[] {
     const pokemon = this.getActivePokemon(playerIndex);
 
+    // Encore lock: forced to repeat the encore'd move
+    if (pokemon.encoreTurns > 0 && pokemon.encoreMove) {
+      const encoreIdx = pokemon.moves.findIndex(m => m.data.name === pokemon.encoreMove);
+      if (encoreIdx !== -1 && pokemon.moves[encoreIdx].currentPp > 0) {
+        return [encoreIdx];
+      }
+      // Encore'd move has no PP — encore ends, fallthrough to normal selection
+      pokemon.encoreTurns = 0;
+      pokemon.encoreMove = null;
+      pokemon.volatileStatuses.delete('encore');
+    }
+
     // If choice-locked, can only use that move
     if (pokemon.choiceLocked) {
       const lockedIdx = pokemon.moves.findIndex(m => m.data.name === pokemon.choiceLocked);
@@ -178,6 +202,47 @@ export class Battle {
       .map(({ index }) => index);
 
     return available;
+  }
+
+  /**
+   * Check if a player needs a self-switch (after U-Turn, Volt Switch, etc.).
+   */
+  needsSelfSwitch(playerIndex: number): boolean {
+    return this.pendingSelfSwitch[playerIndex as 0 | 1];
+  }
+
+  /**
+   * Process a self-switch (U-Turn, Volt Switch, Baton Pass, etc.).
+   * For Baton Pass, stats and volatile statuses are passed to the incoming Pokemon.
+   */
+  processSelfSwitch(playerIndex: number, pokemonIndex: number, isBatonPass: boolean): BattleEvent[] {
+    const events: BattleEvent[] = [];
+    const player = this.state.players[playerIndex];
+    const oldPokemon = player.team[player.activePokemonIndex];
+
+    if (isBatonPass && oldPokemon.isAlive) {
+      // Save boosts and volatile statuses to pass
+      const savedBoosts = { ...oldPokemon.boosts };
+      const savedVolatile = new Set(oldPokemon.volatileStatuses);
+      const savedSubHp = oldPokemon.substituteHp;
+
+      this.executeSwitch(playerIndex, pokemonIndex, events);
+
+      // Apply passed stats to the new Pokemon
+      const newPokemon = player.team[player.activePokemonIndex];
+      newPokemon.boosts = savedBoosts;
+      for (const vs of savedVolatile) {
+        if (vs !== 'flinch' && vs !== 'protect') {
+          newPokemon.volatileStatuses.add(vs);
+        }
+      }
+      newPokemon.substituteHp = savedSubHp;
+    } else {
+      this.executeSwitch(playerIndex, pokemonIndex, events);
+    }
+
+    this.pendingSelfSwitch[playerIndex as 0 | 1] = false;
+    return events;
   }
 
   // --- Action ordering ---
@@ -306,14 +371,21 @@ export class Battle {
       pp: isStruggle ? 'Struggle' : attacker.moves[moveIndex]?.currentPp,
     });
 
+    // Recharge turn (Hyper Beam, Giga Impact)
+    if (attacker.mustRecharge) {
+      attacker.mustRecharge = false;
+      this.addEvent(events, 'cant_move', { pokemon: attacker.species.name, reason: 'recharge' });
+      return;
+    }
+
     // Check paralysis
     if (attacker.status === 'paralysis' && this.rng.chance(25)) {
       this.addEvent(events, 'cant_move', { pokemon: attacker.species.name, reason: 'paralysis' });
       return;
     }
 
-    // Check sleep
-    if (attacker.status === 'sleep') {
+    // Check sleep (Sleep Talk bypasses this)
+    if (attacker.status === 'sleep' && move.name !== 'Sleep Talk') {
       if (attacker.sleepTurns > 0) {
         attacker.sleepTurns--;
         this.addEvent(events, 'cant_move', { pokemon: attacker.species.name, reason: 'sleep' });
@@ -367,6 +439,24 @@ export class Battle {
       return;
     }
 
+    // Truant: skip every other turn
+    if (attacker.ability === 'Truant' && attacker.truantNextTurn) {
+      attacker.truantNextTurn = false;
+      this.addEvent(events, 'cant_move', { pokemon: attacker.species.name, reason: 'loafing' });
+      return;
+    }
+
+    // Focus Punch: fails if user took damage this turn
+    if (move.name === 'Focus Punch' && attacker.tookDamageThisTurn) {
+      this.addEvent(events, 'use_move', {
+        pokemon: attacker.species.name,
+        move: move.name,
+        player: playerIndex,
+      });
+      this.addEvent(events, 'cant_move', { pokemon: attacker.species.name, reason: 'lost focus' });
+      return;
+    }
+
     this.addEvent(events, 'use_move', {
       pokemon: attacker.species.name,
       move: move.name,
@@ -379,8 +469,19 @@ export class Battle {
       return;
     }
 
-    // Type immunity check for non-status moves
-    if (move.category !== 'Status') {
+    // Protect check — blocks most moves targeting the defender
+    if (defender.volatileStatuses.has('protect') && move.target !== 'self' && move.target !== 'allySide') {
+      this.addEvent(events, 'protected', { pokemon: defender.species.name, move: move.name });
+      return;
+    }
+
+    // Substitute check — absorbs damage for the pokemon behind it
+    if (defender.substituteHp > 0 && move.category !== 'Status') {
+      // Damage hits the substitute instead
+    }
+
+    // Type immunity check for non-status moves (Struggle bypasses type immunity)
+    if (move.category !== 'Status' && !isStruggle) {
       const effectiveness = getTypeEffectiveness(
         move.type as PokemonType,
         defender.species.types as PokemonType[]
@@ -411,9 +512,36 @@ export class Battle {
     attacker.lastMoveUsed = move.name;
     attacker.hasMovedThisTurn = true;
 
+    // Truant: flag to skip next turn
+    if (attacker.ability === 'Truant') {
+      attacker.truantNextTurn = true;
+    }
+
+    // Recharge: flag to skip next turn (Hyper Beam, Giga Impact, etc.)
+    if (move.flags.recharge && attacker.isAlive) {
+      attacker.mustRecharge = true;
+    }
+
     // Choice lock
     if (!isStruggle && (attacker.item === 'Choice Band' || attacker.item === 'Choice Specs' || attacker.item === 'Choice Scarf')) {
       attacker.choiceLocked = move.name;
+    }
+
+    // selfSwitch (U-Turn, Flip Turn, Volt Switch, Baton Pass, Parting Shot, etc.)
+    if (move.selfSwitch && attacker.isAlive) {
+      const switches = this.getAvailableSwitches(playerIndex);
+      if (switches.length > 0) {
+        this.pendingSelfSwitch[playerIndex as 0 | 1] = true;
+      }
+    }
+
+    // forceSwitch (Roar, Whirlwind, Dragon Tail, Circle Throw)
+    if (move.forceSwitch && defender.isAlive) {
+      const oppSwitches = this.getAvailableSwitches(opponentIndex);
+      if (oppSwitches.length > 0) {
+        const target = oppSwitches[this.rng.int(0, oppSwitches.length - 1)];
+        this.executeSwitch(opponentIndex, target, events);
+      }
     }
   }
 
@@ -450,11 +578,13 @@ export class Battle {
         this.rng, isCritical && hit === 0, modifiers
       );
 
-      const damage = result.finalDamage;
+      // Cap damage at defender's remaining HP
+      const damage = Math.min(result.finalDamage, defender.currentHp);
       totalDamage += damage;
 
       // Apply damage
       defender.currentHp = clampHp(defender.currentHp - damage, defender.maxHp);
+      if (damage > 0) defender.tookDamageThisTurn = true;
 
       this.logger.debug('damage', `${attacker.species.name}'s ${move.name} dealt ${damage} to ${defender.species.name}`, {
         ...result,
@@ -509,6 +639,12 @@ export class Battle {
       }
     }
 
+    // Self-destruct moves (Explosion, Self-Destruct) — user faints
+    if ((move as any).selfdestruct && attacker.isAlive) {
+      attacker.currentHp = 0;
+      this.checkFaint(attacker, playerIndex, events);
+    }
+
     // Struggle recoil (25% of max HP)
     if (isStruggle) {
       const struggleRecoil = Math.max(1, Math.floor(attacker.maxHp / 4));
@@ -534,8 +670,8 @@ export class Battle {
       }
     }
 
-    // Life Orb recoil
-    if (attacker.item === 'Life Orb' && totalDamage > 0 && attacker.ability !== 'Magic Guard') {
+    // Life Orb recoil (skip if attacker already fainted from move recoil)
+    if (attacker.isAlive && attacker.item === 'Life Orb' && totalDamage > 0 && attacker.ability !== 'Magic Guard') {
       const lifeOrbRecoil = Math.max(1, Math.floor(attacker.maxHp / 10));
       attacker.currentHp = clampHp(attacker.currentHp - lifeOrbRecoil, attacker.maxHp);
       this.addEvent(events, 'item_damage', {
@@ -547,8 +683,12 @@ export class Battle {
     }
 
     // Secondary effects (status, stat drops, flinch)
+    // Self-targeting effects (like Close Combat's -1 Def/-1 SpD) must apply even if defender fainted
     if (defender.isAlive) {
       this.applyMoveEffects(attacker, defender, move, playerIndex, opponentIndex, events);
+    } else {
+      // Defender fainted — still apply self-effects (selfBoosts, self-status, self-heal)
+      this.applySelfEffectsOnly(attacker, move, events);
     }
 
     // Contact-triggered abilities
@@ -565,6 +705,157 @@ export class Battle {
     opponentIndex: number,
     events: BattleEvent[]
   ): void {
+    // Protect-like moves
+    const protectMoves = ['Protect', 'Detect', 'Baneful Bunker', 'King\'s Shield', 'Spiky Shield', 'Obstruct', 'Silk Trap'];
+    if (protectMoves.includes(move.name)) {
+      // Fails if used last turn consecutively
+      if (attacker.protectedLastTurn) {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'consecutive use' });
+        return;
+      }
+      attacker.volatileStatuses.add('protect');
+      this.addEvent(events, 'protect', { pokemon: attacker.species.name });
+      return;
+    }
+
+    // Weather-dependent healing: Moonlight, Synthesis, Morning Sun
+    const weatherHealMoves = ['Moonlight', 'Synthesis', 'Morning Sun'];
+    if (weatherHealMoves.includes(move.name)) {
+      let fraction = 0.5; // default: heal 50%
+      if (this.state.weather === 'sun') {
+        fraction = 2 / 3; // 66.7% in sun
+      } else if (this.state.weather !== 'none') {
+        fraction = 0.25; // 25% in rain/sand/hail
+      }
+      const healAmount = Math.floor(attacker.maxHp * fraction);
+      const actualHeal = Math.min(healAmount, attacker.maxHp - attacker.currentHp);
+      if (actualHeal <= 0) {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'already at full HP' });
+        return;
+      }
+      attacker.currentHp = clampHp(attacker.currentHp + healAmount, attacker.maxHp);
+      this.addEvent(events, 'heal', { pokemon: attacker.species.name, amount: actualHeal });
+      return;
+    }
+
+    // Sleep Talk: use a random other move while asleep
+    if (move.name === 'Sleep Talk') {
+      if (attacker.status !== 'sleep') {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: 'Sleep Talk', reason: 'not asleep' });
+        return;
+      }
+      // Decrement sleep counter for Sleep Talk turn
+      if (attacker.sleepTurns > 0) attacker.sleepTurns--;
+      // Pick a random move that isn't Sleep Talk
+      const usableMoves = attacker.moves
+        .map((m, i) => ({ m, i }))
+        .filter(({ m }) => m.data.name !== 'Sleep Talk' && m.data.name !== 'Rest');
+      if (usableMoves.length === 0) {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: 'Sleep Talk', reason: 'no usable moves' });
+        return;
+      }
+      const chosen = usableMoves[this.rng.int(0, usableMoves.length - 1)];
+      // Execute the chosen move (don't deduct PP for the called move)
+      const chosenMove = chosen.m.data;
+      this.addEvent(events, 'use_move', {
+        pokemon: attacker.species.name,
+        move: chosenMove.name,
+        player: playerIndex,
+      });
+      // Protect check for called move
+      if (defender.volatileStatuses.has('protect') && chosenMove.target !== 'self' && chosenMove.target !== 'allySide') {
+        this.addEvent(events, 'protected', { pokemon: defender.species.name, move: chosenMove.name });
+        return;
+      }
+      // Accuracy check for the called move
+      if (chosenMove.accuracy !== null && !rollAccuracy(this.rng, chosenMove.accuracy, attacker.boosts.accuracy, defender.boosts.evasion)) {
+        this.addEvent(events, 'miss', { pokemon: attacker.species.name, move: chosenMove.name });
+        return;
+      }
+      if (chosenMove.category === 'Status') {
+        this.executeStatusMove(attacker, defender, chosenMove, playerIndex, opponentIndex, events);
+      } else {
+        this.executeDamagingMove(attacker, defender, chosenMove, playerIndex, opponentIndex, false, events);
+      }
+      attacker.lastMoveUsed = chosenMove.name;
+      return;
+    }
+
+    // Rest: heal to full, sleep for exactly 2 turns
+    if (move.name === 'Rest') {
+      if (attacker.status === 'sleep') {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: 'Rest', reason: 'already asleep' });
+        return;
+      }
+      if (attacker.currentHp >= attacker.maxHp) {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: 'Rest', reason: 'already at full HP' });
+        return;
+      }
+      // Abilities that block sleep also block Rest
+      if (attacker.ability === 'Insomnia' || attacker.ability === 'Vital Spirit') {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: 'Rest', reason: 'ability prevents sleep' });
+        return;
+      }
+      // Clear existing status first
+      if (attacker.status) {
+        this.addEvent(events, 'status_cure', { pokemon: attacker.species.name, status: attacker.status });
+      }
+      // Heal to full
+      const healAmount = attacker.maxHp - attacker.currentHp;
+      attacker.currentHp = attacker.maxHp;
+      this.addEvent(events, 'heal', { pokemon: attacker.species.name, amount: healAmount });
+      // Self-inflict sleep (exactly 2 turns)
+      attacker.status = 'sleep';
+      attacker.sleepTurns = 2;
+      this.addEvent(events, 'status', { pokemon: attacker.species.name, status: 'sleep' });
+      return;
+    }
+
+    // Curse: dual-mode depending on user type
+    if (move.name === 'Curse') {
+      const isGhost = (attacker.species.types as PokemonType[]).includes('Ghost');
+      if (isGhost) {
+        // Ghost Curse: sacrifice 50% max HP, target is cursed (loses 1/4 max HP each turn)
+        const cost = Math.floor(attacker.maxHp / 2);
+        attacker.currentHp = clampHp(attacker.currentHp - cost, attacker.maxHp);
+        this.addEvent(events, 'damage', {
+          attacker: attacker.species.name,
+          defender: attacker.species.name,
+          move: 'Curse',
+          damage: cost,
+          remainingHp: attacker.currentHp,
+          maxHp: attacker.maxHp,
+        });
+        defender.volatileStatuses.add('curse' as any);
+        this.addEvent(events, 'volatile_status', { pokemon: defender.species.name, status: 'curse' });
+        this.checkFaint(attacker, playerIndex, events);
+      } else {
+        // Non-Ghost Curse: +1 ATK, +1 DEF, -1 SPE
+        this.applyBoost(attacker, 'atk', 1, events);
+        this.applyBoost(attacker, 'def', 1, events);
+        this.applyBoost(attacker, 'spe', -1, events);
+      }
+      return;
+    }
+
+    // Substitute: costs 25% HP, creates a substitute
+    if (move.name === 'Substitute') {
+      const cost = Math.floor(attacker.maxHp / 4);
+      if (attacker.currentHp <= cost) {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'not enough HP' });
+        return;
+      }
+      if (attacker.substituteHp > 0) {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'already has substitute' });
+        return;
+      }
+      attacker.currentHp -= cost;
+      attacker.substituteHp = cost;
+      attacker.volatileStatuses.add('substitute');
+      this.addEvent(events, 'substitute', { pokemon: attacker.species.name, hp: cost });
+      return;
+    }
+
     this.applyMoveEffects(attacker, defender, move, playerIndex, opponentIndex, events);
   }
 
@@ -627,8 +918,120 @@ export class Battle {
       }
     }
 
-    // Handle moves that directly set status/boosts (from Showdown data format)
-    // These are stored on the move itself, not in effects array
+    // Handle moves that directly set status/boosts/volatileStatus (from Showdown data format)
+    if (move.volatileStatus) {
+      this.applyVolatileStatus(attacker, defender, move, playerIndex, opponentIndex, events);
+    }
+
+    // Legacy boost fields — skip if the effects array already handled boosts
+    // (otherwise moves like Nasty Plot double-apply: effects gives +2 spa to self,
+    // then move.boosts gives +2 spa to the DEFENDER incorrectly)
+    const effectsHaveBoosts = move.effects?.some(e => e.type === 'boost');
+    if (!effectsHaveBoosts) {
+      if (move.boosts) {
+        for (const [stat, stages] of Object.entries(move.boosts)) {
+          if (stages) this.applyBoost(defender, stat as BoostableStat, stages, events);
+        }
+      }
+      if (move.selfBoosts) {
+        for (const [stat, stages] of Object.entries(move.selfBoosts)) {
+          if (stages) this.applyBoost(attacker, stat as BoostableStat, stages, events);
+        }
+      }
+    }
+  }
+
+  /** Apply only self-targeting effects from a move (used when defender fainted) */
+  private applySelfEffectsOnly(
+    attacker: BattlePokemon,
+    move: MoveData,
+    events: BattleEvent[],
+  ): void {
+    // Self-targeting effects from effects array
+    for (const effect of (move.effects || [])) {
+      const chance = effect.chance || 100;
+      if (!this.rng.chance(chance)) continue;
+
+      if (effect.target === 'self' && effect.type === 'boost') {
+        this.applyBoost(attacker, effect.stat as BoostableStat, effect.stages as number, events);
+      }
+      if (effect.type === 'heal') {
+        const amount = effect.amount || 0.5;
+        const healAmount = Math.floor(attacker.maxHp * amount);
+        attacker.currentHp = clampHp(attacker.currentHp + healAmount, attacker.maxHp);
+        this.addEvent(events, 'heal', { pokemon: attacker.species.name, amount: healAmount });
+      }
+    }
+
+    // Legacy selfBoosts field
+    const effectsHaveBoosts = move.effects?.some(e => e.type === 'boost');
+    if (!effectsHaveBoosts && move.selfBoosts) {
+      for (const [stat, stages] of Object.entries(move.selfBoosts)) {
+        if (stages) this.applyBoost(attacker, stat as BoostableStat, stages, events);
+      }
+    }
+  }
+
+  private applyVolatileStatus(
+    attacker: BattlePokemon,
+    defender: BattlePokemon,
+    move: MoveData,
+    _playerIndex: number,
+    _opponentIndex: number,
+    events: BattleEvent[],
+  ): void {
+    const target = move.target === 'self' ? attacker : defender;
+    const vs = move.volatileStatus!;
+
+    switch (vs) {
+      case 'encore': {
+        if (!target.lastMoveUsed) {
+          this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'no last move' });
+          return;
+        }
+        if (target.encoreTurns > 0) {
+          this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'already encored' });
+          return;
+        }
+        target.encoreTurns = 3;
+        target.encoreMove = target.lastMoveUsed;
+        target.volatileStatuses.add('encore');
+        this.addEvent(events, 'volatile_status', {
+          pokemon: target.species.name,
+          status: 'encore',
+          move: target.encoreMove,
+        });
+        break;
+      }
+      case 'confusion': {
+        if (target.volatileStatuses.has('confusion')) return;
+        target.volatileStatuses.add('confusion');
+        target.confusionTurns = this.rng.int(2, 5);
+        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'confusion' });
+        break;
+      }
+      case 'leech-seed': {
+        if (target.volatileStatuses.has('leech-seed')) return;
+        if ((target.species.types as PokemonType[]).includes('Grass')) {
+          this.addEvent(events, 'immune', { target: target.species.name, move: move.name, reason: 'Grass type' });
+          return;
+        }
+        target.volatileStatuses.add('leech-seed');
+        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'leech-seed' });
+        break;
+      }
+      case 'taunt': {
+        if (target.volatileStatuses.has('taunt')) return;
+        target.volatileStatuses.add('taunt');
+        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'taunt' });
+        break;
+      }
+      default: {
+        target.volatileStatuses.add(vs as any);
+        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: vs });
+        break;
+      }
+    }
   }
 
   // --- Status conditions ---
@@ -683,6 +1086,9 @@ export class Battle {
     stages: number,
     events: BattleEvent[]
   ): void {
+    // Contrary reverses all stat changes
+    if (pokemon.ability === 'Contrary') stages = -stages;
+
     const oldStage = pokemon.boosts[stat];
     const newStage = Math.max(-6, Math.min(6, oldStage + stages));
     const actualChange = newStage - oldStage;
@@ -764,12 +1170,29 @@ export class Battle {
     oldPokemon.choiceLocked = null;
     oldPokemon.toxicCounter = oldPokemon.status === 'toxic' ? 1 : 0;
     oldPokemon.confusionTurns = 0;
+    oldPokemon.encoreTurns = 0;
+    oldPokemon.encoreMove = null;
+    oldPokemon.truantNextTurn = false;
+    oldPokemon.mustRecharge = false;
 
-    this.addEvent(events, 'switch', {
-      player: playerIndex,
-      from: oldPokemon.species.name,
-      to: newPokemon.species.name,
-    });
+    if (oldPokemon.isAlive) {
+      this.addEvent(events, 'switch', {
+        player: playerIndex,
+        from: oldPokemon.species.name,
+        to: newPokemon.species.name,
+        toId: newPokemon.species.id,
+        toHp: newPokemon.currentHp,
+        toMaxHp: newPokemon.maxHp,
+      });
+    } else {
+      this.addEvent(events, 'send_out', {
+        player: playerIndex,
+        pokemon: newPokemon.species.name,
+        speciesId: newPokemon.species.id,
+        currentHp: newPokemon.currentHp,
+        maxHp: newPokemon.maxHp,
+      });
+    }
 
     player.activePokemonIndex = pokemonIndex;
 
@@ -1195,6 +1618,18 @@ export class Battle {
         this.checkFaint(pokemon, playerIndex, events);
       }
 
+      // Curse damage (Ghost Curse: 1/4 max HP per turn)
+      if (pokemon.volatileStatuses.has('curse' as any)) {
+        const curseDmg = Math.max(1, Math.floor(pokemon.maxHp / 4));
+        pokemon.currentHp = clampHp(pokemon.currentHp - curseDmg, pokemon.maxHp);
+        this.addEvent(events, 'status_damage', {
+          pokemon: pokemon.species.name,
+          status: 'curse',
+          damage: curseDmg,
+        });
+        this.checkFaint(pokemon, playerIndex, events);
+      }
+
       // Leftovers
       if (pokemon.item === 'Leftovers' && pokemon.currentHp < pokemon.maxHp) {
         const heal = Math.max(1, Math.floor(pokemon.maxHp / 16));
@@ -1231,6 +1666,16 @@ export class Battle {
       // Speed Boost
       if (pokemon.ability === 'Speed Boost') {
         this.applyBoost(pokemon, 'spe', 1, events);
+      }
+
+      // Encore countdown
+      if (pokemon.encoreTurns > 0) {
+        pokemon.encoreTurns--;
+        if (pokemon.encoreTurns <= 0) {
+          pokemon.encoreMove = null;
+          pokemon.volatileStatuses.delete('encore');
+          this.addEvent(events, 'volatile_cure', { pokemon: pokemon.species.name, status: 'encore' });
+        }
       }
 
       // Clear flinch at end of turn

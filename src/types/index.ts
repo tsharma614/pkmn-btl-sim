@@ -6,7 +6,7 @@ export type PokemonType =
   | 'Rock' | 'Ghost' | 'Dragon' | 'Dark' | 'Steel' | 'Fairy';
 
 export type StatusCondition = 'burn' | 'paralysis' | 'sleep' | 'poison' | 'toxic' | 'freeze';
-export type VolatileStatus = 'confusion' | 'flinch' | 'leech-seed' | 'trapped' | 'substitute' | 'encore' | 'taunt' | 'torment' | 'disable';
+export type VolatileStatus = 'confusion' | 'flinch' | 'leech-seed' | 'trapped' | 'substitute' | 'encore' | 'taunt' | 'torment' | 'disable' | 'protect';
 
 export type Weather = 'sun' | 'rain' | 'sandstorm' | 'hail' | 'none';
 export type Terrain = 'none';
@@ -44,6 +44,15 @@ export interface MoveData {
   effects?: MoveEffect[];
   target: MoveTarget;
   description?: string;
+  selfdestruct?: boolean;     // true for Explosion, Self-Destruct — user faints after use
+  selfSwitch?: boolean | 'copyvolatile';  // true for U-Turn/Volt Switch, "copyvolatile" for Baton Pass
+  forceSwitch?: boolean;      // true for Roar/Whirlwind — forces opponent to switch
+  volatileStatus?: string | null;  // e.g. "encore", "taunt" — applied to target
+  willCrit?: boolean;
+  critRatio?: number;
+  status?: string | null;     // direct status to apply (from Showdown data)
+  boosts?: Partial<Record<BoostableStat, number>> | null;     // boosts applied to target
+  selfBoosts?: Partial<Record<BoostableStat, number>> | null; // boosts applied to self
 }
 
 export interface MoveFlags {
@@ -57,6 +66,7 @@ export interface MoveFlags {
   drain?: number;           // fraction of damage drained (e.g., 0.5)
   multiHit?: [number, number]; // [min, max] hits
   charge?: boolean;         // two-turn move
+  recharge?: boolean;       // must recharge next turn (Hyper Beam, Giga Impact)
   protect?: boolean;        // blocked by Protect
   mirror?: boolean;         // reflected by Mirror Move
   defrost?: boolean;        // thaws user if frozen
@@ -87,6 +97,7 @@ export interface PokemonSpecies {
   bestAbility: string;    // competitive best ability
   tier: Tier;
   generation: number;
+  weightkg: number;       // weight in kg (for Heavy Slam, Low Kick, etc.)
   movePool: string[];     // all learnable moves
   sets: PokemonSet[];     // competitive sets
 }
@@ -121,7 +132,13 @@ export interface BattlePokemon {
   lastMoveUsed: string | null;
   choiceLocked: string | null;  // move name if choice-locked
   hasMovedThisTurn: boolean;
+  tookDamageThisTurn: boolean;
+  protectedLastTurn: boolean;
   timesHit: number;        // for tracking
+  encoreTurns: number;     // turns remaining under Encore
+  encoreMove: string | null; // move name locked by Encore
+  truantNextTurn: boolean;  // Truant: skip next turn
+  mustRecharge: boolean;    // Recharge: must skip next turn (Hyper Beam etc.)
 }
 
 export interface BattleMove {

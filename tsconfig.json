@@ -8,5 +8,5 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "scripts/**/*"]
+  "include": ["App.tsx", "index.ts", "src/**/*", "scripts/**/*"]
 }

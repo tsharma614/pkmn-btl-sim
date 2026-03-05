@@ -17,7 +17,7 @@ export function calculateDamage(
   additionalModifiers?: { attackMod?: number; defenseMod?: number; powerMod?: number; finalMod?: number }
 ): DamageCalcResult {
   const level = attacker.level;
-  let basePower = move.power || 0;
+  let basePower = move.power ?? getVariablePower(move, attacker, defender);
 
   if (basePower === 0) {
     return zeroDamageResult();
@@ -180,6 +180,60 @@ function getWeatherModifier(moveType: PokemonType, weather: Weather): number {
     if (moveType === 'Water') return 0.5;
   }
   return 1;
+}
+
+/**
+ * Calculate base power for variable-power moves (Heavy Slam, Low Kick, Gyro Ball, etc.)
+ */
+function getVariablePower(move: MoveData, attacker: BattlePokemon, defender: BattlePokemon): number {
+  const moveId = move.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  switch (moveId) {
+    // Power based on user weight / target weight ratio
+    case 'heavyslam':
+    case 'heatcrash': {
+      const ratio = (attacker.species.weightkg || 1) / (defender.species.weightkg || 1);
+      if (ratio >= 5) return 120;
+      if (ratio >= 4) return 100;
+      if (ratio >= 3) return 80;
+      if (ratio >= 2) return 60;
+      return 40;
+    }
+
+    // Power based on target's weight
+    case 'lowkick':
+    case 'grassknot': {
+      const weight = defender.species.weightkg || 1;
+      if (weight >= 200) return 120;
+      if (weight >= 100) return 100;
+      if (weight >= 50) return 80;
+      if (weight >= 25) return 60;
+      if (weight >= 10) return 40;
+      return 20;
+    }
+
+    // Power based on target speed / user speed (capped at 150)
+    case 'gyroball': {
+      const userSpeed = Math.max(1, attacker.stats.spe * getStatStageMultiplier(attacker.boosts.spe));
+      const targetSpeed = Math.max(1, defender.stats.spe * getStatStageMultiplier(defender.boosts.spe));
+      return Math.min(150, Math.floor(25 * targetSpeed / userSpeed) + 1);
+    }
+
+    // Power based on user speed / target speed (capped at 150)
+    case 'electroball': {
+      const userSpeed = Math.max(1, attacker.stats.spe * getStatStageMultiplier(attacker.boosts.spe));
+      const targetSpeed = Math.max(1, defender.stats.spe * getStatStageMultiplier(defender.boosts.spe));
+      const ratio = userSpeed / targetSpeed;
+      if (ratio >= 4) return 150;
+      if (ratio >= 3) return 120;
+      if (ratio >= 2) return 80;
+      if (ratio >= 1) return 60;
+      return 40;
+    }
+
+    default:
+      return 0;
+  }
 }
 
 function zeroDamageResult(): DamageCalcResult {

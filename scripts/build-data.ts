@@ -305,8 +305,12 @@ async function main() {
       sideCondition: (move as any).sideCondition || null,
       boosts: move.boosts || null,
       selfBoosts: move.self?.boosts || null,
+      selfdestruct: move.selfdestruct === 'always' ? true : undefined,
     };
   }
+
+  // Fix Showdown data quirks
+  if (moves['bide']) moves['bide'].category = 'Status';
 
   console.log(`  Processed ${Object.keys(moves).length} moves`);
 
@@ -319,6 +323,36 @@ async function main() {
 
   fs.writeFileSync(path.join(outDir, 'moves.json'), JSON.stringify(moves, null, 2));
   console.log('  Wrote moves.json');
+
+  // --- Build Abilities ---
+  console.log('Processing abilities...');
+  const abilities: Record<string, any> = {};
+  for (const ability of Dex.abilities.all()) {
+    if (ability.isNonstandard && ability.isNonstandard !== 'Past') continue;
+    if (!ability.exists) continue;
+    abilities[ability.id] = {
+      id: ability.id,
+      name: ability.name,
+      shortDesc: ability.shortDesc || ability.desc || '',
+    };
+  }
+  fs.writeFileSync(path.join(outDir, 'abilities.json'), JSON.stringify(abilities, null, 2));
+  console.log(`  Wrote abilities.json (${Object.keys(abilities).length} abilities)`);
+
+  // --- Build Items ---
+  console.log('Processing items...');
+  const items: Record<string, any> = {};
+  for (const item of Dex.items.all()) {
+    if (item.isNonstandard && item.isNonstandard !== 'Past') continue;
+    if (!item.exists) continue;
+    items[item.id] = {
+      id: item.id,
+      name: item.name,
+      shortDesc: item.shortDesc || item.desc || '',
+    };
+  }
+  fs.writeFileSync(path.join(outDir, 'items.json'), JSON.stringify(items, null, 2));
+  console.log(`  Wrote items.json (${Object.keys(items).length} items)`);
 
   console.log('Done!');
 }
@@ -458,8 +492,9 @@ function buildMoveEffects(move: any): any[] {
     }
   }
   if (move.boosts) {
+    const boostTarget = move.target === 'self' ? 'self' : 'target';
     for (const [stat, stages] of Object.entries(move.boosts)) {
-      effects.push({ type: 'boost', stat, stages, chance: 100, target: 'target' });
+      effects.push({ type: 'boost', stat, stages, chance: 100, target: boostTarget });
     }
   }
   if (move.self?.boosts) {
@@ -475,6 +510,11 @@ function buildMoveEffects(move: any): any[] {
   }
   if (move.forceSwitch) {
     effects.push({ type: 'custom', handler: 'forceSwitch', chance: 100 });
+  }
+  // Healing moves: heal is [numerator, denominator] e.g. [1,2] = 50%
+  if (move.heal && Array.isArray(move.heal)) {
+    const amount = move.heal[0] / move.heal[1];
+    effects.push({ type: 'heal', amount, chance: 100 });
   }
 
   return effects;

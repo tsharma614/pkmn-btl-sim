@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PBS",
+    "name": "PBSim",
     "slug": "pbs",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,14 +9,18 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1a1a2e"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tanmay.pbs",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#1a1a2e",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -25,6 +29,13 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "serverUrl": "https://pbs-server.fly.dev",
+      "eas": {
+        "projectId": "7efe854a-1941-4674-8878-87952e308e65"
+      }
+    },
+    "owner": "tanmaysharma"
   }
 }

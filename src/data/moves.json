@@ -141,7 +141,7 @@
         "stat": "def",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense by 2.",
@@ -404,7 +404,7 @@
         "stat": "spe",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Speed by 2.",
@@ -594,7 +594,7 @@
         "stat": "spd",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Sp. Def by 2.",
@@ -1468,7 +1468,7 @@
         "stat": "spe",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Speed by 2; user loses 100 kg.",
@@ -1744,7 +1744,7 @@
         "stat": "def",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense by 2.",
@@ -2045,7 +2045,7 @@
     "id": "bide",
     "name": "Bide",
     "type": "Normal",
-    "category": "Physical",
+    "category": "Status",
     "power": null,
     "accuracy": null,
     "pp": 10,
@@ -3264,14 +3264,14 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Attack and Defense by 1.",
@@ -3504,14 +3504,14 @@
         "stat": "spa",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spd",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Sp. Atk and Sp. Def by 1.",
@@ -3707,7 +3707,7 @@
         "stat": "spd",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "+1 SpD, user's next Electric move 2x power.",
@@ -4132,35 +4132,35 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spa",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spd",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spe",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "User loses 33% of its max HP. +1 to all stats.",
@@ -4350,21 +4350,21 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "accuracy",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises user's Attack, Defense, accuracy by 1.",
@@ -4818,14 +4818,14 @@
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spd",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense and Sp. Def by 1.",
@@ -4871,7 +4871,7 @@
         "stat": "def",
         "stages": 3,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense by 3.",
@@ -5580,14 +5580,14 @@
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spd",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense and Sp. Def by 1.",
@@ -5633,7 +5633,7 @@
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense by 1.",
@@ -6382,7 +6382,7 @@
         "stat": "evasion",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's evasiveness by 1.",
@@ -6637,14 +6637,14 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spe",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Attack and Speed by 1.",
@@ -8170,7 +8170,8 @@
     "weather": null,
     "sideCondition": null,
     "boosts": null,
-    "selfBoosts": null
+    "selfBoosts": null,
+    "selfdestruct": true
   },
   "extrasensory": {
     "id": "extrasensory",
@@ -8795,21 +8796,21 @@
         "stat": "atk",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spa",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spe",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "+2 Attack, Sp. Atk, Speed for 1/2 user's max HP.",
@@ -10736,21 +10737,21 @@
         "stat": "spa",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spd",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spe",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Charges, then raises SpA, SpD, Spe by 2 turn 2.",
@@ -10825,7 +10826,8 @@
       "protect": true,
       "mirror": true,
       "defrost": false,
-      "charge": false
+      "charge": false,
+      "recharge": true
     },
     "effects": [],
     "description": "User cannot move next turn.",
@@ -11363,14 +11365,14 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spa",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises user's Attack and Sp. Atk by 1; 2 in Sun.",
@@ -11789,7 +11791,7 @@
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense by 1.",
@@ -12168,7 +12170,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 0.5,
+        "chance": 100
+      }
+    ],
     "description": "Heals the user by 50% of its max HP.",
     "critRatio": 1,
     "willCrit": false,
@@ -12606,14 +12614,14 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "accuracy",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Attack and accuracy by 1.",
@@ -12942,7 +12950,8 @@
       "protect": true,
       "mirror": true,
       "defrost": false,
-      "charge": false
+      "charge": false,
+      "recharge": true
     },
     "effects": [],
     "description": "User cannot move next turn.",
@@ -13944,7 +13953,7 @@
         "stat": "def",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense by 2.",
@@ -14994,7 +15003,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 0.25,
+        "chance": 100
+      }
+    ],
     "description": "Heals the user and its allies by 1/4 their max HP.",
     "critRatio": 1,
     "willCrit": false,
@@ -16106,7 +16121,7 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Attack by 1.",
@@ -16664,7 +16679,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 0.5,
+        "chance": 100
+      }
+    ],
     "description": "Heals the user by 50% of its max HP.",
     "critRatio": 1,
     "willCrit": false,
@@ -16810,7 +16831,7 @@
         "stat": "evasion",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's evasiveness by 2.",
@@ -17092,7 +17113,8 @@
     "weather": null,
     "sideCondition": null,
     "boosts": null,
-    "selfBoosts": null
+    "selfBoosts": null,
+    "selfdestruct": true
   },
   "mistyterrain": {
     "id": "mistyterrain",
@@ -17707,7 +17729,7 @@
         "stat": "spa",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Sp. Atk by 2.",
@@ -18098,35 +18120,35 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spa",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spd",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spe",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises all stats by 1 (not acc/eva). Traps user.",
@@ -20871,21 +20893,21 @@
         "stat": "spa",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spd",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spe",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Sp. Atk, Sp. Def, Speed by 1.",
@@ -21290,7 +21312,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 0.5,
+        "chance": 100
+      }
+    ],
     "description": "Heals the user by 50% of its max HP.",
     "critRatio": 1,
     "willCrit": false,
@@ -21949,7 +21977,7 @@
         "stat": "spe",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Speed by 2.",
@@ -22294,7 +22322,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 0.5,
+        "chance": 100
+      }
+    ],
     "description": "Heals 50% HP. Flying-type removed 'til turn ends.",
     "critRatio": 1,
     "willCrit": false,
@@ -23241,7 +23275,8 @@
     "weather": null,
     "sideCondition": null,
     "boosts": null,
-    "selfBoosts": null
+    "selfBoosts": null,
+    "selfdestruct": true
   },
   "shadowball": {
     "id": "shadowball",
@@ -23497,7 +23532,7 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Attack by 1.",
@@ -23654,35 +23689,35 @@
         "stat": "def",
         "stages": -1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spd",
         "stages": -1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "atk",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spa",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spe",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Lowers Def, SpD by 1; raises Atk, SpA, Spe by 2.",
@@ -23766,7 +23801,7 @@
         "stat": "def",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense by 2.",
@@ -23811,14 +23846,14 @@
         "stat": "spe",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Speed by 2 and Attack by 1.",
@@ -24368,7 +24403,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 0.5,
+        "chance": 100
+      }
+    ],
     "description": "Heals the user by 50% of its max HP.",
     "critRatio": 1,
     "willCrit": false,
@@ -25132,7 +25173,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "heal",
+        "amount": 0.5,
+        "chance": 100
+      }
+    ],
     "description": "Heals the user by 50% of its max HP.",
     "critRatio": 1,
     "willCrit": false,
@@ -27479,7 +27526,7 @@
         "stat": "atk",
         "stages": 2,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Attack by 2.",
@@ -27703,7 +27750,7 @@
         "stat": "spa",
         "stages": 3,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Sp. Atk by 3.",
@@ -28248,41 +28295,6 @@
     },
     "effects": [],
     "description": "Power doubles if the user's last move failed.",
-    "critRatio": 1,
-    "willCrit": false,
-    "forceSwitch": false,
-    "selfSwitch": false,
-    "status": null,
-    "volatileStatus": null,
-    "weather": null,
-    "sideCondition": null,
-    "boosts": null,
-    "selfBoosts": null
-  },
-  "terablast": {
-    "id": "terablast",
-    "name": "Tera Blast",
-    "type": "Normal",
-    "category": "Special",
-    "power": 80,
-    "accuracy": 100,
-    "pp": 10,
-    "priority": 0,
-    "target": "normal",
-    "flags": {
-      "contact": false,
-      "sound": false,
-      "bullet": false,
-      "punch": false,
-      "bite": false,
-      "pulse": false,
-      "protect": true,
-      "mirror": true,
-      "defrost": false,
-      "charge": false
-    },
-    "effects": [],
-    "description": "If Terastallized: Phys. if Atk > SpA, type = Tera.",
     "critRatio": 1,
     "willCrit": false,
     "forceSwitch": false,
@@ -30032,21 +30044,21 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spe",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Attack, Defense, Speed by 1.",
@@ -30978,7 +30990,7 @@
         "stat": "def",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Defense by 1.",
@@ -31094,14 +31106,14 @@
         "stat": "atk",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       },
       {
         "type": "boost",
         "stat": "spa",
         "stages": 1,
         "chance": 100,
-        "target": "target"
+        "target": "self"
       }
     ],
     "description": "Raises the user's Attack and Sp. Atk by 1.",

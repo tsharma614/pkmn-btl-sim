@@ -1,0 +1,12 @@
+node_modules
+.expo
+assets
+ios
+android
+tests
+scripts
+App.tsx
+index.ts
+*.md
+.git
+.claude

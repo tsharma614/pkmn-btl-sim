@@ -86,7 +86,13 @@ export function createBattlePokemon(
     lastMoveUsed: null,
     choiceLocked: null,
     hasMovedThisTurn: false,
+    tookDamageThisTurn: false,
+    protectedLastTurn: false,
     timesHit: 0,
+    encoreTurns: 0,
+    encoreMove: null,
+    truantNextTurn: false,
+    mustRecharge: false,
   };
 
   return pokemon;
