@@ -9,6 +9,12 @@ import { clampHp, getStatStageMultiplier } from '../utils/stats';
 import { SeededRNG } from '../utils/rng';
 import { BattleLogger } from '../logging/logger';
 
+/** Translate Showdown abbreviations to our StatusCondition names */
+const STATUS_ALIASES: Record<string, string> = {
+  par: 'paralysis', slp: 'sleep', brn: 'burn',
+  frz: 'freeze', psn: 'poison', tox: 'toxic',
+};
+
 export class Battle {
   state: BattleState;
   rng: SeededRNG;
@@ -320,7 +326,7 @@ export class Battle {
 
     // Paralysis halves speed
     if (pokemon.status === 'paralysis') {
-      speed = Math.floor(speed * 0.25);
+      speed = Math.floor(speed * 0.5);
     }
 
     // Choice Scarf
@@ -876,13 +882,16 @@ export class Battle {
       if (!this.rng.chance(chance)) continue;
 
       switch (effect.type) {
-        case 'status':
+        case 'status': {
+          const rawStatus = effect.status as string;
+          const resolved = (STATUS_ALIASES[rawStatus] || rawStatus) as StatusCondition;
           if (effect.target === 'self') {
-            this.applyStatus(attacker, effect.status as StatusCondition, events);
+            this.applyStatus(attacker, resolved, events);
           } else {
-            this.applyStatus(defender, effect.status as StatusCondition, events);
+            this.applyStatus(defender, resolved, events);
           }
           break;
+        }
 
         case 'boost': {
           const target = effect.target === 'self' ? attacker : defender;

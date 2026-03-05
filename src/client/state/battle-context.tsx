@@ -18,7 +18,7 @@ const SERVER_URL = getServerUrl();
 interface BattleContextValue {
   state: BattleState;
   dispatch: React.Dispatch<BattleAction>;
-  startGame: (playerName: string, itemMode: 'competitive' | 'casual') => void;
+  startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard') => void;
   startOnlineCreate: (playerName: string, itemMode: 'competitive' | 'casual') => void;
   joinRoom: (playerName: string, itemMode: 'competitive' | 'casual', code: string) => void;
   selectLead: (index: number) => void;
@@ -51,11 +51,11 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     connectionRef.current = null;
   }, []);
 
-  const startConnection = useCallback((playerName: string, itemMode: 'competitive' | 'casual') => {
+  const startConnection = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen: number | null = null, difficulty: 'easy' | 'normal' | 'hard' = 'normal') => {
     cleanupConnection();
     dispatch({ type: 'RESET' });
     dispatch({ type: 'START_GAME', playerName, itemMode });
-    const conn = createBattleConnection(SERVER_URL, playerName, itemMode, dispatch);
+    const conn = createBattleConnection(SERVER_URL, playerName, itemMode, dispatch, maxGen, difficulty);
     activeConnection = conn;
     connectionRef.current = conn;
     conn.start();
@@ -128,9 +128,9 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     // Don't auto-connect — wait for user to start from setup screen
   }, []);
 
-  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual') => {
+  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard') => {
     mountedRef.current = false; // allow re-init
-    startConnection(playerName, itemMode);
+    startConnection(playerName, itemMode, maxGen ?? null, difficulty ?? 'normal');
     mountedRef.current = true;
   }, [startConnection]);
 
@@ -161,12 +161,10 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const playAgain = useCallback(() => {
-    const name = stateRef.current.playerName;
-    const mode = stateRef.current.itemMode;
-    mountedRef.current = false;
-    startConnection(name, mode);
-    mountedRef.current = true;
-  }, [startConnection]);
+    // Go back to setup screen so the player can change name/settings
+    cleanupConnection();
+    dispatch({ type: 'RESET' });
+  }, [cleanupConnection]);
 
   const requestRematchOnline = useCallback(() => {
     if (connectionRef.current) {

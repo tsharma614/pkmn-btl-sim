@@ -9,15 +9,28 @@ import {
 } from 'react-native';
 import { CategoryIcon } from './CategoryIcon';
 import { typeColors, colors, spacing } from '../theme';
+import { getTypeEffectiveness } from '../../data/type-chart';
 import type { OwnPokemon } from '../../server/types';
+import type { PokemonType } from '../../types';
 
 interface Props {
   active: OwnPokemon;
   onSelectMove: (index: number) => void;
   disabled: boolean;
+  opponentTypes?: PokemonType[];
 }
 
-export function MoveGrid({ active, onSelectMove, disabled }: Props) {
+function getEffBadge(move: OwnPokemon['moves'][0], opponentTypes?: PokemonType[]): { label: string; color: string } | null {
+  if (!opponentTypes || opponentTypes.length === 0) return null;
+  if (move.category === 'Status') return null;
+  const eff = getTypeEffectiveness(move.type as PokemonType, opponentTypes);
+  if (eff === 0) return { label: 'IMMUNE', color: '#e53935' };
+  if (eff >= 2) return { label: 'SE', color: '#43a047' };
+  if (eff < 1) return { label: 'NVE', color: '#757575' };
+  return null;
+}
+
+export function MoveGrid({ active, onSelectMove, disabled, opponentTypes }: Props) {
   const [tooltip, setTooltip] = useState<{
     move: OwnPokemon['moves'][0];
     index: number;
@@ -37,6 +50,7 @@ export function MoveGrid({ active, onSelectMove, disabled }: Props) {
         // Darker shade for border (multiply RGB by ~0.65)
         const borderColor = darkenColor(bg, 0.55);
         const highlightColor = lightenColor(bg, 0.25);
+        const effBadge = getEffBadge(move, opponentTypes);
 
         return (
           <TouchableOpacity
@@ -58,6 +72,13 @@ export function MoveGrid({ active, onSelectMove, disabled }: Props) {
           >
             {/* Top highlight edge */}
             <View style={[styles.topHighlight, { backgroundColor: highlightColor }]} />
+
+            {/* Effectiveness badge */}
+            {effBadge && (
+              <View style={[styles.effBadge, { backgroundColor: effBadge.color }]}>
+                <Text style={styles.effBadgeText}>{effBadge.label}</Text>
+              </View>
+            )}
 
             {/* Move name */}
             <Text style={styles.moveName} numberOfLines={1}>
@@ -195,6 +216,21 @@ const styles = StyleSheet.create({
   },
   moveBtnDisabled: {
     opacity: 0.35,
+  },
+  effBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    borderRadius: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    zIndex: 2,
+  },
+  effBadgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   moveName: {
     color: '#fff',

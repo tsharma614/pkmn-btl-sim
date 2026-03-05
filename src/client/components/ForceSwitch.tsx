@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { HpBar } from './HpBar';
 import { StatusBadge } from './StatusBadge';
 import { TypeBadge } from './TypeBadge';
+import { SwitchPreviewModal } from './SwitchPreviewModal';
 import { colors, spacing } from '../theme';
-import type { NeedsSwitchPayload } from '../../server/types';
+import type { NeedsSwitchPayload, OwnPokemon } from '../../server/types';
 
 interface Props {
   availableSwitches: NeedsSwitchPayload['availableSwitches'];
   onSelect: (pokemonIndex: number) => void;
   reason?: 'faint' | 'self_switch';
+  team?: OwnPokemon[];
+  activePokemonIndex?: number;
 }
 
-export function ForceSwitch({ availableSwitches, onSelect, reason = 'faint' }: Props) {
+export function ForceSwitch({ availableSwitches, onSelect, reason = 'faint', team, activePokemonIndex = 0 }: Props) {
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const isSelfSwitch = reason === 'self_switch';
   return (
     <View style={styles.overlay}>
@@ -29,6 +33,8 @@ export function ForceSwitch({ availableSwitches, onSelect, reason = 'faint' }: P
               key={index}
               style={styles.row}
               onPress={() => onSelect(index)}
+              onLongPress={() => team && setPreviewIndex(index)}
+              delayLongPress={300}
               activeOpacity={0.7}
             >
               <View style={styles.left}>
@@ -61,6 +67,17 @@ export function ForceSwitch({ availableSwitches, onSelect, reason = 'faint' }: P
             </TouchableOpacity>
           ))}
         </ScrollView>
+
+        {team && previewIndex !== null && (
+          <SwitchPreviewModal
+            team={team}
+            initialIndex={previewIndex}
+            activePokemonIndex={activePokemonIndex}
+            visible
+            onClose={() => setPreviewIndex(null)}
+            onSelectSwitch={(idx) => { onSelect(idx); setPreviewIndex(null); }}
+          />
+        )}
       </View>
     </View>
   );

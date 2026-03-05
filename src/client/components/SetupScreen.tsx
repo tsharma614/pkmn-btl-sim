@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,13 +9,16 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
+import { getWinLoss } from '../utils/battle-history';
 import { PokemonSprite } from './PokemonSprite';
 import { colors, spacing } from '../theme';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
+export type Difficulty = 'easy' | 'normal' | 'hard';
+
 interface Props {
-  onStart: (playerName: string, itemMode: 'competitive' | 'casual') => void;
+  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty) => void;
   onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual') => void;
 }
 
@@ -72,6 +75,13 @@ function PokeballLogo() {
 export function SetupScreen({ onStart, onPlayOnline }: Props) {
   const [name, setName] = useState('');
   const [itemMode, setItemMode] = useState<'competitive' | 'casual'>('competitive');
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
+  const [classicMode, setClassicMode] = useState(false);
+  const [record, setRecord] = useState<{ wins: number; losses: number } | null>(null);
+
+  useEffect(() => {
+    getWinLoss().then(setRecord);
+  }, []);
 
   const displayName = name.trim() || 'Player';
 
@@ -97,6 +107,9 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
           <PokeballLogo />
           <Text style={styles.title}>PBS</Text>
           <Text style={styles.subtitle}>Pokemon Battle Simulator</Text>
+          {record && (record.wins > 0 || record.losses > 0) && (
+            <Text style={styles.recordText}>Record: {record.wins}W - {record.losses}L</Text>
+          )}
         </View>
 
         {/* Name input */}
@@ -156,10 +169,51 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
           </Text>
         </View>
 
+        {/* Difficulty toggle */}
+        <View style={styles.section}>
+          <Text style={styles.label}>CPU Difficulty</Text>
+          <View style={styles.toggleRow}>
+            {(['easy', 'normal', 'hard'] as Difficulty[]).map(d => (
+              <TouchableOpacity
+                key={d}
+                style={[styles.toggleBtn, difficulty === d && styles.toggleBtnActive]}
+                onPress={() => setDifficulty(d)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.toggleText, difficulty === d && styles.toggleTextActive]}>
+                  {d.charAt(0).toUpperCase() + d.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={styles.modeDesc}>
+            {difficulty === 'easy'
+              ? 'Bot picks moves randomly.'
+              : difficulty === 'normal'
+              ? 'Smart with some randomness.'
+              : 'Plays optimally.'}
+          </Text>
+        </View>
+
+        {/* Classic mode toggle */}
+        <TouchableOpacity
+          style={styles.checkboxRow}
+          onPress={() => setClassicMode(!classicMode)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.checkbox, classicMode && styles.checkboxChecked]}>
+            {classicMode && <Text style={styles.checkmark}>{'✓'}</Text>}
+          </View>
+          <View style={styles.checkboxTextWrap}>
+            <Text style={styles.checkboxLabel}>Classic Mode</Text>
+            <Text style={styles.checkboxDesc}>Gen 1-4 Pokemon only (Diamond/Pearl and earlier)</Text>
+          </View>
+        </TouchableOpacity>
+
         {/* Buttons */}
         <TouchableOpacity
           style={styles.playNowBtn}
-          onPress={() => onStart(displayName, itemMode)}
+          onPress={() => onStart(displayName, itemMode, classicMode ? 4 : null, difficulty)}
           activeOpacity={0.7}
         >
           <Text style={styles.playNowText}>PLAY NOW</Text>
@@ -259,6 +313,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     letterSpacing: 1,
   },
+  recordText: {
+    fontSize: 14,
+    color: colors.accent,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
   section: {
     marginBottom: spacing.xl,
   },
@@ -310,6 +371,46 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: spacing.sm,
     lineHeight: 16,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  checkboxChecked: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '900',
+    marginTop: -1,
+  },
+  checkboxTextWrap: {
+    flex: 1,
+  },
+  checkboxLabel: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  checkboxDesc: {
+    color: colors.textDim,
+    fontSize: 11,
+    marginTop: 1,
   },
   playNowBtn: {
     backgroundColor: colors.accent,

@@ -4,6 +4,7 @@ import { MoveGrid } from './MoveGrid';
 import { SwitchList } from './SwitchList';
 import { colors, spacing } from '../theme';
 import { useBattle } from '../state/battle-context';
+import type { PokemonType } from '../../types';
 
 interface Props {
   disabled: boolean;
@@ -16,6 +17,7 @@ export function ActionPanel({ disabled }: Props) {
   if (!yourState) return null;
 
   const active = yourState.team[yourState.activePokemonIndex];
+  const opponentTypes = (state.opponentVisible?.activePokemon?.species.types ?? []) as PokemonType[];
 
   // Check if must switch (all moves unusable)
   const usableMoves = active.moves.filter(
@@ -81,6 +83,7 @@ export function ActionPanel({ disabled }: Props) {
           active={active}
           onSelectMove={selectMove}
           disabled={disabled}
+          opponentTypes={opponentTypes}
         />
       ) : (
         <SwitchList

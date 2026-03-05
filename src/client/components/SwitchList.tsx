@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { HpBar } from './HpBar';
 import { StatusBadge } from './StatusBadge';
 import { TypeBadge } from './TypeBadge';
+import { SwitchPreviewModal } from './SwitchPreviewModal';
 import { colors, spacing } from '../theme';
 import type { OwnPokemon } from '../../server/types';
 
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export function SwitchList({ team, activePokemonIndex, onSelectSwitch, disabled }: Props) {
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {team.map((pokemon, i) => {
@@ -30,6 +33,8 @@ export function SwitchList({ team, activePokemonIndex, onSelectSwitch, disabled 
               isFainted && styles.rowFainted,
             ]}
             onPress={() => onSelectSwitch(i)}
+            onLongPress={() => setPreviewIndex(i)}
+            delayLongPress={300}
             disabled={isDisabled}
             activeOpacity={0.7}
           >
@@ -61,6 +66,17 @@ export function SwitchList({ team, activePokemonIndex, onSelectSwitch, disabled 
           </TouchableOpacity>
         );
       })}
+
+      {previewIndex !== null && (
+        <SwitchPreviewModal
+          team={team}
+          initialIndex={previewIndex}
+          activePokemonIndex={activePokemonIndex}
+          visible
+          onClose={() => setPreviewIndex(null)}
+          onSelectSwitch={onSelectSwitch}
+        />
+      )}
     </ScrollView>
   );
 }

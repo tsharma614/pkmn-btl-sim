@@ -330,6 +330,8 @@ export function BattleScreen() {
           availableSwitches={state.availableSwitches}
           onSelect={selectForceSwitch}
           reason={state.switchReason}
+          team={state.yourState.team}
+          activePokemonIndex={state.yourState.activePokemonIndex}
         />
       )}
 

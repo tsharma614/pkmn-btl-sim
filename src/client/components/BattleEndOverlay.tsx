@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share } from 'react-native';
+import { saveBattleResult } from '../utils/battle-history';
 import { colors, spacing } from '../theme';
 import { HpBar } from './HpBar';
 import { PokemonSprite } from './PokemonSprite';
@@ -176,6 +177,19 @@ function buildShareMessage(
 
 export function BattleEndOverlay({ data, playerName, opponentName, stats, gameMode, onPlayAgain, onExitToMenu }: Props) {
   const isWinner = data.winner === playerName;
+  const savedRef = useRef(false);
+
+  useEffect(() => {
+    if (savedRef.current) return;
+    savedRef.current = true;
+    const pokemonLeft = data.finalState.yourTeam.filter(p => p.isAlive).length;
+    saveBattleResult({
+      date: new Date().toISOString(),
+      opponent: opponentName,
+      result: isWinner ? 'win' : 'loss',
+      pokemonLeft,
+    });
+  }, []);
   const hasTeamData = data.finalState.yourTeam.length > 0;
   const mvp = getMVP(stats, data.finalState.yourTeam);
   const awards = getAwards(isWinner, stats, data.finalState.yourTeam);

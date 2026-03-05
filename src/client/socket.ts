@@ -44,14 +44,45 @@ const SOCKET_OPTS = {
   autoConnect: false,
 };
 
+export type BotDifficulty = 'easy' | 'normal' | 'hard';
+
 // --- Bot state (module-level, not React state) ---
 let botState: TurnResultPayload['yourState'] | null = null;
 let botOpponent: VisiblePokemon | null = null;
+let botPendingForceSwitch = false;
+let botDifficulty: BotDifficulty = 'normal';
+
+function pickEasyAction(
+  state: TurnResultPayload['yourState'],
+): { type: 'move' | 'switch'; index: number } {
+  const active = state.team[state.activePokemonIndex];
+  const usableMoves = active.moves
+    .map((m, i) => ({ ...m, idx: i }))
+    .filter(m => m.currentPp > 0 && !m.disabled &&
+      !(active.choiceLocked && m.name !== active.choiceLocked));
+  if (usableMoves.length === 0) {
+    const switches = state.team
+      .map((p, i) => ({ alive: p.isAlive, idx: i }))
+      .filter(s => s.idx !== state.activePokemonIndex && s.alive);
+    if (switches.length > 0) {
+      return { type: 'switch', index: switches[Math.floor(Math.random() * switches.length)].idx };
+    }
+    return { type: 'move', index: 0 };
+  }
+  const pick = usableMoves[Math.floor(Math.random() * usableMoves.length)];
+  return { type: 'move', index: pick.idx };
+}
 
 function pickSmartAction(
   state: TurnResultPayload['yourState'],
   opponent: VisiblePokemon | null,
 ): { type: 'move' | 'switch'; index: number } {
+  // Easy difficulty: random move, never switch
+  if (botDifficulty === 'easy') {
+    return pickEasyAction(state);
+  }
+
+  const isHard = botDifficulty === 'hard';
   const active = state.team[state.activePokemonIndex];
   const oppTypes = (opponent?.species.types ?? []) as PokemonType[];
 
@@ -156,8 +187,10 @@ function pickSmartAction(
       }
     }
 
-    // Small random factor to prevent pure determinism
-    score += Math.random() * 15;
+    // Random factor: none for hard, normal amount for normal
+    if (!isHard) {
+      score += Math.random() * 15;
+    }
 
     return { ...m, score };
   });
@@ -166,13 +199,28 @@ function pickSmartAction(
 
   // Consider switching if all moves are bad (immune/resisted)
   const bestScore = scoredMoves[0].score;
-  if (bestScore < 20 && switches.length > 0 && Math.random() < 0.6) {
+  const switchThreshold = isHard ? 0.8 : 0.6;
+  if (bestScore < 20 && switches.length > 0 && Math.random() < switchThreshold) {
     return pickBestSwitch(state, switches, oppTypes);
+  }
+
+  // Hard mode: switch on type disadvantage more aggressively
+  if (isHard && switches.length > 0 && oppTypes.length > 0) {
+    const botTypes = active.species.types as PokemonType[];
+    let disadvantage = false;
+    for (const oppType of oppTypes) {
+      const eff = getTypeEffectiveness(oppType, botTypes);
+      if (eff > 1) { disadvantage = true; break; }
+    }
+    if (disadvantage && bestScore < 80 && Math.random() < 0.5) {
+      return pickBestSwitch(state, switches, oppTypes);
+    }
   }
 
   // Small random switch chance when at low HP
   const hpPct = active.currentHp / active.maxHp;
-  if (switches.length > 0 && hpPct < 0.25 && Math.random() < 0.15) {
+  const lowHpSwitchChance = isHard ? 0.3 : 0.15;
+  if (switches.length > 0 && hpPct < 0.25 && Math.random() < lowHpSwitchChance) {
     return pickBestSwitch(state, switches, oppTypes);
   }
 
@@ -313,7 +361,10 @@ export function createBattleConnection(
   playerName: string,
   itemMode: 'competitive' | 'casual',
   dispatch: (action: any) => void,
+  maxGen: number | null = null,
+  difficulty: BotDifficulty = 'normal',
 ): BattleConnection {
+  botDifficulty = difficulty;
   const humanSocket = io(serverUrl, SOCKET_OPTS) as unknown as ClientSocket;
   const botSocket = io(serverUrl, SOCKET_OPTS) as unknown as ClientSocket;
 
@@ -375,13 +426,48 @@ export function createBattleConnection(
   botSocket.on('turn_result', (payload: TurnResultPayload) => {
     botState = payload.yourState;
     botOpponent = payload.opponentVisible?.activePokemon ?? null;
+    // If the force switch was resolved, clear the flag
+    if (botPendingForceSwitch && payload.events.some(e => e.type === 'switch' || e.type === 'send_out')) {
+      botPendingForceSwitch = false;
+    }
   });
 
   botSocket.on('needs_switch', (payload: NeedsSwitchPayload) => {
+    console.log(`[bot] needs_switch: reason=${payload.reason}, available=${payload.availableSwitches.length}`);
+    botPendingForceSwitch = true;
     const available = payload.availableSwitches;
-    const ranked = [...available].sort(
-      (a, b) => (b.pokemon.currentHp / b.pokemon.maxHp) - (a.pokemon.currentHp / a.pokemon.maxHp),
-    );
+    if (available.length === 0) {
+      console.warn('[bot] needs_switch but no available switches!');
+      botPendingForceSwitch = false;
+      return;
+    }
+    const oppTypes = (botOpponent?.species.types ?? []) as PokemonType[];
+    const ranked = [...available].sort((a, b) => {
+      // Hard mode: consider type matchup for force switches
+      if (botDifficulty === 'hard' && oppTypes.length > 0) {
+        let scoreA = a.pokemon.currentHp / a.pokemon.maxHp;
+        let scoreB = b.pokemon.currentHp / b.pokemon.maxHp;
+        const aTypes = a.pokemon.species.types as PokemonType[];
+        const bTypes = b.pokemon.species.types as PokemonType[];
+        for (const move of a.pokemon.moves) {
+          if (move.category !== 'Status' && move.power && move.currentPp > 0) {
+            if (getTypeEffectiveness(move.type as PokemonType, oppTypes) > 1) scoreA += 0.5;
+          }
+        }
+        for (const move of b.pokemon.moves) {
+          if (move.category !== 'Status' && move.power && move.currentPp > 0) {
+            if (getTypeEffectiveness(move.type as PokemonType, oppTypes) > 1) scoreB += 0.5;
+          }
+        }
+        for (const oppType of oppTypes) {
+          if (getTypeEffectiveness(oppType, aTypes) < 1) scoreA += 0.2;
+          if (getTypeEffectiveness(oppType, bTypes) < 1) scoreB += 0.2;
+        }
+        return scoreB - scoreA;
+      }
+      return (b.pokemon.currentHp / b.pokemon.maxHp) - (a.pokemon.currentHp / a.pokemon.maxHp);
+    });
+    console.log(`[bot] submitting force switch to index ${ranked[0].index} (${ranked[0].pokemon.species.name})`);
     botSocket.emit('submit_force_switch', { pokemonIndex: ranked[0].index });
   });
 
@@ -411,7 +497,7 @@ export function createBattleConnection(
 
     Promise.all([humanReady, botReady]).then(() => {
       dispatch({ type: 'CONNECTED' });
-      humanSocket.emit('create_room', { playerName, itemMode });
+      humanSocket.emit('create_room', { playerName, itemMode, maxGen });
     });
   };
 
@@ -435,6 +521,7 @@ export function createBattleConnection(
     botSocket.disconnect();
     botState = null;
     botOpponent = null;
+    botPendingForceSwitch = false;
   };
 
   return conn;
@@ -517,8 +604,8 @@ export function submitAction(
   action: { type: 'move' | 'switch'; index: number },
 ): void {
   connection.humanSocket.emit('submit_action', action);
-  // In CPU mode, also submit bot's action
-  if (connection.botSocket && botState) {
+  // In CPU mode, also submit bot's action (but not if bot has a pending force switch)
+  if (connection.botSocket && botState && !botPendingForceSwitch) {
     const botAction = pickSmartAction(botState, botOpponent);
     connection.botSocket.emit('submit_action', botAction);
   }
