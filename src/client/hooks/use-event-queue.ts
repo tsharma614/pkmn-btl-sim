@@ -322,8 +322,20 @@ export function formatEventMessage(event: BattleEvent): { text: string; segments
     case 'hazard_set':
       text = `${d.hazard} was set!`;
       break;
+    case 'screen_set':
+      text = `${d.screen} was set up!`;
+      break;
+    case 'screen_end':
+      text = `${d.screen} wore off!`;
+      break;
     case 'hazard_damage':
       text = `${d.pokemon} took damage from ${d.hazard}!`;
+      break;
+    case 'endure':
+      text = `${d.pokemon} endured the hit!`;
+      break;
+    case 'leech_seed':
+      text = `${d.pokemon}'s health was sapped by Leech Seed!`;
       break;
     case 'recoil':
       text = `${d.pokemon} took recoil damage!`;
@@ -369,9 +381,14 @@ export function formatEventMessage(event: BattleEvent): { text: string; segments
       const vs = d.status as string;
       if (vs === 'encore') text = `${d.pokemon} must keep using ${d.move}!`;
       else if (vs === 'confusion') text = `${d.pokemon} became confused!`;
-      else if (vs === 'leech-seed') text = `${d.pokemon} was seeded!`;
+      else if (vs === 'leechseed' || vs === 'leech-seed') text = `${d.pokemon} was seeded!`;
       else if (vs === 'taunt') text = `${d.pokemon} was taunted!`;
       else if (vs === 'curse') text = `${d.pokemon} was cursed!`;
+      else if (vs === 'yawn') text = `${d.pokemon} grew drowsy!`;
+      else if (vs === 'focusenergy') text = `${d.pokemon} is getting pumped!`;
+      else if (vs === 'ingrain') text = `${d.pokemon} planted its roots!`;
+      else if (vs === 'aquaring') text = `${d.pokemon} surrounded itself with a veil of water!`;
+      else if (vs === 'endure') text = `${d.pokemon} braced itself!`;
       else text = `${d.pokemon} was affected by ${vs}!`;
       break;
     }

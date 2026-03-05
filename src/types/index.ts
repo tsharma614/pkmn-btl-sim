@@ -139,6 +139,8 @@ export interface BattlePokemon {
   encoreMove: string | null; // move name locked by Encore
   truantNextTurn: boolean;  // Truant: skip next turn
   mustRecharge: boolean;    // Recharge: must skip next turn (Hyper Beam etc.)
+  turnsOnField: number;     // Turns since entering battle (for Fake Out, etc.)
+  itemConsumed: boolean;    // True if held item was consumed (Focus Sash, Weakness Policy, etc.)
 }
 
 export interface BattleMove {
@@ -201,6 +203,8 @@ export interface SideEffects {
   reflect: number;            // turns remaining
   lightScreen: number;        // turns remaining
   tailwind: number;           // turns remaining
+  stickyWeb: boolean;
+  auroraVeil: number;         // turns remaining
 }
 
 export interface BattleEvent {

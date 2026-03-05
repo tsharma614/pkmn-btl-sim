@@ -410,6 +410,8 @@ export function createBattleConnection(
       reflect: 0,
       lightScreen: 0,
       tailwind: 0,
+      stickyWeb: false,
+      auroraVeil: 0,
     };
     botState = {
       team: payload.yourTeam,

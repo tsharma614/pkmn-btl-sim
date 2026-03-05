@@ -23,6 +23,24 @@ export function calculateDamage(
     return zeroDamageResult();
   }
 
+  // Fixed-damage moves (Seismic Toss, Night Shade)
+  if (basePower === -1) {
+    return {
+      damage: level,
+      basePower: 0,
+      attackStat: 0,
+      defenseStat: 0,
+      stab: false,
+      typeEffectiveness: 1,
+      weatherModifier: 1,
+      abilityModifier: 1,
+      itemModifier: 1,
+      criticalHit: false,
+      randomFactor: 1,
+      finalDamage: level,
+    };
+  }
+
   // Determine attacking and defending stats
   const isPhysical = move.category === 'Physical';
   const attackStatName = isPhysical ? 'atk' : 'spa';
@@ -148,10 +166,24 @@ export function rollAccuracy(
   rng: SeededRNG,
   moveAccuracy: number | null,
   attackerAccuracyStage: number,
-  defenderEvasionStage: number
+  defenderEvasionStage: number,
+  options?: { moveName?: string; weather?: string; attackerAbility?: string }
 ): boolean {
   // Null accuracy = never misses
   if (moveAccuracy === null) return true;
+
+  // Thunder always hits in rain, 50% accuracy in sun
+  if (options?.moveName === 'Thunder' || options?.moveName === 'Hurricane') {
+    if (options?.weather === 'rain') return true;
+    if (options?.weather === 'sun') moveAccuracy = 50;
+  }
+  // Blizzard always hits in hail
+  if (options?.moveName === 'Blizzard' && options?.weather === 'hail') return true;
+
+  // Compound Eyes: 1.3x accuracy
+  if (options?.attackerAbility === 'Compound Eyes') {
+    moveAccuracy = Math.floor(moveAccuracy * 1.3);
+  }
 
   // Net accuracy stage
   const netStage = Math.max(-6, Math.min(6, attackerAccuracyStage - defenderEvasionStage));
@@ -229,6 +261,45 @@ function getVariablePower(move: MoveData, attacker: BattlePokemon, defender: Bat
       if (ratio >= 2) return 80;
       if (ratio >= 1) return 60;
       return 40;
+    }
+
+    // Facade: doubles if burned, paralyzed, or poisoned
+    case 'facade': {
+      return attacker.status ? 140 : 70;
+    }
+
+    // Flail / Reversal: power based on remaining HP %
+    case 'flail':
+    case 'reversal': {
+      const ratio = Math.floor((attacker.currentHp * 48) / attacker.maxHp);
+      if (ratio <= 1) return 200;
+      if (ratio <= 4) return 150;
+      if (ratio <= 9) return 100;
+      if (ratio <= 16) return 80;
+      if (ratio <= 32) return 40;
+      return 20;
+    }
+
+    // Seismic Toss / Night Shade: damage = user's level (handled as fixed damage)
+    case 'seismictoss':
+    case 'nightshade': {
+      return -1; // Sentinel: fixed damage handled in battle.ts
+    }
+
+    // Stored Power / Power Trip: 20 + 20 per positive boost
+    case 'storedpower':
+    case 'powertrip': {
+      let boostTotal = 0;
+      for (const stat of ['atk', 'def', 'spa', 'spd', 'spe', 'accuracy', 'evasion'] as const) {
+        const b = attacker.boosts[stat];
+        if (b > 0) boostTotal += b;
+      }
+      return 20 + 20 * boostTotal;
+    }
+
+    // Weather Ball: 50 normally, 100 in weather
+    case 'weatherball': {
+      return 50; // Type change and power doubling handled in battle.ts modifier
     }
 
     default:

@@ -15,6 +15,14 @@ const STATUS_ALIASES: Record<string, string> = {
   frz: 'freeze', psn: 'poison', tox: 'toxic',
 };
 
+/** Translate Showdown weather names to our Weather type */
+const WEATHER_ALIASES: Record<string, Weather> = {
+  RainDance: 'rain', raindance: 'rain', rain: 'rain',
+  Sandstorm: 'sandstorm', sandstorm: 'sandstorm',
+  sunnyday: 'sun', SunnyDay: 'sun', sun: 'sun',
+  snowscape: 'hail', Snowscape: 'hail', hail: 'hail',
+};
+
 export class Battle {
   state: BattleState;
   rng: SeededRNG;
@@ -88,14 +96,18 @@ export class Battle {
     const active0 = this.getActivePokemon(0);
     const active1 = this.getActivePokemon(1);
     // Track if Protect was used last turn (for consecutive failure)
-    active0.protectedLastTurn = active0.volatileStatuses.has('protect');
-    active1.protectedLastTurn = active1.volatileStatuses.has('protect');
+    active0.protectedLastTurn = active0.volatileStatuses.has('protect') || active0.volatileStatuses.has('endure');
+    active1.protectedLastTurn = active1.volatileStatuses.has('protect') || active1.volatileStatuses.has('endure');
     active0.volatileStatuses.delete('protect');
     active1.volatileStatuses.delete('protect');
+    active0.volatileStatuses.delete('endure');
+    active1.volatileStatuses.delete('endure');
     active0.hasMovedThisTurn = false;
     active1.hasMovedThisTurn = false;
     active0.tookDamageThisTurn = false;
     active1.tookDamageThisTurn = false;
+    active0.turnsOnField++;
+    active1.turnsOnField++;
 
     // Handle forfeits
     if (action1.type === 'forfeit') {
@@ -312,7 +324,22 @@ export class Battle {
     if (action.type === 'move') {
       const pokemon = this.getActivePokemon(playerIndex);
       const move = pokemon.moves[(action as MoveAction).moveIndex];
-      if (move) return move.data.priority;
+      if (move) {
+        let priority = move.data.priority;
+        // Prankster: +1 priority for Status moves
+        if (pokemon.ability === 'Prankster' && move.data.category === 'Status') {
+          priority += 1;
+        }
+        // Gale Wings: +1 priority for Flying-type moves at full HP
+        if (pokemon.ability === 'Gale Wings' && move.data.type === 'Flying' && pokemon.currentHp === pokemon.maxHp) {
+          priority += 1;
+        }
+        // Triage: +3 priority for healing moves
+        if (pokemon.ability === 'Triage' && move.data.flags.drain) {
+          priority += 3;
+        }
+        return priority;
+      }
     }
     return 0;
   }
@@ -329,9 +356,23 @@ export class Battle {
       speed = Math.floor(speed * 0.5);
     }
 
+    // Weather speed abilities
+    if (pokemon.ability === 'Chlorophyll' && this.state.weather === 'sun') speed = Math.floor(speed * 2);
+    if (pokemon.ability === 'Swift Swim' && this.state.weather === 'rain') speed = Math.floor(speed * 2);
+    if (pokemon.ability === 'Sand Rush' && this.state.weather === 'sandstorm') speed = Math.floor(speed * 2);
+    if (pokemon.ability === 'Slush Rush' && this.state.weather === 'hail') speed = Math.floor(speed * 2);
+    // Unburden: doubles speed when item is consumed
+    if (pokemon.ability === 'Unburden' && pokemon.itemConsumed) speed = Math.floor(speed * 2);
+
     // Choice Scarf
     if (pokemon.item === 'Choice Scarf') {
       speed = Math.floor(speed * 1.5);
+    }
+
+    // Tailwind doubles speed
+    const side = this.getSideEffects(playerIndex);
+    if (side.tailwind > 0) {
+      speed = Math.floor(speed * 2);
     }
 
     return Math.max(1, speed);
@@ -452,6 +493,17 @@ export class Battle {
       return;
     }
 
+    // Fake Out: only works on the first turn after entering battle
+    if (move.name === 'Fake Out' && attacker.turnsOnField > 1) {
+      this.addEvent(events, 'use_move', {
+        pokemon: attacker.species.name,
+        move: move.name,
+        player: playerIndex,
+      });
+      this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'not first turn' });
+      return;
+    }
+
     // Focus Punch: fails if user took damage this turn
     if (move.name === 'Focus Punch' && attacker.tookDamageThisTurn) {
       this.addEvent(events, 'use_move', {
@@ -470,7 +522,11 @@ export class Battle {
     });
 
     // Accuracy check
-    if (!rollAccuracy(this.rng, move.accuracy, attacker.boosts.accuracy, defender.boosts.evasion)) {
+    if (!rollAccuracy(this.rng, move.accuracy, attacker.boosts.accuracy, defender.boosts.evasion, {
+      moveName: move.name,
+      weather: this.state.weather,
+      attackerAbility: attacker.ability,
+    })) {
       this.addEvent(events, 'miss', { pokemon: attacker.species.name, move: move.name });
       return;
     }
@@ -512,6 +568,35 @@ export class Battle {
       this.executeStatusMove(attacker, defender, move, playerIndex, opponentIndex, events);
     } else {
       this.executeDamagingMove(attacker, defender, move, playerIndex, opponentIndex, isStruggle, events);
+    }
+
+    // Rapid Spin: clear hazards and +1 Speed on hit
+    if (move.name === 'Rapid Spin' && attacker.isAlive) {
+      const side = this.getSideEffects(playerIndex);
+      let cleared = false;
+      if (side.stealthRock) { side.stealthRock = false; cleared = true; }
+      if (side.spikesLayers > 0) { side.spikesLayers = 0; cleared = true; }
+      if (side.toxicSpikesLayers > 0) { side.toxicSpikesLayers = 0; cleared = true; }
+      if (side.stickyWeb) { side.stickyWeb = false; cleared = true; }
+      if (cleared) {
+        this.addEvent(events, 'hazard_clear', { pokemon: attacker.species.name, move: 'Rapid Spin' });
+      }
+      // Also remove Leech Seed and partial trapping
+      attacker.volatileStatuses.delete('leechseed');
+      attacker.volatileStatuses.delete('partiallytrapped' as any);
+      this.applyBoost(attacker, 'spe', 1, events);
+    }
+
+    // Defog: clear all hazards from both sides
+    if (move.name === 'Defog') {
+      for (let i = 0; i < 2; i++) {
+        const side = this.getSideEffects(i);
+        side.stealthRock = false;
+        side.spikesLayers = 0;
+        side.toxicSpikesLayers = 0;
+        side.stickyWeb = false;
+      }
+      this.addEvent(events, 'hazard_clear', { pokemon: attacker.species.name, move: 'Defog' });
     }
 
     // Set last move used
@@ -565,6 +650,8 @@ export class Battle {
 
     // Critical hit check
     let critStage = move.critRatio !== undefined ? move.critRatio : 0;
+    // Focus Energy
+    if (attacker.volatileStatuses.has('focusenergy')) critStage += 2;
     // Super Luck
     if (attacker.ability === 'Super Luck') critStage++;
     // Scope Lens / Razor Claw
@@ -585,12 +672,34 @@ export class Battle {
       );
 
       // Cap damage at defender's remaining HP
-      const damage = Math.min(result.finalDamage, defender.currentHp);
+      let damage = Math.min(result.finalDamage, defender.currentHp);
+
+      // Focus Sash: survive at 1 HP if at full HP (single use)
+      if (damage >= defender.currentHp && defender.currentHp === defender.maxHp &&
+          defender.item === 'Focus Sash' && !defender.itemConsumed) {
+        damage = defender.currentHp - 1;
+        defender.itemConsumed = true;
+        this.addEvent(events, 'item_trigger', { pokemon: defender.species.name, item: 'Focus Sash' });
+      }
+      // Sturdy: survive at 1 HP if at full HP
+      if (damage >= defender.currentHp && defender.currentHp === defender.maxHp &&
+          defender.ability === 'Sturdy') {
+        damage = defender.currentHp - 1;
+        this.addEvent(events, 'ability_trigger', { pokemon: defender.species.name, ability: 'Sturdy' });
+      }
+
       totalDamage += damage;
 
       // Apply damage
       defender.currentHp = clampHp(defender.currentHp - damage, defender.maxHp);
-      if (damage > 0) defender.tookDamageThisTurn = true;
+      if (damage > 0) {
+        defender.tookDamageThisTurn = true;
+        // Air Balloon pops when hit
+        if (defender.item === 'Air Balloon' && !defender.itemConsumed) {
+          defender.itemConsumed = true;
+          this.addEvent(events, 'item_trigger', { pokemon: defender.species.name, item: 'Air Balloon', message: 'popped' });
+        }
+      }
 
       this.logger.debug('damage', `${attacker.species.name}'s ${move.name} dealt ${damage} to ${defender.species.name}`, {
         ...result,
@@ -613,7 +722,7 @@ export class Battle {
         });
       }
 
-      this.checkFaint(defender, opponentIndex, events);
+      this.checkFaint(defender, opponentIndex, events, true);
     }
 
     if (hits > 1) {
@@ -676,8 +785,16 @@ export class Battle {
       }
     }
 
+    // Secondary effects (status, stat drops, flinch)
+    // Sheer Force: suppress secondary effects (they got the 1.3x power boost instead)
+    const hasSecondaryEffects = move.effects && move.effects.some(e =>
+      e.type === 'status' || e.type === 'flinch' || (e.type === 'boost' && e.target !== 'self')
+    );
+    const sheerForceActive = attacker.ability === 'Sheer Force' && hasSecondaryEffects;
+
     // Life Orb recoil (skip if attacker already fainted from move recoil)
-    if (attacker.isAlive && attacker.item === 'Life Orb' && totalDamage > 0 && attacker.ability !== 'Magic Guard') {
+    // Sheer Force also suppresses Life Orb recoil when secondary effects are present
+    if (attacker.isAlive && attacker.item === 'Life Orb' && totalDamage > 0 && attacker.ability !== 'Magic Guard' && !sheerForceActive) {
       const lifeOrbRecoil = Math.max(1, Math.floor(attacker.maxHp / 10));
       attacker.currentHp = clampHp(attacker.currentHp - lifeOrbRecoil, attacker.maxHp);
       this.addEvent(events, 'item_damage', {
@@ -688,9 +805,11 @@ export class Battle {
       this.checkFaint(attacker, playerIndex, events);
     }
 
-    // Secondary effects (status, stat drops, flinch)
     // Self-targeting effects (like Close Combat's -1 Def/-1 SpD) must apply even if defender fainted
-    if (defender.isAlive) {
+    if (sheerForceActive) {
+      // Sheer Force: only apply self-targeting effects, suppress target-facing secondary effects
+      this.applySelfEffectsOnly(attacker, move, events);
+    } else if (defender.isAlive) {
       this.applyMoveEffects(attacker, defender, move, playerIndex, opponentIndex, events);
     } else {
       // Defender fainted — still apply self-effects (selfBoosts, self-status, self-heal)
@@ -700,6 +819,39 @@ export class Battle {
     // Contact-triggered abilities
     if (move.flags.contact && defender.isAlive && attacker.isAlive) {
       this.handleContactAbilities(attacker, defender, playerIndex, opponentIndex, events);
+    }
+
+    // Rocky Helmet: 1/6 max HP damage to attacker on contact
+    if (move.flags.contact && defender.isAlive && attacker.isAlive && defender.item === 'Rocky Helmet') {
+      const rhDamage = Math.max(1, Math.floor(attacker.maxHp / 6));
+      attacker.currentHp = clampHp(attacker.currentHp - rhDamage, attacker.maxHp);
+      this.addEvent(events, 'item_damage', { pokemon: attacker.species.name, item: 'Rocky Helmet', damage: rhDamage });
+      this.checkFaint(attacker, playerIndex, events);
+    }
+
+    // Weakness Policy: +2 Atk/SpA when hit super effectively (single use)
+    if (defender.isAlive && !defender.itemConsumed && defender.item === 'Weakness Policy' && totalDamage > 0) {
+      const eff = getTypeEffectiveness(move.type as PokemonType, defender.species.types as PokemonType[]);
+      if (eff > 1) {
+        defender.itemConsumed = true;
+        this.applyBoost(defender, 'atk', 2, events);
+        this.applyBoost(defender, 'spa', 2, events);
+        this.addEvent(events, 'item_trigger', { pokemon: defender.species.name, item: 'Weakness Policy' });
+      }
+    }
+
+    // Moxie: +1 Atk when KOing opponent
+    if (!defender.isAlive && attacker.isAlive && attacker.ability === 'Moxie') {
+      this.applyBoost(attacker, 'atk', 1, events);
+      this.addEvent(events, 'ability_trigger', { pokemon: attacker.species.name, ability: 'Moxie' });
+    }
+
+    // Beast Boost: +1 to highest stat when KOing opponent
+    if (!defender.isAlive && attacker.isAlive && attacker.ability === 'Beast Boost') {
+      const stats = attacker.stats;
+      const highest = (['atk', 'def', 'spa', 'spd', 'spe'] as const).reduce((a, b) => stats[a] >= stats[b] ? a : b);
+      this.applyBoost(attacker, highest, 1, events);
+      this.addEvent(events, 'ability_trigger', { pokemon: attacker.species.name, ability: 'Beast Boost' });
     }
   }
 
@@ -714,8 +866,8 @@ export class Battle {
     // Protect-like moves
     const protectMoves = ['Protect', 'Detect', 'Baneful Bunker', 'King\'s Shield', 'Spiky Shield', 'Obstruct', 'Silk Trap'];
     if (protectMoves.includes(move.name)) {
-      // Fails if used last turn consecutively
-      if (attacker.protectedLastTurn) {
+      // Consecutive use: 1/3 chance each time (stacks multiplicatively)
+      if (attacker.protectedLastTurn && !this.rng.chance(33)) {
         this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'consecutive use' });
         return;
       }
@@ -899,13 +1051,20 @@ export class Battle {
           break;
         }
 
-        case 'weather':
-          this.setWeather(effect.weather as Weather, events);
+        case 'weather': {
+          const rawWeather = effect.weather as string;
+          const resolvedWeather = WEATHER_ALIASES[rawWeather] || rawWeather as Weather;
+          this.setWeather(resolvedWeather, events);
           break;
+        }
 
-        case 'hazard':
-          this.applyHazard(opponentIndex, effect.hazard as string, events);
+        case 'hazard': {
+          // Screens/Tailwind/Aurora Veil go on the user's side; entry hazards go on opponent's
+          const selfSideHazards = ['reflect', 'lightscreen', 'tailwind', 'auroraveil', 'safeguard', 'mist', 'quickguard', 'wideguard', 'craftyshield', 'matblock', 'luckychant'];
+          const hazardSide = selfSideHazards.includes(effect.hazard as string) ? playerIndex : opponentIndex;
+          this.applyHazard(hazardSide, effect.hazard as string, events);
           break;
+        }
 
         case 'flinch':
           if (!defender.hasMovedThisTurn) {
@@ -1019,20 +1178,54 @@ export class Battle {
         this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'confusion' });
         break;
       }
+      case 'leechseed':
       case 'leech-seed': {
-        if (target.volatileStatuses.has('leech-seed')) return;
+        if (target.volatileStatuses.has('leechseed')) return;
         if ((target.species.types as PokemonType[]).includes('Grass')) {
           this.addEvent(events, 'immune', { target: target.species.name, move: move.name, reason: 'Grass type' });
           return;
         }
-        target.volatileStatuses.add('leech-seed');
-        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'leech-seed' });
+        target.volatileStatuses.add('leechseed');
+        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'leechseed' });
         break;
       }
       case 'taunt': {
         if (target.volatileStatuses.has('taunt')) return;
         target.volatileStatuses.add('taunt');
         this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'taunt' });
+        break;
+      }
+      case 'yawn': {
+        if (target.volatileStatuses.has('yawn') || target.status !== null) return;
+        target.volatileStatuses.add('yawn');
+        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'yawn' });
+        break;
+      }
+      case 'focusenergy': {
+        if (target.volatileStatuses.has('focusenergy')) return;
+        target.volatileStatuses.add('focusenergy');
+        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'focusenergy' });
+        break;
+      }
+      case 'endure': {
+        if (attacker.protectedLastTurn) {
+          this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'consecutive use' });
+          return;
+        }
+        attacker.volatileStatuses.add('endure');
+        this.addEvent(events, 'volatile_status', { pokemon: attacker.species.name, status: 'endure' });
+        break;
+      }
+      case 'ingrain': {
+        if (target.volatileStatuses.has('ingrain')) return;
+        target.volatileStatuses.add('ingrain');
+        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'ingrain' });
+        break;
+      }
+      case 'aquaring': {
+        if (target.volatileStatuses.has('aquaring')) return;
+        target.volatileStatuses.add('aquaring');
+        this.addEvent(events, 'volatile_status', { pokemon: target.species.name, status: 'aquaring' });
         break;
       }
       default: {
@@ -1093,8 +1286,11 @@ export class Battle {
     pokemon: BattlePokemon,
     stat: BoostableStat,
     stages: number,
-    events: BattleEvent[]
+    events: BattleEvent[],
+    fromOpponent: boolean = false
   ): void {
+    // Simple: doubles stat changes
+    if (pokemon.ability === 'Simple') stages = stages * 2;
     // Contrary reverses all stat changes
     if (pokemon.ability === 'Contrary') stages = -stages;
 
@@ -1118,6 +1314,17 @@ export class Battle {
       stages: actualChange,
       newStage,
     });
+
+    // Defiant: +2 Atk when a stat is lowered by an opponent
+    if (fromOpponent && actualChange < 0 && pokemon.ability === 'Defiant') {
+      this.addEvent(events, 'ability_trigger', { pokemon: pokemon.species.name, ability: 'Defiant' });
+      this.applyBoost(pokemon, 'atk', 2, events);
+    }
+    // Competitive: +2 SpA when a stat is lowered by an opponent
+    if (fromOpponent && actualChange < 0 && pokemon.ability === 'Competitive') {
+      this.addEvent(events, 'ability_trigger', { pokemon: pokemon.species.name, ability: 'Competitive' });
+      this.applyBoost(pokemon, 'spa', 2, events);
+    }
   }
 
   // --- Weather ---
@@ -1158,6 +1365,24 @@ export class Battle {
         side.lightScreen = 5;
         this.addEvent(events, 'screen_set', { side: sideIndex, screen: 'Light Screen' });
         break;
+      case 'stickyweb':
+        if (side.stickyWeb) return;
+        side.stickyWeb = true;
+        this.addEvent(events, 'hazard_set', { side: sideIndex, hazard: 'Sticky Web' });
+        break;
+      case 'tailwind':
+        side.tailwind = 4;
+        this.addEvent(events, 'screen_set', { side: sideIndex, screen: 'Tailwind' });
+        break;
+      case 'auroraveil': {
+        if (this.state.weather !== 'hail') {
+          this.addEvent(events, 'move_fail', { pokemon: 'unknown', move: 'Aurora Veil', reason: 'no hail' });
+          return;
+        }
+        side.auroraVeil = 5;
+        this.addEvent(events, 'screen_set', { side: sideIndex, screen: 'Aurora Veil' });
+        break;
+      }
     }
   }
 
@@ -1173,6 +1398,23 @@ export class Battle {
       return;
     }
 
+    // Natural Cure: cure status when switching out
+    if (oldPokemon.ability === 'Natural Cure' && oldPokemon.status) {
+      this.addEvent(events, 'ability_trigger', { pokemon: oldPokemon.species.name, ability: 'Natural Cure' });
+      this.addEvent(events, 'status_cure', { pokemon: oldPokemon.species.name, status: oldPokemon.status });
+      oldPokemon.status = null;
+    }
+
+    // Regenerator: heal 1/3 HP on switch-out
+    if (oldPokemon.ability === 'Regenerator' && oldPokemon.isAlive) {
+      const heal = Math.floor(oldPokemon.maxHp / 3);
+      const actualHeal = Math.min(heal, oldPokemon.maxHp - oldPokemon.currentHp);
+      if (actualHeal > 0) {
+        oldPokemon.currentHp = clampHp(oldPokemon.currentHp + heal, oldPokemon.maxHp);
+        this.addEvent(events, 'ability_heal', { pokemon: oldPokemon.species.name, ability: 'Regenerator', amount: actualHeal });
+      }
+    }
+
     // Clear volatile statuses on switch-out
     oldPokemon.volatileStatuses.clear();
     oldPokemon.boosts = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 };
@@ -1183,6 +1425,7 @@ export class Battle {
     oldPokemon.encoreMove = null;
     oldPokemon.truantNextTurn = false;
     oldPokemon.mustRecharge = false;
+    oldPokemon.turnsOnField = 0;
 
     if (oldPokemon.isAlive) {
       this.addEvent(events, 'switch', {
@@ -1204,6 +1447,7 @@ export class Battle {
     }
 
     player.activePokemonIndex = pokemonIndex;
+    newPokemon.turnsOnField = 0;
 
     // Apply entry hazards
     this.applyEntryHazards(playerIndex, newPokemon, events);
@@ -1213,6 +1457,9 @@ export class Battle {
   }
 
   private applyEntryHazards(playerIndex: number, pokemon: BattlePokemon, events: BattleEvent[]): void {
+    // Heavy-Duty Boots: immune to entry hazards
+    if (pokemon.item === 'Heavy-Duty Boots') return;
+
     const side = this.getSideEffects(playerIndex);
     const types = pokemon.species.types as PokemonType[];
     const isFlying = types.includes('Flying') || pokemon.ability === 'Levitate';
@@ -1245,6 +1492,16 @@ export class Battle {
       this.checkFaint(pokemon, playerIndex, events);
     }
 
+    // Sticky Web — -1 Speed on switch-in (not affected if Flying/Levitate)
+    if (side.stickyWeb && !isFlying && pokemon.isAlive) {
+      this.applyBoost(pokemon, 'spe', -1, events);
+      this.addEvent(events, 'hazard_damage', {
+        pokemon: pokemon.species.name,
+        hazard: 'Sticky Web',
+        damage: 0,
+      });
+    }
+
     // Toxic Spikes — not affected if Flying/Levitate
     if (side.toxicSpikesLayers > 0 && !isFlying && pokemon.isAlive) {
       // Poison types absorb Toxic Spikes
@@ -1273,11 +1530,11 @@ export class Battle {
     switch (pokemon.ability) {
       case 'Intimidate':
         if (opponent.isAlive) {
-          this.applyBoost(opponent, 'atk', -1, events);
           this.addEvent(events, 'ability_trigger', {
             pokemon: pokemon.species.name,
             ability: 'Intimidate',
           });
+          this.applyBoost(opponent, 'atk', -1, events, true);
         }
         break;
       case 'Drizzle':
@@ -1321,6 +1578,11 @@ export class Battle {
     // Levitate
     if (defender.ability === 'Levitate' && moveType === 'Ground') {
       this.addEvent(events, 'immune', { target: defender.species.name, move: move.name, reason: 'Levitate' });
+      return true;
+    }
+    // Air Balloon
+    if (defender.item === 'Air Balloon' && !defender.itemConsumed && moveType === 'Ground') {
+      this.addEvent(events, 'immune', { target: defender.species.name, move: move.name, reason: 'Air Balloon' });
       return true;
     }
     // Flash Fire
@@ -1427,6 +1689,18 @@ export class Battle {
       case 'Mega Launcher':
         if (move.flags.pulse) mods.powerMod = (mods.powerMod || 1) * 1.5;
         break;
+      case 'Tinted Lens':
+        if (getTypeEffectiveness(move.type as PokemonType, defender.species.types as PokemonType[]) < 1) {
+          mods.finalMod = (mods.finalMod || 1) * 2;
+        }
+        break;
+      case 'Reckless':
+        if (move.flags.recoil) mods.powerMod = (mods.powerMod || 1) * 1.2;
+        break;
+      case 'Analytic':
+        // Bonus if moving last — approximate by checking if defender already moved
+        if (defender.hasMovedThisTurn) mods.finalMod = (mods.finalMod || 1) * 1.3;
+        break;
     }
 
     // Defender ability modifiers
@@ -1441,10 +1715,12 @@ export class Battle {
         if (move.category === 'Physical') mods.defenseMod = 2;
         break;
       case 'Multiscale':
+      case 'Shadow Shield':
         if (defender.currentHp === defender.maxHp) mods.finalMod = (mods.finalMod || 1) * 0.5;
         break;
       case 'Solid Rock':
       case 'Filter':
+      case 'Prism Armor':
         if (getTypeEffectiveness(move.type as PokemonType, defender.species.types as PokemonType[]) > 1) {
           mods.finalMod = (mods.finalMod || 1) * 0.75;
         }
@@ -1462,6 +1738,18 @@ export class Battle {
       case 'Life Orb':
         mods.finalMod = (mods.finalMod || 1) * 1.3;
         break;
+      case 'Expert Belt':
+        if (getTypeEffectiveness(move.type as PokemonType, defender.species.types as PokemonType[]) > 1) {
+          mods.finalMod = (mods.finalMod || 1) * 1.2;
+        }
+        break;
+    }
+
+    // Defender item modifiers
+    switch (defender.item) {
+      case 'Assault Vest':
+        if (move.category === 'Special') mods.defenseMod = (mods.defenseMod || 1) * 1.5;
+        break;
     }
 
     // Screens
@@ -1471,6 +1759,15 @@ export class Battle {
     }
     if (move.category === 'Special' && defenderSide.lightScreen > 0) {
       mods.finalMod = (mods.finalMod || 1) * 0.5;
+    }
+    // Aurora Veil: halves both physical and special (doesn't stack with Reflect/Light Screen)
+    if (defenderSide.auroraVeil > 0) {
+      if (move.category === 'Physical' && defenderSide.reflect <= 0) {
+        mods.finalMod = (mods.finalMod || 1) * 0.5;
+      }
+      if (move.category === 'Special' && defenderSide.lightScreen <= 0) {
+        mods.finalMod = (mods.finalMod || 1) * 0.5;
+      }
     }
 
     return mods;
@@ -1559,6 +1856,18 @@ export class Battle {
           this.addEvent(events, 'screen_end', { side: i, screen: 'Light Screen' });
         }
       }
+      if (side.auroraVeil > 0) {
+        side.auroraVeil--;
+        if (side.auroraVeil === 0) {
+          this.addEvent(events, 'screen_end', { side: i, screen: 'Aurora Veil' });
+        }
+      }
+      if (side.tailwind > 0) {
+        side.tailwind--;
+        if (side.tailwind === 0) {
+          this.addEvent(events, 'screen_end', { side: i, screen: 'Tailwind' });
+        }
+      }
     }
 
     // Status damage and abilities for each Pokemon (faster first)
@@ -1620,7 +1929,7 @@ export class Battle {
       }
 
       // Leech Seed
-      if (pokemon.volatileStatuses.has('leech-seed')) {
+      if (pokemon.volatileStatuses.has('leechseed')) {
         const opponentIndex = playerIndex === 0 ? 1 : 0;
         const opponent = this.getActivePokemon(opponentIndex);
         const damage = Math.max(1, Math.floor(pokemon.maxHp / 8));
@@ -1635,6 +1944,34 @@ export class Battle {
         this.checkFaint(pokemon, playerIndex, events);
       }
 
+      // Nightmare: 1/4 max HP per turn while asleep
+      if (pokemon.volatileStatuses.has('nightmare' as any)) {
+        if (pokemon.status === 'sleep') {
+          const nightmareDmg = Math.max(1, Math.floor(pokemon.maxHp / 4));
+          pokemon.currentHp = clampHp(pokemon.currentHp - nightmareDmg, pokemon.maxHp);
+          this.addEvent(events, 'status_damage', {
+            pokemon: pokemon.species.name,
+            status: 'nightmare',
+            damage: nightmareDmg,
+          });
+          this.checkFaint(pokemon, playerIndex, events);
+        } else {
+          pokemon.volatileStatuses.delete('nightmare' as any);
+        }
+      }
+
+      // Trapping damage (Bind, Wrap, Fire Spin, etc.): 1/8 max HP per turn
+      if (pokemon.volatileStatuses.has('partiallytrapped' as any)) {
+        const trapDmg = Math.max(1, Math.floor(pokemon.maxHp / 8));
+        pokemon.currentHp = clampHp(pokemon.currentHp - trapDmg, pokemon.maxHp);
+        this.addEvent(events, 'status_damage', {
+          pokemon: pokemon.species.name,
+          status: 'trapped',
+          damage: trapDmg,
+        });
+        this.checkFaint(pokemon, playerIndex, events);
+      }
+
       // Curse damage (Ghost Curse: 1/4 max HP per turn)
       if (pokemon.volatileStatuses.has('curse' as any)) {
         const curseDmg = Math.max(1, Math.floor(pokemon.maxHp / 4));
@@ -1645,6 +1982,28 @@ export class Battle {
           damage: curseDmg,
         });
         this.checkFaint(pokemon, playerIndex, events);
+      }
+
+      // Yawn: falls asleep at end of the turn after being yawned
+      if (pokemon.volatileStatuses.has('yawn')) {
+        pokemon.volatileStatuses.delete('yawn');
+        if (pokemon.status === null) {
+          this.applyStatus(pokemon, 'sleep', events);
+        }
+      }
+
+      // Ingrain healing: 1/16 max HP per turn
+      if (pokemon.volatileStatuses.has('ingrain') && pokemon.currentHp < pokemon.maxHp) {
+        const heal = Math.max(1, Math.floor(pokemon.maxHp / 16));
+        pokemon.currentHp = clampHp(pokemon.currentHp + heal, pokemon.maxHp);
+        this.addEvent(events, 'heal', { pokemon: pokemon.species.name, amount: heal });
+      }
+
+      // Aqua Ring healing: 1/16 max HP per turn
+      if (pokemon.volatileStatuses.has('aquaring') && pokemon.currentHp < pokemon.maxHp) {
+        const heal = Math.max(1, Math.floor(pokemon.maxHp / 16));
+        pokemon.currentHp = clampHp(pokemon.currentHp + heal, pokemon.maxHp);
+        this.addEvent(events, 'heal', { pokemon: pokemon.species.name, amount: heal });
       }
 
       // Leftovers
@@ -1678,6 +2037,18 @@ export class Battle {
           });
           this.checkFaint(pokemon, playerIndex, events);
         }
+      }
+
+      // Toxic Orb: badly poison at end of turn
+      if (pokemon.item === 'Toxic Orb' && !pokemon.status) {
+        this.applyStatus(pokemon, 'toxic', events);
+        this.addEvent(events, 'item_trigger', { pokemon: pokemon.species.name, item: 'Toxic Orb' });
+      }
+
+      // Flame Orb: burn at end of turn
+      if (pokemon.item === 'Flame Orb' && !pokemon.status) {
+        this.applyStatus(pokemon, 'burn', events);
+        this.addEvent(events, 'item_trigger', { pokemon: pokemon.species.name, item: 'Flame Orb' });
       }
 
       // Speed Boost
@@ -1791,8 +2162,14 @@ export class Battle {
     return Math.max(1, damage);
   }
 
-  private checkFaint(pokemon: BattlePokemon, playerIndex: number, events: BattleEvent[]): void {
+  private checkFaint(pokemon: BattlePokemon, playerIndex: number, events: BattleEvent[], fromDirectAttack: boolean = false): void {
     if (pokemon.currentHp <= 0) {
+      // Endure: survive at 1 HP (only from direct attacks, not residual damage)
+      if (fromDirectAttack && pokemon.volatileStatuses.has('endure')) {
+        pokemon.currentHp = 1;
+        this.addEvent(events, 'endure', { pokemon: pokemon.species.name });
+        return;
+      }
       pokemon.currentHp = 0;
       pokemon.isAlive = false;
       pokemon.status = null;
@@ -1884,5 +2261,7 @@ function createEmptySideEffects(): SideEffects {
     reflect: 0,
     lightScreen: 0,
     tailwind: 0,
+    stickyWeb: false,
+    auroraVeil: 0,
   };
 }

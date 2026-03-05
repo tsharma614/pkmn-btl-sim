@@ -84,6 +84,8 @@ export interface BattleState {
   queuedPendingEvents: BattleEvent[];
   /** Battle statistics accumulated across all turns */
   battleStats: BattleStats;
+  /** Human-readable battle log lines for sharing */
+  battleLog: string[];
 }
 
 function emptyStats(): BattleStats {
@@ -137,6 +139,7 @@ export const initialState: BattleState = {
   queuedOpponentVisible: null,
   queuedPendingEvents: [],
   battleStats: emptyStats(),
+  battleLog: [],
 };
 
 export type BattleAction =
@@ -289,6 +292,116 @@ function accumulateStats(
   return stats;
 }
 
+/** Convert battle events into human-readable log lines for sharing */
+function eventsToLogLines(events: BattleEvent[]): string[] {
+  const lines: string[] = [];
+  let currentTurn = -1;
+
+  for (const event of events) {
+    const d = event.data;
+    if (event.turn !== currentTurn) {
+      currentTurn = event.turn;
+      if (currentTurn > 0) lines.push(`--- Turn ${currentTurn} ---`);
+    }
+
+    switch (event.type) {
+      case 'use_move':
+        lines.push(`${d.pokemon} used ${d.move}!`);
+        break;
+      case 'damage': {
+        const parts: string[] = [];
+        if ((d.effectiveness as number) > 1) parts.push('super effective');
+        if ((d.effectiveness as number) > 0 && (d.effectiveness as number) < 1) parts.push('not very effective');
+        if ((d.effectiveness as number) === 0) parts.push('immune');
+        if (d.isCritical) parts.push('critical hit');
+        const suffix = parts.length > 0 ? ` (${parts.join(', ')})` : '';
+        lines.push(`  ${d.target} took ${d.damage} damage${suffix} [${d.remainingHp}/${d.maxHp} HP]`);
+        break;
+      }
+      case 'miss':
+        lines.push(`  ${d.pokemon}'s ${d.move} missed!`);
+        break;
+      case 'immune':
+        lines.push(`  It doesn't affect ${d.target}...`);
+        break;
+      case 'faint':
+        lines.push(`  ${d.pokemon} fainted!`);
+        break;
+      case 'switch':
+      case 'send_out':
+        lines.push(`${d.player !== undefined ? '' : ''}${d.to || d.pokemon} was sent out!`);
+        break;
+      case 'status':
+        lines.push(`  ${d.pokemon} was ${d.status === 'burn' ? 'burned' : d.status === 'poison' ? 'poisoned' : d.status === 'paralysis' ? 'paralyzed' : d.status === 'sleep' ? 'put to sleep' : d.status === 'freeze' ? 'frozen' : d.status === 'toxic' ? 'badly poisoned' : 'afflicted with ' + d.status}!`);
+        break;
+      case 'status_damage':
+        lines.push(`  ${d.pokemon} took ${d.damage} damage from ${d.status}!`);
+        break;
+      case 'item_damage':
+        lines.push(`  ${d.pokemon} lost ${d.damage} HP from ${d.item}!`);
+        break;
+      case 'item_heal':
+        lines.push(`  ${d.pokemon} restored ${d.amount} HP with ${d.item}!`);
+        break;
+      case 'heal':
+      case 'ability_heal':
+        lines.push(`  ${d.pokemon} restored ${d.amount} HP!`);
+        break;
+      case 'boost': {
+        const dir = (d.amount as number) > 0 ? 'rose' : 'fell';
+        const stages = Math.abs(d.amount as number);
+        const intensity = stages >= 3 ? ' drastically' : stages === 2 ? ' sharply' : '';
+        lines.push(`  ${d.pokemon}'s ${d.stat}${intensity} ${dir}!`);
+        break;
+      }
+      case 'weather_set':
+        lines.push(`  The weather changed to ${d.weather}!`);
+        break;
+      case 'weather_end':
+        lines.push(`  The ${d.weather} subsided.`);
+        break;
+      case 'weather_damage':
+        lines.push(`  ${d.pokemon} took ${d.damage} damage from ${d.weather}!`);
+        break;
+      case 'protect':
+        lines.push(`  ${d.pokemon} protected itself!`);
+        break;
+      case 'protect_blocked':
+        lines.push(`  ${d.target} protected itself from ${d.move}!`);
+        break;
+      case 'cant_move':
+        lines.push(`  ${d.pokemon} can't move! (${d.reason})`);
+        break;
+      case 'recoil':
+        lines.push(`  ${d.pokemon} took ${d.damage} recoil damage!`);
+        break;
+      case 'move_fail':
+        lines.push(`  ${d.pokemon}'s ${d.move} failed! (${d.reason})`);
+        break;
+      case 'hazard_set':
+        lines.push(`  ${d.hazard} was set on ${d.side === 0 ? 'the near' : 'the far'} side!`);
+        break;
+      case 'hazard_damage':
+        lines.push(`  ${d.pokemon} took ${d.damage} damage from ${d.hazard}!`);
+        break;
+      case 'leech_seed':
+        lines.push(`  ${d.pokemon} had ${d.damage} HP drained by Leech Seed!`);
+        break;
+      case 'drain':
+        lines.push(`  ${d.pokemon} drained ${d.amount} HP!`);
+        break;
+      case 'ability':
+        lines.push(`  [${d.pokemon}'s ${d.ability}]`);
+        break;
+      // Skip purely visual events
+      default:
+        break;
+    }
+  }
+
+  return lines;
+}
+
 export function battleReducer(state: BattleState, action: BattleAction): BattleState {
   switch (action.type) {
     case 'START_GAME':
@@ -336,6 +449,21 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       };
 
     case 'BATTLE_START': {
+      // Build battle log header with team info
+      const yourTeamNames = action.payload.yourTeam.map(p =>
+        `${p.species.name} (${p.species.types.join('/')}${p.item ? ', ' + p.item : ''}, ${p.ability})`
+      );
+      const logHeader = [
+        `=== PBS Battle Log ===`,
+        `Date: ${new Date().toLocaleString()}`,
+        `Player: ${state.playerName}`,
+        `Opponent: ${state.opponentName || state.botName || 'Unknown'}`,
+        ``,
+        `Your Team:`,
+        ...yourTeamNames.map((n, i) => `  ${i + 1}. ${n}`),
+        ``,
+      ];
+
       const newState: BattleState = {
         ...state,
         phase: 'battling',
@@ -347,6 +475,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
           sideEffects: { ...EMPTY_SIDE },
         },
         turn: 1,
+        battleLog: logHeader,
       };
       // For online mode, populate opponent lead from payload
       if (action.payload.opponentLead) {
@@ -402,6 +531,9 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       const updatedStats = hasEvents
         ? accumulateStats(state.battleStats, action.payload.events, playerNames)
         : state.battleStats;
+      const updatedLog = hasEvents
+        ? [...state.battleLog, ...eventsToLogLines(action.payload.events)]
+        : state.battleLog;
 
       // If currently animating, DON'T replace pendingEvents — queue the new ones
       if (currentlyAnimating) {
@@ -418,6 +550,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
           weather: action.payload.weather,
           turn: action.payload.turn,
           battleStats: updatedStats,
+          battleLog: updatedLog,
         };
       }
 
@@ -436,6 +569,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         queuedSwitch: null,
         queuedEnd: null,
         battleStats: updatedStats,
+        battleLog: updatedLog,
       };
     }
 

@@ -13,6 +13,7 @@ interface Props {
   playerName: string;
   opponentName: string;
   stats: BattleStats;
+  battleLog: string[];
   gameMode: GameMode;
   onPlayAgain: () => void;
   onExitToMenu: () => void;
@@ -175,7 +176,64 @@ function buildShareMessage(
   return lines.join('\n');
 }
 
-export function BattleEndOverlay({ data, playerName, opponentName, stats, gameMode, onPlayAgain, onExitToMenu }: Props) {
+function buildBattleLogText(
+  playerName: string,
+  opponentName: string,
+  isWinner: boolean,
+  stats: BattleStats,
+  battleLog: string[],
+  data: BattleEndPayload,
+): string {
+  const sections: string[] = [];
+
+  // Header
+  sections.push(battleLog.filter(l => !l.startsWith('---') && !l.startsWith('  ')).length > 0
+    ? battleLog.slice(0, battleLog.indexOf('')).join('\n')
+    : `=== PBS Battle Log ===\nPlayer: ${playerName}\nOpponent: ${opponentName}`
+  );
+
+  // Opponent team (revealed at end)
+  if (data.finalState.opponentTeam.length > 0) {
+    sections.push(`Opponent Team:\n${data.finalState.opponentTeam.map((p, i) =>
+      `  ${i + 1}. ${p.species.name} (${p.species.types.join('/')}${p.item ? ', ' + p.item : ''}, ${p.ability})`
+    ).join('\n')}`);
+  }
+
+  // Result
+  sections.push(`Result: ${isWinner ? 'WIN' : 'LOSS'} in ${data.finalState.turn} turns (${data.reason})`);
+
+  // Stats summary
+  const accuracy = stats.playerMovesUsed > 0
+    ? Math.round(((stats.playerMovesUsed - stats.playerMisses) / stats.playerMovesUsed) * 100)
+    : 100;
+  sections.push([
+    `Stats:`,
+    `  Damage Dealt: ${stats.playerDamageDealt} | Damage Taken: ${stats.opponentDamageDealt}`,
+    `  KOs Scored: ${stats.playerKOs} | Pokemon Lost: ${stats.opponentKOs}`,
+    `  Moves Used: ${stats.playerMovesUsed} | Switches: ${stats.playerSwitches}`,
+    `  Accuracy: ${accuracy}% | Crits: ${stats.playerCrits}`,
+    `  Super Effective Hits: ${stats.superEffectives}`,
+    stats.biggestHitDealt ? `  Biggest Hit Dealt: ${stats.biggestHitDealt.pokemon}'s ${stats.biggestHitDealt.move} for ${stats.biggestHitDealt.damage}` : '',
+    stats.biggestHitTaken ? `  Biggest Hit Taken: ${stats.biggestHitTaken.pokemon}'s ${stats.biggestHitTaken.move} for ${stats.biggestHitTaken.damage}` : '',
+  ].filter(Boolean).join('\n'));
+
+  // Final standings
+  sections.push(`Final Standings:\n  Your Team:\n${data.finalState.yourTeam.map(p =>
+    `    ${p.species.name}: ${p.isAlive ? `${p.currentHp}/${p.maxHp} HP (${Math.round(p.currentHp / p.maxHp * 100)}%)` : 'FAINTED'}`
+  ).join('\n')}\n  Opponent Team:\n${data.finalState.opponentTeam.map(p =>
+    `    ${p.species.name}: ${p.isAlive ? `${p.currentHp}/${p.maxHp} HP (${Math.round(p.currentHp / p.maxHp * 100)}%)` : 'FAINTED'}`
+  ).join('\n')}`);
+
+  // Full battle log
+  const turnLines = battleLog.filter(l => l.startsWith('---') || l.startsWith('  ') || l.includes(' used ') || l.includes(' was sent out'));
+  if (turnLines.length > 0) {
+    sections.push(`Turn-by-Turn Log:\n${turnLines.join('\n')}`);
+  }
+
+  return sections.join('\n\n');
+}
+
+export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu }: Props) {
   const isWinner = data.winner === playerName;
   const savedRef = useRef(false);
 
@@ -208,6 +266,11 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, gameMo
       data.finalState.yourTeam,
     );
     Share.share({ message });
+  };
+
+  const handleShareLog = () => {
+    const logText = buildBattleLogText(playerName, opponentName, isWinner, stats, battleLog, data);
+    Share.share({ message: logText });
   };
 
   // Build badge list (conditional, only show if > 0)
@@ -348,10 +411,15 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, gameMo
             </View>
           )}
 
-          {/* Share button */}
-          <TouchableOpacity style={styles.shareBtn} onPress={handleShare} activeOpacity={0.7}>
-            <Text style={styles.shareBtnText}>Share</Text>
-          </TouchableOpacity>
+          {/* Share buttons */}
+          <View style={styles.shareRow}>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShare} activeOpacity={0.7}>
+              <Text style={styles.shareBtnText}>Share</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShareLog} activeOpacity={0.7}>
+              <Text style={styles.shareBtnText}>Share Battle Log</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={styles.btn} onPress={onPlayAgain} activeOpacity={0.7}>
             <Text style={styles.btnText}>
@@ -581,13 +649,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  // Share button
+  // Share buttons
+  shareRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: spacing.sm,
+  },
   shareBtn: {
     backgroundColor: colors.surfaceLight,
-    paddingHorizontal: 32,
+    paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
-    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
   },

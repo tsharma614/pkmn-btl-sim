@@ -55,7 +55,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnlineCreate, joinRoom, selectLead, selectForceSwitch, playAgain, requestRematchOnline, returnToMenu } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, playAgain, requestRematchOnline, returnToMenu } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -132,7 +132,7 @@ export function BattleScreen() {
   if (state.phase === 'setup') {
     return (
       <SafeAreaView style={styles.full}>
-        <SetupScreen onStart={startGame} onPlayOnline={startOnlineCreate} />
+        <SetupScreen onStart={startGame} onPlayOnline={startOnline} />
       </SafeAreaView>
     );
   }
@@ -156,6 +156,7 @@ export function BattleScreen() {
           opponentName={state.opponentName}
           playerName={state.playerName}
           itemMode={state.itemMode}
+          onCreateRoom={createRoom}
           onJoinRoom={joinRoom}
           onCancel={returnToMenu}
         />
@@ -342,6 +343,7 @@ export function BattleScreen() {
           playerName={state.playerName}
           opponentName={state.opponentName ?? state.botName ?? 'Opponent'}
           stats={state.battleStats}
+          battleLog={state.battleLog}
           gameMode={state.gameMode}
           onPlayAgain={state.gameMode === 'online' ? requestRematchOnline : playAgain}
           onExitToMenu={returnToMenu}

@@ -18,11 +18,12 @@ interface Props {
   opponentName: string | null;
   playerName: string;
   itemMode: 'competitive' | 'casual';
+  onCreateRoom: (playerName: string, itemMode: 'competitive' | 'casual') => void;
   onJoinRoom: (playerName: string, itemMode: 'competitive' | 'casual', code: string) => void;
   onCancel: () => void;
 }
 
-export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, onJoinRoom, onCancel }: Props) {
+export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, onCreateRoom, onJoinRoom, onCancel }: Props) {
   const [mode, setMode] = useState<'choice' | 'create' | 'join'>(roomCode ? 'create' : 'choice');
   const [joinCode, setJoinCode] = useState('');
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -121,7 +122,10 @@ export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, onJo
 
       <TouchableOpacity
         style={styles.createBtn}
-        onPress={() => setMode('create')}
+        onPress={() => {
+          setMode('create');
+          onCreateRoom(playerName, itemMode);
+        }}
         activeOpacity={0.7}
       >
         <Text style={styles.createBtnText}>CREATE ROOM</Text>

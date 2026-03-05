@@ -19,7 +19,8 @@ interface BattleContextValue {
   state: BattleState;
   dispatch: React.Dispatch<BattleAction>;
   startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard') => void;
-  startOnlineCreate: (playerName: string, itemMode: 'competitive' | 'casual') => void;
+  startOnline: (playerName: string, itemMode: 'competitive' | 'casual') => void;
+  createRoom: (playerName: string, itemMode: 'competitive' | 'casual') => void;
   joinRoom: (playerName: string, itemMode: 'competitive' | 'casual', code: string) => void;
   selectLead: (index: number) => void;
   selectMove: (moveIndex: number) => void;
@@ -69,29 +70,39 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     activeConnection = conn;
     connectionRef.current = conn;
     conn.start();
-    // Once connected, create the room
-    const waitConnect = conn.humanSocket.connected
-      ? Promise.resolve()
-      : new Promise<void>(r => conn.humanSocket.once('connect', r));
-    waitConnect.then(() => {
-      conn.startCreateRoom?.(itemMode);
-    });
+    // Don't auto-create room — let OnlineLobby show create/join choice first
   }, [cleanupConnection]);
 
+  /** Create a room on the already-connected online socket */
+  const createRoom = useCallback((playerName: string, itemMode: 'competitive' | 'casual') => {
+    const conn = connectionRef.current;
+    if (conn) {
+      conn.startCreateRoom?.(itemMode);
+    }
+  }, []);
+
+  /** Join an existing room by code — reuses current connection if available */
   const joinRoom = useCallback((playerName: string, itemMode: 'competitive' | 'casual', code: string) => {
-    cleanupConnection();
-    dispatch({ type: 'RESET' });
-    dispatch({ type: 'START_ONLINE', playerName, itemMode });
-    const conn = createOnlineConnection(SERVER_URL, playerName, itemMode, dispatch);
-    activeConnection = conn;
-    connectionRef.current = conn;
-    conn.start();
-    const waitConnect = conn.humanSocket.connected
-      ? Promise.resolve()
-      : new Promise<void>(r => conn.humanSocket.once('connect', r));
-    waitConnect.then(() => {
+    const conn = connectionRef.current;
+    if (conn && conn.gameMode === 'online') {
+      // Already connected in online mode, just join
       conn.startJoinRoom?.(code.toUpperCase(), itemMode);
-    });
+    } else {
+      // No existing connection — create one and join
+      cleanupConnection();
+      dispatch({ type: 'RESET' });
+      dispatch({ type: 'START_ONLINE', playerName, itemMode });
+      const newConn = createOnlineConnection(SERVER_URL, playerName, itemMode, dispatch);
+      activeConnection = newConn;
+      connectionRef.current = newConn;
+      newConn.start();
+      const waitConnect = newConn.humanSocket.connected
+        ? Promise.resolve()
+        : new Promise<void>(r => newConn.humanSocket.once('connect', r));
+      waitConnect.then(() => {
+        newConn.startJoinRoom?.(code.toUpperCase(), itemMode);
+      });
+    }
   }, [cleanupConnection]);
 
   // AppState listener: reconnect when app returns to foreground
@@ -183,7 +194,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         state,
         dispatch,
         startGame,
-        startOnlineCreate,
+        startOnline: startOnlineCreate,
+        createRoom,
         joinRoom,
         selectLead,
         selectMove,

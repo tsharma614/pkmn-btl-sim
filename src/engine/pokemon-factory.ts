@@ -93,6 +93,8 @@ export function createBattlePokemon(
     encoreMove: null,
     truantNextTurn: false,
     mustRecharge: false,
+    turnsOnField: 0,
+    itemConsumed: false,
   };
 
   return pokemon;

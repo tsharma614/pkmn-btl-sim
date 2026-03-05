@@ -213,7 +213,15 @@ export function registerSocketHandlers(
 
       const { pokemonIndex } = payload;
       console.log(`[${room.code}] P${playerData.index} (${playerData.player.name}) submit_force_switch → index ${pokemonIndex}`);
-      const result = room.processForceSwitch(playerData.index, pokemonIndex);
+      let result;
+      try {
+        result = room.processForceSwitch(playerData.index, pokemonIndex);
+      } catch (err) {
+        console.error(`[${room.code}] CRITICAL: processForceSwitch crashed:`, err);
+        room.forfeit(0);
+        broadcastBattleEnd(io, room, 'error');
+        return;
+      }
 
       if (result.error) {
         console.warn(`[${room.code}] Force switch error for P${playerData.index}: ${result.error}`);
@@ -443,7 +451,16 @@ function processTurnAndBroadcast(
     const p1 = b.getActivePokemon(1);
     console.log(`[${room.code}] === Turn ${b.state.turn + 1} === ${p0.species.name} (${p0.currentHp}/${p0.maxHp} ${p0.ability}${p0.status ? ' ' + p0.status : ''}) vs ${p1.species.name} (${p1.currentHp}/${p1.maxHp} ${p1.ability}${p1.status ? ' ' + p1.status : ''})`);
   }
-  const events = room.processTurn();
+  let events: import('../types').BattleEvent[];
+  try {
+    events = room.processTurn();
+  } catch (err) {
+    console.error(`[${room.code}] CRITICAL: processTurn crashed:`, err);
+    // Force end the battle so clients don't hang forever
+    room.forfeit(0);
+    broadcastBattleEnd(io, room, 'error');
+    return;
+  }
   logBattleEvents(room.code, events);
 
   // Check if battle ended — send final turn events BEFORE battle_end
