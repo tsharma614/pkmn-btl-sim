@@ -1353,6 +1353,14 @@ export class Battle {
       this.applyBoost(defender, 'atk', 1, events);
       return true;
     }
+    // Wonder Guard — only super effective moves hit
+    if (defender.ability === 'Wonder Guard' && move.category !== 'Status') {
+      const effectiveness = getTypeEffectiveness(moveType, defender.species.types as PokemonType[]);
+      if (effectiveness <= 1) {
+        this.addEvent(events, 'immune', { target: defender.species.name, move: move.name, reason: 'Wonder Guard' });
+        return true;
+      }
+    }
     // Soundproof
     if (defender.ability === 'Soundproof' && move.flags.sound) {
       this.addEvent(events, 'immune', { target: defender.species.name, move: move.name, reason: 'Soundproof' });

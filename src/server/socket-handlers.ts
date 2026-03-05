@@ -326,34 +326,96 @@ export function registerSocketHandlers(
 
 /** Log battle events to server console for debugging */
 function logBattleEvents(roomCode: string, events: import('../types').BattleEvent[]): void {
+  const tag = `[${roomCode}]`;
   for (const event of events) {
     const d = event.data;
     switch (event.type) {
       case 'use_move':
-        console.log(`  [${roomCode}] ${d.pokemon} used ${d.move}`);
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} used ${d.move}`);
         break;
-      case 'damage':
-        console.log(`  [${roomCode}] ${d.defender} took ${d.damage} dmg${d.isCritical ? ' (CRIT)' : ''}`);
+      case 'damage': {
+        const eff = d.effectiveness as number;
+        const effLabel = eff > 1 ? ' SE' : eff > 0 && eff < 1 ? ' NVE' : '';
+        console.log(`  ${tag} T${event.turn} ${d.defender} took ${d.damage} dmg (${d.remainingHp}/${d.maxHp} HP)${d.isCritical ? ' CRIT' : ''}${effLabel}`);
         break;
+      }
       case 'faint':
-        console.log(`  [${roomCode}] ${d.pokemon} fainted`);
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} FAINTED`);
         break;
       case 'status':
-        console.log(`  [${roomCode}] ${d.pokemon} → ${d.status}`);
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} → ${d.status}`);
+        break;
+      case 'status_cure':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} cured ${d.status}${d.reason ? ` (${d.reason})` : ''}`);
         break;
       case 'boost':
-        console.log(`  [${roomCode}] ${d.pokemon} ${d.stat} ${(d.stages as number) > 0 ? '+' : ''}${d.stages}`);
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} ${d.stat} ${(d.stages as number) > 0 ? '+' : ''}${d.stages}`);
         break;
       case 'switch':
-        console.log(`  [${roomCode}] ${d.from} → ${d.to}`);
+        console.log(`  ${tag} T${event.turn} P${d.player} switch: ${d.from} → ${d.to} (${d.toHp}/${d.toMaxHp} HP)`);
+        break;
+      case 'send_out':
+        console.log(`  ${tag} T${event.turn} P${d.player} sent out ${d.pokemon} (${d.currentHp}/${d.maxHp} HP)`);
         break;
       case 'miss':
-        console.log(`  [${roomCode}] ${d.pokemon} ${d.move} MISSED`);
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} ${d.move} MISSED`);
         break;
       case 'immune':
-        console.log(`  [${roomCode}] ${d.target} immune`);
+        console.log(`  ${tag} T${event.turn} ${d.target} immune to ${d.move} (${d.reason})`);
+        break;
+      case 'cant_move':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} can't move: ${d.reason}`);
+        break;
+      case 'ability_trigger':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} ability: ${d.ability}`);
+        break;
+      case 'ability_heal':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} ${d.ability} healed ${d.amount} HP`);
+        break;
+      case 'recoil':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} recoil ${d.damage} dmg`);
+        break;
+      case 'drain':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} drained ${d.amount || d.healed} HP`);
+        break;
+      case 'heal':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} healed ${d.amount} HP`);
+        break;
+      case 'item_heal':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} ${d.item} healed ${d.amount} HP`);
+        break;
+      case 'weather':
+        console.log(`  ${tag} T${event.turn} Weather: ${d.weather}${d.setter ? ` (${d.setter})` : ''}`);
+        break;
+      case 'weather_damage':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} ${d.weather} dmg: ${d.damage}`);
+        break;
+      case 'hazard_damage':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} ${d.hazard} dmg: ${d.damage}`);
+        break;
+      case 'protected':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} Protected from ${d.move}`);
+        break;
+      case 'confusion_self_hit':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} hit itself in confusion: ${d.damage} dmg`);
+        break;
+      case 'volatile_status':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} → volatile: ${d.status}`);
+        break;
+      case 'volatile_cure':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} cured volatile: ${d.status}`);
+        break;
+      case 'item_consumed':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} consumed ${d.item}`);
+        break;
+      case 'item_knocked':
+        console.log(`  ${tag} T${event.turn} ${d.pokemon} lost ${d.item} (Knock Off)`);
+        break;
+      case 'battle_end':
+        console.log(`  ${tag} T${event.turn} BATTLE END — winner: ${d.winner} reason: ${d.reason}`);
         break;
       default:
+        console.log(`  ${tag} T${event.turn} [${event.type}] ${JSON.stringify(d)}`);
         break;
     }
   }
@@ -366,6 +428,13 @@ function processTurnAndBroadcast(
   roomManager: RoomManager,
   disconnectTracker: DisconnectTracker
 ): void {
+  // Log pre-turn state
+  if (room.battle) {
+    const b = room.battle;
+    const p0 = b.getActivePokemon(0);
+    const p1 = b.getActivePokemon(1);
+    console.log(`[${room.code}] === Turn ${b.state.turn + 1} === ${p0.species.name} (${p0.currentHp}/${p0.maxHp} ${p0.ability}${p0.status ? ' ' + p0.status : ''}) vs ${p1.species.name} (${p1.currentHp}/${p1.maxHp} ${p1.ability}${p1.status ? ' ' + p1.status : ''})`);
+  }
   const events = room.processTurn();
   logBattleEvents(room.code, events);
 

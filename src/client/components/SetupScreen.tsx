@@ -22,33 +22,33 @@ interface Props {
 /** Background sprite positions — 7 rows of 3, filling the whole screen */
 const BG_SPRITES: { id: string; x: number; y: number; size: number; opacity: number }[] = [
   // Row 1 (top)
-  { id: 'mewtwo', x: -10, y: 20, size: 130, opacity: 0.12 },
-  { id: 'ceruledge', x: SCREEN_W / 2 - 55, y: 40, size: 110, opacity: 0.10 },
-  { id: 'garchomp', x: SCREEN_W - 120, y: 25, size: 120, opacity: 0.11 },
+  { id: 'mewtwo', x: -10, y: -10, size: 130, opacity: 0.12 },
+  { id: 'ceruledge', x: SCREEN_W / 2 - 55, y: 10, size: 110, opacity: 0.10 },
+  { id: 'garchomp', x: SCREEN_W - 120, y: -5, size: 120, opacity: 0.11 },
   // Row 2
-  { id: 'kyogre', x: -20, y: SCREEN_H * 0.15, size: 120, opacity: 0.10 },
-  { id: 'aggron', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.16, size: 110, opacity: 0.09 },
-  { id: 'groudon', x: SCREEN_W - 110, y: SCREEN_H * 0.15, size: 120, opacity: 0.10 },
+  { id: 'kyogre', x: -20, y: SCREEN_H * 0.11, size: 120, opacity: 0.10 },
+  { id: 'aggron', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.12, size: 110, opacity: 0.09 },
+  { id: 'groudon', x: SCREEN_W - 110, y: SCREEN_H * 0.11, size: 120, opacity: 0.10 },
   // Row 3
-  { id: 'electivire', x: -10, y: SCREEN_H * 0.29, size: 110, opacity: 0.09 },
-  { id: 'heracross', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.30, size: 100, opacity: 0.09 },
-  { id: 'roserade', x: SCREEN_W - 100, y: SCREEN_H * 0.29, size: 100, opacity: 0.08 },
+  { id: 'electivire', x: -10, y: SCREEN_H * 0.24, size: 110, opacity: 0.09 },
+  { id: 'heracross', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.25, size: 100, opacity: 0.09 },
+  { id: 'roserade', x: SCREEN_W - 100, y: SCREEN_H * 0.24, size: 100, opacity: 0.08 },
   // Row 4
-  { id: 'rhyperior', x: -15, y: SCREEN_H * 0.43, size: 120, opacity: 0.10 },
-  { id: 'metagross', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.44, size: 110, opacity: 0.09 },
-  { id: 'magmortar', x: SCREEN_W - 110, y: SCREEN_H * 0.43, size: 110, opacity: 0.10 },
+  { id: 'rhyperior', x: -15, y: SCREEN_H * 0.37, size: 120, opacity: 0.10 },
+  { id: 'metagross', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.38, size: 110, opacity: 0.09 },
+  { id: 'magmortar', x: SCREEN_W - 110, y: SCREEN_H * 0.37, size: 110, opacity: 0.10 },
   // Row 5
-  { id: 'cinderace', x: -10, y: SCREEN_H * 0.57, size: 110, opacity: 0.10 },
-  { id: 'registeel', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.58, size: 100, opacity: 0.09 },
-  { id: 'empoleon', x: SCREEN_W - 110, y: SCREEN_H * 0.57, size: 110, opacity: 0.09 },
+  { id: 'cinderace', x: -10, y: SCREEN_H * 0.50, size: 110, opacity: 0.10 },
+  { id: 'registeel', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.51, size: 100, opacity: 0.09 },
+  { id: 'empoleon', x: SCREEN_W - 110, y: SCREEN_H * 0.50, size: 110, opacity: 0.09 },
   // Row 6
-  { id: 'dragonite', x: -15, y: SCREEN_H * 0.71, size: 120, opacity: 0.10 },
-  { id: 'gliscor', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.72, size: 100, opacity: 0.09 },
-  { id: 'tyrantrum', x: SCREEN_W - 120, y: SCREEN_H * 0.71, size: 120, opacity: 0.11 },
+  { id: 'dragonite', x: -15, y: SCREEN_H * 0.63, size: 120, opacity: 0.10 },
+  { id: 'gliscor', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.64, size: 100, opacity: 0.09 },
+  { id: 'tyrantrum', x: SCREEN_W - 120, y: SCREEN_H * 0.63, size: 120, opacity: 0.11 },
   // Row 7 (bottom)
-  { id: 'gengar', x: -10, y: SCREEN_H * 0.85, size: 120, opacity: 0.11 },
-  { id: 'baxcalibur', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.86, size: 110, opacity: 0.09 },
-  { id: 'glalie', x: SCREEN_W - 100, y: SCREEN_H * 0.85, size: 100, opacity: 0.08 },
+  { id: 'gengar', x: -10, y: SCREEN_H * 0.76, size: 120, opacity: 0.11 },
+  { id: 'baxcalibur', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.77, size: 110, opacity: 0.09 },
+  { id: 'glalie', x: SCREEN_W - 100, y: SCREEN_H * 0.76, size: 100, opacity: 0.08 },
 ];
 
 function PokeballLogo() {
