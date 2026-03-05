@@ -22,6 +22,7 @@ export interface RoomPlayer {
 export interface CreateRoomPayload {
   playerName: string;
   itemMode?: 'competitive' | 'casual';
+  maxGen?: number | null;
 }
 
 export interface JoinRoomPayload {

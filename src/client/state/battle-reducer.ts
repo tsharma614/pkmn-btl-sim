@@ -529,8 +529,6 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
     case 'RESET':
       return {
         ...initialState,
-        playerName: state.playerName,
-        itemMode: state.itemMode,
         battleStats: emptyStats(),
       };
 

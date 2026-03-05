@@ -459,6 +459,21 @@ export function useEventQueue(
   const initialOpponentHpRef = useRef(initialOpponentHp);
   initialOpponentHpRef.current = initialOpponentHp;
 
+  // Clear stale overrides when the real active Pokemon changes outside of event
+  // processing (e.g., new battle started). Without this, name/sprite from the
+  // previous game's last event leaks into the next game.
+  useEffect(() => {
+    if (isProcessing) return; // don't clear mid-animation
+    if (playerNameOverride && yourPokemonName && playerNameOverride !== yourPokemonName) {
+      setPlayerNameOverride(null);
+      setPlayerSpriteOverride(null);
+    }
+    if (opponentNameOverride && opponentPokemonName && opponentNameOverride !== opponentPokemonName) {
+      setOpponentNameOverride(null);
+      setOpponentSpriteOverride(null);
+    }
+  }, [yourPokemonName, opponentPokemonName, isProcessing]);
+
   useEffect(() => {
     if (events.length === 0 || events === lastEventsRef.current) return;
     lastEventsRef.current = events;

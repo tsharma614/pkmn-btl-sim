@@ -26,6 +26,17 @@ console.log(`Team generator loaded: T1=${TIERS[1].length}, T2=${TIERS[2].length}
 
 interface TeamGeneratorOptions {
   itemMode: 'competitive' | 'casual';
+  maxGen?: number | null;
+}
+
+/** Build filtered tier pools based on maxGen (null = no filter). */
+function getFilteredTiers(maxGen: number | null): Record<Tier, PokemonSpecies[]> {
+  if (!maxGen) return TIERS;
+  const filtered: Record<Tier, PokemonSpecies[]> = { 1: [], 2: [], 3: [], 4: [] };
+  for (const tier of [1, 2, 3, 4] as Tier[]) {
+    filtered[tier] = TIERS[tier].filter(s => s.generation <= maxGen);
+  }
+  return filtered;
 }
 
 /**
@@ -36,6 +47,7 @@ export function generateTeam(
   rng: SeededRNG,
   options: TeamGeneratorOptions = { itemMode: 'competitive' }
 ): BattlePokemon[] {
+  const tiers = getFilteredTiers(options.maxGen ?? null);
   const distribution: { tier: Tier; count: number }[] = [
     { tier: 1, count: 1 },
     { tier: 2, count: 2 },
@@ -52,7 +64,7 @@ export function generateTeam(
     team = [];
 
     for (const { tier, count } of distribution) {
-      const pool = [...TIERS[tier]];
+      const pool = [...tiers[tier]];
       rng.shuffle(pool);
 
       let added = 0;

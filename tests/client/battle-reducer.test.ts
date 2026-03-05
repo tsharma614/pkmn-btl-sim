@@ -694,8 +694,8 @@ describe('battleReducer', () => {
       });
       const result = battleReducer(state, { type: 'RESET' });
       expect(result.phase).toBe('setup');
-      expect(result.playerName).toBe('Tanmay');
-      expect(result.itemMode).toBe('casual');
+      expect(result.playerName).toBe('Player'); // fully resets name
+      expect(result.itemMode).toBe('competitive'); // fully resets item mode
       expect(result.gameMode).toBe('cpu'); // reset to default
       expect(result.roomCode).toBeNull();
       expect(result.opponentName).toBeNull();
@@ -782,10 +782,10 @@ describe('battleReducer', () => {
       state = battleReducer(state, { type: 'BATTLE_END', payload: makeBattleEndPayload() });
       expect(state.phase).toBe('battle_end');
 
-      // 10. Reset
+      // 10. Reset — fully clears state including name
       state = battleReducer(state, { type: 'RESET' });
       expect(state.phase).toBe('setup');
-      expect(state.playerName).toBe('Tanmay');
+      expect(state.playerName).toBe('Player');
     });
   });
 

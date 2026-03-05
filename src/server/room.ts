@@ -23,6 +23,8 @@ export class Room {
   pendingForceSwitch: [boolean, boolean];
   /** Rematch request tracking */
   rematchRequested: [boolean, boolean];
+  /** Generation filter: only use Pokemon from gen <= maxGen (null = all gens) */
+  maxGen: number | null;
   createdAt: number;
   rng: SeededRNG;
 
@@ -36,6 +38,7 @@ export class Room {
     this.pendingActions = [null, null];
     this.pendingForceSwitch = [false, false];
     this.rematchRequested = [false, false];
+    this.maxGen = null;
     this.createdAt = Date.now();
     this.rng = new SeededRNG(seed);
   }
@@ -81,8 +84,8 @@ export class Room {
   }
 
   private generateTeams(): void {
-    this.teams[0] = generateTeam(this.rng, { itemMode: this.players[0]!.itemMode });
-    this.teams[1] = generateTeam(this.rng, { itemMode: this.players[1]!.itemMode });
+    this.teams[0] = generateTeam(this.rng, { itemMode: this.players[0]!.itemMode, maxGen: this.maxGen });
+    this.teams[1] = generateTeam(this.rng, { itemMode: this.players[1]!.itemMode, maxGen: this.maxGen });
   }
 
   selectLead(playerIndex: 0 | 1, pokemonIndex: number, itemMode: 'competitive' | 'casual'): boolean {
@@ -172,8 +175,9 @@ export class Room {
     return { valid: true };
   }
 
-  /** Returns true if both players have submitted their actions. */
+  /** Returns true if both players have submitted their actions and no force switches are pending. */
   bothActionsReady(): boolean {
+    if (this.pendingForceSwitch[0] || this.pendingForceSwitch[1]) return false;
     return this.pendingActions[0] !== null && this.pendingActions[1] !== null;
   }
 

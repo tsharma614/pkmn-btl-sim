@@ -32,13 +32,13 @@ export function registerSocketHandlers(
     console.log(`[connect] ${socket.id}`);
 
     socket.on('create_room', (payload) => {
-      const { playerName, itemMode } = payload;
+      const { playerName, itemMode, maxGen } = payload;
       if (!playerName || typeof playerName !== 'string') {
         socket.emit('error', { message: 'Player name is required' });
         return;
       }
 
-      const { room, code } = roomManager.createRoom(socket.id, playerName, itemMode || 'competitive');
+      const { room, code } = roomManager.createRoom(socket.id, playerName, itemMode || 'competitive', maxGen ?? null);
       socket.join(code);
       socket.emit('room_created', { code });
       console.log(`[room] ${playerName} created room ${code}`);
@@ -212,11 +212,18 @@ export function registerSocketHandlers(
       }
 
       const { pokemonIndex } = payload;
+      console.log(`[${room.code}] P${playerData.index} (${playerData.player.name}) submit_force_switch → index ${pokemonIndex}`);
       const result = room.processForceSwitch(playerData.index, pokemonIndex);
 
       if (result.error) {
+        console.warn(`[${room.code}] Force switch error for P${playerData.index}: ${result.error}`);
         socket.emit('error', { message: result.error });
         return;
+      }
+
+      // Log the switch events
+      if (result.events.length > 0) {
+        logBattleEvents(room.code, result.events);
       }
 
       // If this player needs to switch again (hazard KO), ask again
@@ -233,6 +240,7 @@ export function registerSocketHandlers(
 
       // If all force switches are resolved, send turn results
       if (room.allForceSwitchesResolved()) {
+        console.log(`[${room.code}] All force switches resolved, broadcasting`);
         broadcastTurnResult(io, room, result.events);
       }
     });
@@ -450,13 +458,19 @@ function processTurnAndBroadcast(
   for (let i = 0; i < 2; i++) {
     if (room.pendingForceSwitch[i as 0 | 1]) {
       anyNeedsSwitch = true;
+      const isSelf = room.battle?.needsSelfSwitch(i) ?? false;
+      console.log(`[${room.code}] P${i} needs ${isSelf ? 'self-switch (U-Turn/Volt Switch)' : 'faint switch'}`);
       const p = room.players[i as 0 | 1]!;
       const targetSocket = io.sockets.sockets.get(p.socketId);
       if (targetSocket) {
         // Send turn events first so the client sees what happened
         const turnResult = buildTurnResultPayload(room, i as 0 | 1, events);
         targetSocket.emit('turn_result', turnResult);
-        targetSocket.emit('needs_switch', buildNeedsSwitchPayload(room, i as 0 | 1));
+        const switchPayload = buildNeedsSwitchPayload(room, i as 0 | 1);
+        console.log(`[${room.code}] Sending needs_switch to P${i} (${p.name}): ${switchPayload.availableSwitches.length} available, reason=${switchPayload.reason}`);
+        targetSocket.emit('needs_switch', switchPayload);
+      } else {
+        console.warn(`[${room.code}] P${i} socket not found! socketId=${p.socketId}`);
       }
     }
   }
