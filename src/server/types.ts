@@ -23,6 +23,7 @@ export interface CreateRoomPayload {
   playerName: string;
   itemMode?: 'competitive' | 'casual';
   maxGen?: number | null;
+  legendaryMode?: boolean;
 }
 
 export interface JoinRoomPayload {
@@ -96,6 +97,7 @@ export interface OwnPokemon {
     category: string;
     power: number | null;
     accuracy: number | null;
+    priority: number;
     currentPp: number;
     maxPp: number;
     disabled: boolean;

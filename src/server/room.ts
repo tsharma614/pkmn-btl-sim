@@ -25,6 +25,8 @@ export class Room {
   rematchRequested: [boolean, boolean];
   /** Generation filter: only use Pokemon from gen <= maxGen (null = all gens) */
   maxGen: number | null;
+  /** Legendary mode: high-tier teams (mostly T1) */
+  legendaryMode: boolean;
   /** Lock to prevent double-processing turns */
   isProcessingTurn: boolean;
   /** Accumulated events from force switches (both players) */
@@ -43,6 +45,7 @@ export class Room {
     this.pendingForceSwitch = [false, false];
     this.rematchRequested = [false, false];
     this.maxGen = null;
+    this.legendaryMode = false;
     this.isProcessingTurn = false;
     this.forceSwitchEvents = [];
     this.createdAt = Date.now();
@@ -90,8 +93,8 @@ export class Room {
   }
 
   private generateTeams(): void {
-    this.teams[0] = generateTeam(this.rng, { itemMode: this.players[0]!.itemMode, maxGen: this.maxGen });
-    this.teams[1] = generateTeam(this.rng, { itemMode: this.players[1]!.itemMode, maxGen: this.maxGen });
+    this.teams[0] = generateTeam(this.rng, { itemMode: this.players[0]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode });
+    this.teams[1] = generateTeam(this.rng, { itemMode: this.players[1]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode });
   }
 
   selectLead(playerIndex: 0 | 1, pokemonIndex: number, itemMode: 'competitive' | 'casual'): boolean {

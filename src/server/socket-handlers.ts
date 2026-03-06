@@ -32,13 +32,13 @@ export function registerSocketHandlers(
     console.log(`[connect] ${socket.id}`);
 
     socket.on('create_room', (payload) => {
-      const { playerName, itemMode, maxGen } = payload;
+      const { playerName, itemMode, maxGen, legendaryMode } = payload;
       if (!playerName || typeof playerName !== 'string') {
         socket.emit('error', { message: 'Player name is required' });
         return;
       }
 
-      const { room, code } = roomManager.createRoom(socket.id, playerName, itemMode || 'competitive', maxGen ?? null);
+      const { room, code } = roomManager.createRoom(socket.id, playerName, itemMode || 'competitive', maxGen ?? null, legendaryMode ?? false);
       socket.join(code);
       socket.emit('room_created', { code });
       console.log(`[room] ${playerName} created room ${code}`);

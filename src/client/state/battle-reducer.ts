@@ -86,6 +86,8 @@ export interface BattleState {
   battleStats: BattleStats;
   /** Human-readable battle log lines for sharing */
   battleLog: string[];
+  /** True when socket is attempting to reconnect (shown as non-blocking banner) */
+  isReconnecting: boolean;
 }
 
 function emptyStats(): BattleStats {
@@ -140,6 +142,7 @@ export const initialState: BattleState = {
   queuedPendingEvents: [],
   battleStats: emptyStats(),
   battleLog: [],
+  isReconnecting: false,
 };
 
 export type BattleAction =
@@ -159,6 +162,8 @@ export type BattleAction =
   | { type: 'EVENTS_PROCESSED' }
   | { type: 'SET_ACTION_VIEW'; view: 'moves' | 'switch' }
   | { type: 'DISCONNECTED' }
+  | { type: 'RECONNECTING' }
+  | { type: 'RECONNECTED' }
   | { type: 'OPPONENT_DISCONNECTED' }
   | { type: 'RESET' };
 
@@ -169,6 +174,8 @@ const EMPTY_SIDE: SideEffects = {
   reflect: 0,
   lightScreen: 0,
   tailwind: 0,
+  stickyWeb: false,
+  auroraVeil: 0,
 };
 
 /** Are events currently being animated? */
@@ -360,9 +367,10 @@ function eventsToLogLines(events: BattleEvent[]): string[] {
         lines.push(`  ${d.pokemon} restored ${d.amount} HP!`);
         break;
       case 'boost': {
-        const dir = (d.amount as number) > 0 ? 'rose' : 'fell';
-        const stages = Math.abs(d.amount as number);
-        const intensity = stages >= 3 ? ' drastically' : stages === 2 ? ' sharply' : '';
+        const stageChange = (d.stages ?? d.amount) as number;
+        const dir = stageChange > 0 ? 'rose' : 'fell';
+        const absStages = Math.abs(stageChange);
+        const intensity = absStages >= 3 ? ' drastically' : absStages === 2 ? ' sharply' : '';
         lines.push(`  ${d.pokemon}'s ${d.stat}${intensity} ${dir}!`);
         break;
       }
@@ -659,6 +667,19 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         ...state,
         phase: 'disconnected',
         phaseBeforeDisconnect: state.phase,
+        isReconnecting: false,
+      };
+
+    case 'RECONNECTING':
+      return {
+        ...state,
+        isReconnecting: true,
+      };
+
+    case 'RECONNECTED':
+      return {
+        ...state,
+        isReconnecting: false,
       };
 
     case 'OPPONENT_DISCONNECTED':

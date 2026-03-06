@@ -25,6 +25,8 @@ const EMPTY_SIDE: SideEffects = {
   reflect: 0,
   lightScreen: 0,
   tailwind: 0,
+  stickyWeb: false,
+  auroraVeil: 0,
 };
 
 function makeMockOwnPokemon(overrides: Partial<OwnPokemon> = {}): OwnPokemon {
@@ -643,6 +645,38 @@ describe('battleReducer', () => {
     });
   });
 
+  // ========== RECONNECTING ==========
+  describe('RECONNECTING', () => {
+    it('sets isReconnecting to true', () => {
+      const state = battlingState();
+      const result = battleReducer(state, { type: 'RECONNECTING' });
+      expect(result.isReconnecting).toBe(true);
+    });
+
+    it('preserves current phase', () => {
+      const state = battlingState({ phase: 'waiting_for_turn' });
+      const result = battleReducer(state, { type: 'RECONNECTING' });
+      expect(result.phase).toBe('waiting_for_turn');
+      expect(result.isReconnecting).toBe(true);
+    });
+  });
+
+  // ========== RECONNECTED ==========
+  describe('RECONNECTED', () => {
+    it('clears isReconnecting', () => {
+      const state = battlingState({ isReconnecting: true });
+      const result = battleReducer(state, { type: 'RECONNECTED' });
+      expect(result.isReconnecting).toBe(false);
+    });
+
+    it('preserves current phase', () => {
+      const state = battlingState({ phase: 'battling', isReconnecting: true });
+      const result = battleReducer(state, { type: 'RECONNECTED' });
+      expect(result.phase).toBe('battling');
+      expect(result.isReconnecting).toBe(false);
+    });
+  });
+
   // ========== DISCONNECTED ==========
   describe('DISCONNECTED', () => {
     it('transitions to disconnected and saves previous phase', () => {
@@ -650,6 +684,14 @@ describe('battleReducer', () => {
       const result = battleReducer(state, { type: 'DISCONNECTED' });
       expect(result.phase).toBe('disconnected');
       expect(result.phaseBeforeDisconnect).toBe('battling');
+      expect(result.isReconnecting).toBe(false);
+    });
+
+    it('clears isReconnecting when fully disconnected', () => {
+      const state = battlingState({ isReconnecting: true });
+      const result = battleReducer(state, { type: 'DISCONNECTED' });
+      expect(result.phase).toBe('disconnected');
+      expect(result.isReconnecting).toBe(false);
     });
 
     it('saves waiting_for_turn as phaseBeforeDisconnect', () => {

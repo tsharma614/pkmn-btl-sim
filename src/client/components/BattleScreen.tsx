@@ -241,6 +241,14 @@ export function BattleScreen() {
           />
         )}
 
+        {/* Reconnecting banner (online only) */}
+        {state.isReconnecting && (
+          <View style={styles.reconnectBanner}>
+            <ActivityIndicator size="small" color="#fff" />
+            <Text style={styles.reconnectText}>Reconnecting...</Text>
+          </View>
+        )}
+
         {/* Turn indicator */}
         <View style={styles.turnBar}>
           <TouchableOpacity onPress={() => setShowExitConfirm(true)} hitSlop={8}>
@@ -478,6 +486,24 @@ const styles = StyleSheet.create({
   weatherTint: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
+  },
+  reconnectBanner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(230, 80, 80, 0.9)',
+    paddingVertical: 6,
+    zIndex: 100,
+    gap: 8,
+  },
+  reconnectText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
   },
   opponentPlatform: {
     width: 120,

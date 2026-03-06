@@ -14,7 +14,8 @@ export function calculateDamage(
   weather: Weather,
   rng: SeededRNG,
   isCritical: boolean,
-  additionalModifiers?: { attackMod?: number; defenseMod?: number; powerMod?: number; finalMod?: number }
+  additionalModifiers?: { attackMod?: number; defenseMod?: number; powerMod?: number; finalMod?: number },
+  defenderTypes?: PokemonType[]
 ): DamageCalcResult {
   const level = attacker.level;
   let basePower = move.power ?? getVariablePower(move, attacker, defender);
@@ -43,8 +44,17 @@ export function calculateDamage(
 
   // Determine attacking and defending stats
   const isPhysical = move.category === 'Physical';
-  const attackStatName = isPhysical ? 'atk' : 'spa';
-  const defenseStatName = isPhysical ? 'def' : 'spd';
+  let attackStatName: 'atk' | 'spa' | 'def' = isPhysical ? 'atk' : 'spa';
+  let defenseStatName: 'def' | 'spd' = isPhysical ? 'def' : 'spd';
+
+  // Body Press: uses attacker's Defense stat instead of Attack
+  if (move.name === 'Body Press') {
+    attackStatName = 'def';
+  }
+  // Psyshock, Psystrike, Secret Sword: special moves that target physical Defense
+  if (['Psyshock', 'Psystrike', 'Secret Sword'].includes(move.name)) {
+    defenseStatName = 'def';
+  }
 
   let attackStat = attacker.stats[attackStatName];
   let defenseStat = defender.stats[defenseStatName];
@@ -96,7 +106,17 @@ export function calculateDamage(
   const stabMod = stab ? 1.5 : 1;
 
   // Type effectiveness
-  const typeEff = getTypeEffectiveness(move.type, defender.species.types as PokemonType[]);
+  let typeEff = getTypeEffectiveness(move.type, defenderTypes ?? defender.species.types as PokemonType[]);
+  // Freeze-Dry: always super effective against Water types
+  if (move.name === 'Freeze-Dry') {
+    const dTypes = defenderTypes ?? defender.species.types as PokemonType[];
+    if (dTypes.includes('Water' as PokemonType)) {
+      // Recalculate: treat Water as 2x weakness, keep other type interactions
+      const nonWaterTypes = dTypes.filter(t => t !== 'Water') as PokemonType[];
+      const otherEff = nonWaterTypes.length > 0 ? getTypeEffectiveness(move.type, nonWaterTypes) : 1;
+      typeEff = otherEff * 2; // Water always 2x
+    }
+  }
 
   // Critical hit (1.5x in Gen 6+)
   const critMod = isCritical ? 1.5 : 1;

@@ -121,6 +121,18 @@ function pickSmartAction(
 
   const botTypes = active.species.types as PokemonType[];
 
+  const hpPct = active.currentHp / active.maxHp;
+  const oppHpPct = opponent ? opponent.currentHp / opponent.maxHp : 1;
+
+  // Estimate opponent's offensive threat to us
+  let oppThreat = 1; // how much SE the opponent likely has on us
+  if (isHard && oppTypes.length > 0) {
+    for (const oppType of oppTypes) {
+      const eff = getTypeEffectiveness(oppType, botTypes);
+      oppThreat *= eff;
+    }
+  }
+
   const scoredMoves = usableMoves.map(m => {
     let score = 0;
     const moveType = m.type as PokemonType;
@@ -155,35 +167,93 @@ function pickSmartAction(
       if (m.accuracy && m.accuracy < 100) {
         score *= (m.accuracy / 100);
       }
+
+      // Hard mode: priority move bonus when opponent is low HP (finish them off)
+      if (isHard && m.priority > 0 && oppHpPct < 0.25 && score > 0) {
+        score *= 1.8; // Strongly prefer priority to KO
+      }
+      // Hard mode: KO-securing bonus
+      if (isHard && oppHpPct < 0.3 && score > 0) {
+        score *= 1.3;
+      }
+      // Hard mode: prefer high-power moves over chip when opponent is healthy
+      if (isHard && oppHpPct > 0.7 && score > 0) {
+        score *= 1 + (m.power / 500); // slight bonus for raw power
+      }
     } else {
       // Status moves: moderate base score
-      // Boost moves are better early (high HP)
-      const hpPct = active.currentHp / active.maxHp;
       score = 35;
 
-      // Healing moves are great at low HP
-      if (m.name === 'Recover' || m.name === 'Roost' || m.name === 'Moonlight' ||
-          m.name === 'Synthesis' || m.name === 'Soft-Boiled' || m.name === 'Rest' ||
-          m.name === 'Slack Off' || m.name === 'Morning Sun' || m.name === 'Milk Drink') {
-        score = hpPct < 0.5 ? 120 : hpPct < 0.75 ? 60 : 10;
+      // Healing moves: much smarter thresholds for hard mode
+      const healMoves = ['Recover', 'Roost', 'Moonlight', 'Synthesis', 'Soft-Boiled',
+        'Rest', 'Slack Off', 'Morning Sun', 'Milk Drink', 'Shore Up', 'Strength Sap'];
+      if (healMoves.includes(m.name)) {
+        if (isHard) {
+          // Don't heal if opponent is very low — go for the kill instead
+          if (oppHpPct < 0.2) {
+            score = 10;
+          } else {
+            score = hpPct < 0.35 ? 150 : hpPct < 0.6 ? 100 : hpPct < 0.8 ? 40 : 5;
+          }
+        } else {
+          score = hpPct < 0.5 ? 120 : hpPct < 0.75 ? 60 : 10;
+        }
       }
 
-      // Setup moves are better at high HP
-      const setupMoves = ['Swords Dance', 'Nasty Plot', 'Calm Mind', 'Dragon Dance', 'Bulk Up',
-        'Curse', 'Iron Defense', 'Amnesia', 'Agility', 'Shell Smash', 'Quiver Dance',
-        'Coil', 'Shift Gear', 'Work Up', 'Hone Claws', 'Tail Glow'];
-      if (setupMoves.includes(m.name)) {
-        score = hpPct > 0.6 ? 70 : 25;
+      // Setup moves: consider current boost level
+      const setupMoves: Record<string, { stat: string; stages: number }> = {
+        'Swords Dance': { stat: 'atk', stages: 2 }, 'Nasty Plot': { stat: 'spa', stages: 2 },
+        'Dragon Dance': { stat: 'atk', stages: 1 }, 'Calm Mind': { stat: 'spa', stages: 1 },
+        'Bulk Up': { stat: 'atk', stages: 1 }, 'Quiver Dance': { stat: 'spa', stages: 1 },
+        'Shell Smash': { stat: 'atk', stages: 2 }, 'Coil': { stat: 'atk', stages: 1 },
+        'Shift Gear': { stat: 'spe', stages: 2 }, 'Tail Glow': { stat: 'spa', stages: 3 },
+        'Iron Defense': { stat: 'def', stages: 2 }, 'Amnesia': { stat: 'spd', stages: 2 },
+        'Agility': { stat: 'spe', stages: 2 }, 'Work Up': { stat: 'atk', stages: 1 },
+        'Hone Claws': { stat: 'atk', stages: 1 }, 'Curse': { stat: 'atk', stages: 1 },
+      };
+      const setupInfo = setupMoves[m.name];
+      if (setupInfo) {
+        const currentBoost = active.boosts[setupInfo.stat as keyof typeof active.boosts] || 0;
+        if (isHard) {
+          // Don't set up if opponent threatens us hard — attack or switch instead
+          if (oppThreat >= 2 && hpPct < 0.8) {
+            score = 5;
+          } else if (currentBoost >= 4) {
+            score = 5;
+          } else if (hpPct > 0.7 && oppHpPct > 0.5) {
+            score = 110 - currentBoost * 15;
+          } else if (hpPct > 0.5 && oppThreat <= 1) {
+            score = 60 - currentBoost * 10;
+          } else {
+            score = 15;
+          }
+        } else {
+          score = hpPct > 0.6 ? 70 : 25;
+        }
       }
 
-      // Hazards
+      // Hazards: higher priority for hard mode early game
       if (m.name === 'Stealth Rock' || m.name === 'Spikes' || m.name === 'Toxic Spikes') {
-        score = 65;
+        score = isHard ? 85 : 65;
       }
 
-      // Status moves targeting opponent
-      if (m.name === 'Toxic' || m.name === 'Will-O-Wisp' || m.name === 'Thunder Wave') {
-        score = opponent?.status ? 5 : 60;
+      // Status moves: don't waste on already-statused opponents
+      if (m.name === 'Toxic' || m.name === 'Will-O-Wisp' || m.name === 'Thunder Wave' ||
+          m.name === 'Sleep Powder' || m.name === 'Spore' || m.name === 'Hypnosis' ||
+          m.name === 'Stun Spore' || m.name === 'Nuzzle') {
+        if (opponent?.status) {
+          score = 5;
+        } else if (isHard) {
+          const isSleep = ['Sleep Powder', 'Spore', 'Hypnosis'].includes(m.name);
+          // Don't status if we can KO; prioritize sleep on healthy threats
+          if (oppHpPct < 0.2) {
+            score = 15; // just attack
+          } else {
+            score = isSleep ? 90 : 70;
+          }
+        } else {
+          score = 60;
+        }
       }
     }
 
@@ -199,29 +269,27 @@ function pickSmartAction(
 
   // Consider switching if all moves are bad (immune/resisted)
   const bestScore = scoredMoves[0].score;
-  const switchThreshold = isHard ? 0.8 : 0.6;
+  const switchThreshold = isHard ? 0.9 : 0.6;
   if (bestScore < 20 && switches.length > 0 && Math.random() < switchThreshold) {
-    return pickBestSwitch(state, switches, oppTypes);
+    return pickBestSwitch(state, switches, oppTypes, isHard);
   }
 
   // Hard mode: switch on type disadvantage more aggressively
   if (isHard && switches.length > 0 && oppTypes.length > 0) {
-    const botTypes = active.species.types as PokemonType[];
-    let disadvantage = false;
-    for (const oppType of oppTypes) {
-      const eff = getTypeEffectiveness(oppType, botTypes);
-      if (eff > 1) { disadvantage = true; break; }
+    // Switch if opponent has SE coverage AND we don't have a great move (score < 100)
+    if (oppThreat > 1 && bestScore < 100 && Math.random() < 0.65) {
+      return pickBestSwitch(state, switches, oppTypes, true);
     }
-    if (disadvantage && bestScore < 80 && Math.random() < 0.5) {
-      return pickBestSwitch(state, switches, oppTypes);
+    // Always switch if opponent has 4x advantage and we're not about to KO
+    if (oppThreat >= 4 && bestScore < 150) {
+      return pickBestSwitch(state, switches, oppTypes, true);
     }
   }
 
-  // Small random switch chance when at low HP
-  const hpPct = active.currentHp / active.maxHp;
-  const lowHpSwitchChance = isHard ? 0.3 : 0.15;
-  if (switches.length > 0 && hpPct < 0.25 && Math.random() < lowHpSwitchChance) {
-    return pickBestSwitch(state, switches, oppTypes);
+  // Switch at low HP — harder bot is more willing to sac-switch to save momentum
+  const lowHpSwitchChance = isHard ? 0.4 : 0.15;
+  if (switches.length > 0 && hpPct < 0.25 && bestScore < 80 && Math.random() < lowHpSwitchChance) {
+    return pickBestSwitch(state, switches, oppTypes, isHard);
   }
 
   return { type: 'move', index: scoredMoves[0].idx };
@@ -232,6 +300,7 @@ function pickBestSwitch(
   state: TurnResultPayload['yourState'],
   switches: { alive: boolean; idx: number }[],
   oppTypes: PokemonType[],
+  isHard: boolean = false,
 ): { type: 'move' | 'switch'; index: number } {
   const ranked = switches
     .map(s => {
@@ -239,20 +308,37 @@ function pickBestSwitch(
       const pTypes = p.species.types as PokemonType[];
       let score = p.currentHp / p.maxHp; // HP ratio as base
 
-      // Bonus for having super effective STAB moves
       if (oppTypes.length > 0) {
+        // Bonus for having super effective moves against opponent
         for (const move of p.moves) {
           if (move.category !== 'Status' && move.power && move.currentPp > 0) {
             const eff = getTypeEffectiveness(move.type as PokemonType, oppTypes);
-            if (eff > 1) score += 0.5;
+            if (eff > 1) score += isHard ? 0.7 : 0.5;
+            // Hard: STAB SE moves are even better
+            if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) {
+              score += 0.3;
+            }
           }
         }
-        // Bonus for resisting opponent's types
+        // Bonus for resisting opponent's types (defensive pivot)
         for (const oppType of oppTypes) {
           const eff = getTypeEffectiveness(oppType, pTypes);
-          if (eff < 1) score += 0.2;
-          if (eff === 0) score += 0.5;
+          if (eff < 1) score += isHard ? 0.35 : 0.2;
+          if (eff === 0) score += isHard ? 0.8 : 0.5;
         }
+        // Hard: penalty for being weak to opponent's types
+        if (isHard) {
+          for (const oppType of oppTypes) {
+            const eff = getTypeEffectiveness(oppType, pTypes);
+            if (eff > 1) score -= 0.3;
+            if (eff >= 4) score -= 0.5;
+          }
+        }
+      }
+
+      // Hard: slight bonus for higher base speed (can outspeed and attack)
+      if (isHard) {
+        score += (p.species.baseStats?.spe ?? 0) / 500;
       }
 
       return { ...s, score };
@@ -333,8 +419,13 @@ function wireHumanEvents(
   humanSocket.on('disconnect', (reason) => {
     console.warn(`[human socket] disconnected: ${reason}`);
     if (getIntentional()) return;
-    if (getHasCreated() && reason === 'io server disconnect') {
-      dispatch({ type: 'DISCONNECTED' });
+    if (getHasCreated()) {
+      // Show reconnecting banner for all disconnect reasons (not just server disconnect)
+      dispatch({ type: 'RECONNECTING' });
+      // If server explicitly kicked us, go to full disconnect screen
+      if (reason === 'io server disconnect') {
+        dispatch({ type: 'DISCONNECTED' });
+      }
     }
   });
 
@@ -343,6 +434,14 @@ function wireHumanEvents(
     if (getHasCreated() && conn.roomCode) {
       console.log(`[human socket] auto-rejoining room ${conn.roomCode}`);
       humanSocket.emit('join_room', { code: conn.roomCode, playerName });
+      dispatch({ type: 'RECONNECTED' });
+    }
+  });
+
+  (humanSocket as any).on('reconnect_attempt', (attempt: number) => {
+    console.log(`[human socket] reconnect attempt ${attempt}`);
+    if (getHasCreated()) {
+      dispatch({ type: 'RECONNECTING' });
     }
   });
 
@@ -363,6 +462,7 @@ export function createBattleConnection(
   dispatch: (action: any) => void,
   maxGen: number | null = null,
   difficulty: BotDifficulty = 'normal',
+  legendaryMode: boolean = false,
 ): BattleConnection {
   botDifficulty = difficulty;
   const humanSocket = io(serverUrl, SOCKET_OPTS) as unknown as ClientSocket;
@@ -499,7 +599,7 @@ export function createBattleConnection(
 
     Promise.all([humanReady, botReady]).then(() => {
       dispatch({ type: 'CONNECTED' });
-      humanSocket.emit('create_room', { playerName, itemMode, maxGen });
+      humanSocket.emit('create_room', { playerName, itemMode, maxGen, legendaryMode });
     });
   };
 

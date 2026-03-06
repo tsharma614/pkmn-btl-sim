@@ -29,6 +29,7 @@ export function serializeOwnPokemon(pokemon: BattlePokemon): OwnPokemon {
       category: m.data.category,
       power: m.data.power,
       accuracy: m.data.accuracy,
+      priority: m.data.priority,
       currentPp: m.currentPp,
       maxPp: m.maxPp,
       disabled: m.disabled,

@@ -27,10 +27,11 @@ export class RoomManager {
     return code;
   }
 
-  createRoom(socketId: string, playerName: string, itemMode: 'competitive' | 'casual' = 'competitive', maxGen: number | null = null): { room: Room; code: string } {
+  createRoom(socketId: string, playerName: string, itemMode: 'competitive' | 'casual' = 'competitive', maxGen: number | null = null, legendaryMode: boolean = false): { room: Room; code: string } {
     const code = this.generateCode();
     const room = new Room(code);
     room.maxGen = maxGen;
+    room.legendaryMode = legendaryMode;
     room.addPlayer(socketId, playerName, itemMode);
     this.rooms.set(code, room);
     this.socketToRoom.set(socketId, code);

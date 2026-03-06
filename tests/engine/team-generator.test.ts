@@ -122,4 +122,123 @@ describe('Team Generator', () => {
       expect(hasSpecial).toBe(true);
     }
   });
+
+  it('no two Pokemon share the exact same type combination', () => {
+    for (let seed = 0; seed < 50; seed++) {
+      const rng = new SeededRNG(seed);
+      const team = generateTeam(rng);
+
+      const typeKeys = team.map(p => [...p.species.types].sort().join('/'));
+      const uniqueKeys = new Set(typeKeys);
+      expect(
+        uniqueKeys.size,
+        `Seed ${seed}: duplicate type combo found in [${typeKeys.join(', ')}]`,
+      ).toBe(typeKeys.length);
+    }
+  });
+
+  it('pure single-type Pokemon can still appear on teams', () => {
+    // Over many seeds, at least some teams should have a single-type Pokemon
+    let foundSingleType = false;
+    for (let seed = 0; seed < 100; seed++) {
+      const rng = new SeededRNG(seed);
+      const team = generateTeam(rng);
+      if (team.some(p => p.species.types.length === 1)) {
+        foundSingleType = true;
+        break;
+      }
+    }
+    expect(foundSingleType).toBe(true);
+  });
+
+  describe('Classic Mode (maxGen = 4)', () => {
+    it('only includes Gen 1-4 Pokemon', () => {
+      for (let seed = 0; seed < 20; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, { itemMode: 'competitive', maxGen: 4 });
+        for (const pokemon of team) {
+          expect(
+            pokemon.species.generation,
+            `${pokemon.species.name} is Gen ${pokemon.species.generation}`,
+          ).toBeLessThanOrEqual(4);
+        }
+      }
+    });
+
+    it('generates a full team of 6', () => {
+      const rng = new SeededRNG(42);
+      const team = generateTeam(rng, { itemMode: 'competitive', maxGen: 4 });
+      expect(team).toHaveLength(6);
+    });
+  });
+
+  describe('Legendary Mode', () => {
+    it('generates a team of 6', () => {
+      const rng = new SeededRNG(42);
+      const team = generateTeam(rng, { itemMode: 'competitive', legendaryMode: true });
+      expect(team).toHaveLength(6);
+    });
+
+    it('has mostly Tier 1 Pokemon', () => {
+      for (let seed = 0; seed < 10; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, { itemMode: 'competitive', legendaryMode: true });
+        const t1Count = team.filter(p => p.species.tier === 1).length;
+        // Should have at least 3 T1 (might be less if T1 pool is small with maxGen)
+        expect(t1Count).toBeGreaterThanOrEqual(3);
+      }
+    });
+
+    it('no duplicate Pokemon on legendary teams', () => {
+      for (let seed = 0; seed < 20; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, { itemMode: 'competitive', legendaryMode: true });
+        const ids = team.map(p => p.species.id);
+        expect(new Set(ids).size).toBe(6);
+      }
+    });
+
+    it('has type variety on legendary teams', () => {
+      for (let seed = 0; seed < 20; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, { itemMode: 'competitive', legendaryMode: true });
+        const typeCounts: Record<string, number> = {};
+        for (const pokemon of team) {
+          for (const type of pokemon.species.types) {
+            typeCounts[type] = (typeCounts[type] || 0) + 1;
+          }
+        }
+        // In legendary mode, max 3 of same type
+        for (const [type, count] of Object.entries(typeCounts)) {
+          expect(count, `Type ${type} appears ${count} times`).toBeLessThanOrEqual(3);
+        }
+      }
+    });
+
+    it('no duplicate type combinations on legendary teams', () => {
+      for (let seed = 0; seed < 30; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, { itemMode: 'competitive', legendaryMode: true });
+        const typeKeys = team.map(p => [...p.species.types].sort().join('/'));
+        const uniqueKeys = new Set(typeKeys);
+        expect(
+          uniqueKeys.size,
+          `Seed ${seed}: duplicate type combo in legendary [${typeKeys.join(', ')}]`,
+        ).toBe(typeKeys.length);
+      }
+    });
+
+    it('combines with classic mode (legendary + Gen 1-4)', () => {
+      for (let seed = 0; seed < 10; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, { itemMode: 'competitive', maxGen: 4, legendaryMode: true });
+        expect(team).toHaveLength(6);
+        for (const pokemon of team) {
+          expect(pokemon.species.generation).toBeLessThanOrEqual(4);
+        }
+        const t1Count = team.filter(p => p.species.tier === 1).length;
+        expect(t1Count).toBeGreaterThanOrEqual(2); // might be fewer T1 in Gen 1-4 only
+      }
+    });
+  });
 });

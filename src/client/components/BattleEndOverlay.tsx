@@ -417,7 +417,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
               <Text style={styles.shareBtnText}>Share</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.shareBtn} onPress={handleShareLog} activeOpacity={0.7}>
-              <Text style={styles.shareBtnText}>Share Battle Log</Text>
+              <Text style={styles.shareBtnText}>Battle Log</Text>
             </TouchableOpacity>
           </View>
 

@@ -27,6 +27,7 @@ console.log(`Team generator loaded: T1=${TIERS[1].length}, T2=${TIERS[2].length}
 interface TeamGeneratorOptions {
   itemMode: 'competitive' | 'casual';
   maxGen?: number | null;
+  legendaryMode?: boolean;
 }
 
 /** Build filtered tier pools based on maxGen (null = no filter). */
@@ -48,12 +49,27 @@ export function generateTeam(
   options: TeamGeneratorOptions = { itemMode: 'competitive' }
 ): BattlePokemon[] {
   const tiers = getFilteredTiers(options.maxGen ?? null);
-  const distribution: { tier: Tier; count: number }[] = [
-    { tier: 1, count: 1 },
-    { tier: 2, count: 2 },
-    { tier: 3, count: 2 },
-    { tier: 4, count: 1 },
-  ];
+  // Legendary Mode: mostly T1 (4 T1, 1 T2, 1 T3), dips into lower tiers if T1 pool is small
+  const distribution: { tier: Tier; count: number }[] = options.legendaryMode
+    ? [
+        { tier: 1, count: Math.min(4, tiers[1].length) },
+        { tier: 2, count: 1 },
+        { tier: 3, count: 1 },
+      ]
+    : [
+        { tier: 1, count: 1 },
+        { tier: 2, count: 2 },
+        { tier: 3, count: 2 },
+        { tier: 4, count: 1 },
+      ];
+
+  // If legendary mode and T1 pool is small, fill remainder from T2
+  if (options.legendaryMode) {
+    const t1Count = distribution[0].count;
+    if (t1Count < 4) {
+      distribution[1].count += (4 - t1Count);
+    }
+  }
 
   let team: PokemonSpecies[] = [];
   let attempts = 0;
@@ -76,7 +92,7 @@ export function generateTeam(
       }
     }
 
-    if (team.length === 6 && validateTeam(team)) {
+    if (team.length === 6 && validateTeam(team, options.legendaryMode)) {
       break;
     }
   }
@@ -95,17 +111,33 @@ export function generateTeam(
   });
 }
 
+/** Get a canonical key for a Pokemon's type combination (sorted, joined). */
+function typeKey(species: PokemonSpecies): string {
+  return [...species.types].sort().join('/');
+}
+
 /**
  * Validate team constraints from the plan.
  */
-function validateTeam(team: PokemonSpecies[]): boolean {
-  // No more than 2 Pokemon sharing a type
+function validateTeam(team: PokemonSpecies[], legendaryMode?: boolean): boolean {
+  // No more than 2 of same type (3 in legendary mode since high-tier Pokemon overlap more)
+  const maxTypeCount = legendaryMode ? 3 : 2;
   const typeCounts: Record<string, number> = {};
   for (const species of team) {
     for (const type of species.types) {
       typeCounts[type] = (typeCounts[type] || 0) + 1;
-      if (typeCounts[type] > 2) return false;
+      if (typeCounts[type] > maxTypeCount) return false;
     }
+  }
+
+  // No duplicate type combinations — two Pokemon with the exact same typing
+  // (e.g. two pure Grass, or two Water/Ground) makes the team feel repetitive.
+  // They must differ in at least one type.
+  const typeKeyCounts: Record<string, number> = {};
+  for (const species of team) {
+    const key = typeKey(species);
+    typeKeyCounts[key] = (typeKeyCounts[key] || 0) + 1;
+    if (typeKeyCounts[key] > 1) return false;
   }
 
   // At least 1 physical attacker and 1 special attacker

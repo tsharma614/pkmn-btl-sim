@@ -3,14 +3,15 @@ import { AppState } from 'react-native';
 import { battleReducer, initialState } from './battle-reducer';
 import type { BattleState, BattleAction } from './battle-reducer';
 import {
-  createBattleConnection,
   createOnlineConnection,
-  submitAction,
-  submitLead,
-  submitForceSwitch,
+  submitAction as submitOnlineAction,
+  submitLead as submitOnlineLead,
+  submitForceSwitch as submitOnlineForceSwitch,
   requestRematch,
 } from '../socket';
 import type { BattleConnection } from '../socket';
+import { createLocalBattle } from '../local-battle';
+import type { LocalBattle } from '../local-battle';
 import { getServerUrl } from '../config';
 
 const SERVER_URL = getServerUrl();
@@ -18,7 +19,7 @@ const SERVER_URL = getServerUrl();
 interface BattleContextValue {
   state: BattleState;
   dispatch: React.Dispatch<BattleAction>;
-  startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard') => void;
+  startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean) => void;
   startOnline: (playerName: string, itemMode: 'competitive' | 'casual') => void;
   createRoom: (playerName: string, itemMode: 'competitive' | 'casual') => void;
   joinRoom: (playerName: string, itemMode: 'competitive' | 'casual', code: string) => void;
@@ -33,47 +34,67 @@ interface BattleContextValue {
 
 const BattleContext = createContext<BattleContextValue | null>(null);
 
-// Module-level connection survives hot reloads. Only one connection ever exists.
+// Module-level refs survive hot reloads
 let activeConnection: BattleConnection | null = null;
+let activeLocalBattle: LocalBattle | null = null;
 
 export function BattleProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(battleReducer, initialState);
   const connectionRef = useRef<BattleConnection | null>(activeConnection);
+  const localBattleRef = useRef<LocalBattle | null>(activeLocalBattle);
   const mountedRef = useRef(false);
-  // Track state in a ref so AppState callback can access current values
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  const cleanupConnection = useCallback(() => {
+  const cleanupAll = useCallback(() => {
     if (activeConnection) {
       activeConnection.disconnect();
       activeConnection = null;
     }
     connectionRef.current = null;
+    if (activeLocalBattle) {
+      activeLocalBattle.disconnect();
+      activeLocalBattle = null;
+    }
+    localBattleRef.current = null;
   }, []);
 
-  const startConnection = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen: number | null = null, difficulty: 'easy' | 'normal' | 'hard' = 'normal') => {
-    cleanupConnection();
+  // --- CPU mode: local battle (no server) ---
+
+  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean) => {
+    cleanupAll();
     dispatch({ type: 'RESET' });
     dispatch({ type: 'START_GAME', playerName, itemMode });
-    const conn = createBattleConnection(SERVER_URL, playerName, itemMode, dispatch, maxGen, difficulty);
-    activeConnection = conn;
-    connectionRef.current = conn;
-    conn.start();
-  }, [cleanupConnection]);
+
+    // Skip 'connecting' phase — go directly to team preview
+    dispatch({ type: 'CONNECTED' });
+
+    const local = createLocalBattle({
+      playerName,
+      itemMode,
+      maxGen: maxGen ?? null,
+      difficulty: difficulty ?? 'normal',
+      legendaryMode: legendaryMode ?? false,
+      dispatch,
+    });
+
+    activeLocalBattle = local;
+    localBattleRef.current = local;
+    local.start();
+  }, [cleanupAll]);
+
+  // --- Online mode: socket connection ---
 
   const startOnlineCreate = useCallback((playerName: string, itemMode: 'competitive' | 'casual') => {
-    cleanupConnection();
+    cleanupAll();
     dispatch({ type: 'RESET' });
     dispatch({ type: 'START_ONLINE', playerName, itemMode });
     const conn = createOnlineConnection(SERVER_URL, playerName, itemMode, dispatch);
     activeConnection = conn;
     connectionRef.current = conn;
     conn.start();
-    // Don't auto-create room — let OnlineLobby show create/join choice first
-  }, [cleanupConnection]);
+  }, [cleanupAll]);
 
-  /** Create a room on the already-connected online socket */
   const createRoom = useCallback((playerName: string, itemMode: 'competitive' | 'casual') => {
     const conn = connectionRef.current;
     if (conn) {
@@ -81,15 +102,12 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  /** Join an existing room by code — reuses current connection if available */
   const joinRoom = useCallback((playerName: string, itemMode: 'competitive' | 'casual', code: string) => {
     const conn = connectionRef.current;
     if (conn && conn.gameMode === 'online') {
-      // Already connected in online mode, just join
       conn.startJoinRoom?.(code.toUpperCase(), itemMode);
     } else {
-      // No existing connection — create one and join
-      cleanupConnection();
+      cleanupAll();
       dispatch({ type: 'RESET' });
       dispatch({ type: 'START_ONLINE', playerName, itemMode });
       const newConn = createOnlineConnection(SERVER_URL, playerName, itemMode, dispatch);
@@ -103,91 +121,103 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         newConn.startJoinRoom?.(code.toUpperCase(), itemMode);
       });
     }
-  }, [cleanupConnection]);
+  }, [cleanupAll]);
 
-  // AppState listener: reconnect when app returns to foreground
+  // AppState listener: reconnect online when app returns to foreground
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
         const conn = connectionRef.current;
         const currentPhase = stateRef.current.phase;
-        if (
-          conn &&
-          conn.roomCode &&
-          currentPhase === 'disconnected'
-        ) {
+        if (conn && conn.roomCode && currentPhase === 'disconnected') {
           console.log('[AppState] App returned to foreground, reconnecting...');
           conn.reconnect();
         }
       }
     });
-
     return () => subscription.remove();
   }, []);
 
   useEffect(() => {
-    // StrictMode guard: only start on first mount
     if (mountedRef.current) return;
     mountedRef.current = true;
-
-    // If module-level connection already exists (hot reload), reuse it
-    if (activeConnection) {
-      connectionRef.current = activeConnection;
-      return;
-    }
-
-    // Don't auto-connect — wait for user to start from setup screen
+    if (activeConnection) connectionRef.current = activeConnection;
+    if (activeLocalBattle) localBattleRef.current = activeLocalBattle;
   }, []);
 
-  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard') => {
-    mountedRef.current = false; // allow re-init
-    startConnection(playerName, itemMode, maxGen ?? null, difficulty ?? 'normal');
-    mountedRef.current = true;
-  }, [startConnection]);
+  // --- Actions: route to local battle or online socket ---
 
   const selectLead = useCallback((index: number) => {
-    if (connectionRef.current) {
-      submitLead(connectionRef.current, index, stateRef.current.itemMode);
+    const local = localBattleRef.current;
+    if (local) {
+      local.selectLead(index);
+      return;
+    }
+    const conn = connectionRef.current;
+    if (conn) {
+      submitOnlineLead(conn, index, stateRef.current.itemMode);
     }
   }, []);
 
   const selectMove = useCallback((moveIndex: number) => {
-    if (connectionRef.current) {
-      submitAction(connectionRef.current, { type: 'move', index: moveIndex });
+    const local = localBattleRef.current;
+    if (local) {
+      dispatch({ type: 'ACTION_SUBMITTED' });
+      // Use setTimeout to let the UI update to 'waiting' before processing
+      setTimeout(() => local.submitAction({ type: 'move', index: moveIndex }), 50);
+      return;
+    }
+    const conn = connectionRef.current;
+    if (conn) {
+      submitOnlineAction(conn, { type: 'move', index: moveIndex });
       dispatch({ type: 'ACTION_SUBMITTED' });
     }
   }, []);
 
   const selectSwitch = useCallback((pokemonIndex: number) => {
-    if (connectionRef.current) {
-      submitAction(connectionRef.current, { type: 'switch', index: pokemonIndex });
+    const local = localBattleRef.current;
+    if (local) {
+      dispatch({ type: 'ACTION_SUBMITTED' });
+      setTimeout(() => local.submitAction({ type: 'switch', index: pokemonIndex }), 50);
+      return;
+    }
+    const conn = connectionRef.current;
+    if (conn) {
+      submitOnlineAction(conn, { type: 'switch', index: pokemonIndex });
       dispatch({ type: 'ACTION_SUBMITTED' });
     }
   }, []);
 
   const selectForceSwitch = useCallback((pokemonIndex: number) => {
-    if (connectionRef.current) {
-      submitForceSwitch(connectionRef.current, pokemonIndex);
+    const local = localBattleRef.current;
+    if (local) {
+      dispatch({ type: 'ACTION_SUBMITTED' });
+      setTimeout(() => local.submitForceSwitch(pokemonIndex), 50);
+      return;
+    }
+    const conn = connectionRef.current;
+    if (conn) {
+      submitOnlineForceSwitch(conn, pokemonIndex);
       dispatch({ type: 'ACTION_SUBMITTED' });
     }
   }, []);
 
   const playAgain = useCallback(() => {
-    // Go back to setup screen so the player can change name/settings
-    cleanupConnection();
+    cleanupAll();
     dispatch({ type: 'RESET' });
-  }, [cleanupConnection]);
+  }, [cleanupAll]);
 
   const requestRematchOnline = useCallback(() => {
-    if (connectionRef.current) {
-      requestRematch(connectionRef.current);
+    const conn = connectionRef.current;
+    if (conn) {
+      requestRematch(conn);
     }
   }, []);
 
   const returnToMenu = useCallback(() => {
-    cleanupConnection();
+    cleanupAll();
     dispatch({ type: 'RESET' });
-  }, [cleanupConnection]);
+  }, [cleanupAll]);
 
   return (
     <BattleContext.Provider

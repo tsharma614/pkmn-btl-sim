@@ -390,6 +390,15 @@ export function formatEventMessage(event: BattleEvent): { text: string; segments
     case 'substitute':
       text = `${d.pokemon} put up a Substitute!`;
       break;
+    case 'substitute_hit':
+      text = `The substitute took the hit for ${d.pokemon}!`;
+      break;
+    case 'substitute_break':
+      text = `${d.pokemon}'s substitute broke!`;
+      break;
+    case 'item_removed':
+      text = `${d.pokemon}'s ${d.item} was knocked off!`;
+      break;
     case 'move_fail':
       text = 'But it failed!';
       break;
@@ -498,6 +507,7 @@ export function useEventQueue(
   useEffect(() => {
     if (yourPokemonName === null && opponentPokemonName === null) {
       setMessages([]);
+      setIsProcessing(false);
       setPlayerNameOverride(null);
       setPlayerSpriteOverride(null);
       setOpponentNameOverride(null);
@@ -505,6 +515,8 @@ export function useEventQueue(
       setDamageReaction(null);
       setPlayerHpOverride(null);
       setOpponentHpOverride(null);
+      setPlayerIndicator(null);
+      setOpponentIndicator(null);
       lastEventsRef.current = [];
       return;
     }

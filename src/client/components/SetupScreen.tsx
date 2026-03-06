@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import { getWinLoss } from '../utils/battle-history';
 import { PokemonSprite } from './PokemonSprite';
@@ -18,7 +19,7 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
 interface Props {
-  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty) => void;
+  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean) => void;
   onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual') => void;
 }
 
@@ -72,11 +73,15 @@ function PokeballLogo() {
   );
 }
 
+type Screen = 'main' | 'cpu_setup' | 'online_setup';
+
 export function SetupScreen({ onStart, onPlayOnline }: Props) {
+  const [screen, setScreen] = useState<Screen>('main');
   const [name, setName] = useState('');
   const [itemMode, setItemMode] = useState<'competitive' | 'casual'>('competitive');
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [classicMode, setClassicMode] = useState(false);
+  const [legendaryMode, setLegendaryMode] = useState(false);
   const [record, setRecord] = useState<{ wins: number; losses: number } | null>(null);
 
   useEffect(() => {
@@ -85,79 +90,236 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
 
   const displayName = name.trim() || 'Player';
 
+  // ---------- Main Menu ----------
+  if (screen === 'main') {
+    return (
+      <View style={styles.container}>
+        {BG_SPRITES.map((s) => (
+          <View
+            key={s.id}
+            style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity }]}
+            pointerEvents="none"
+          >
+            <PokemonSprite speciesId={s.id} facing="front" size={s.size} />
+          </View>
+        ))}
+
+        <View style={styles.mainMenuInner}>
+          <View style={styles.logoSection}>
+            <PokeballLogo />
+            <Text style={styles.title}>PBS</Text>
+            <Text style={styles.subtitle}>Pokemon Battle Simulator</Text>
+            {record && (record.wins > 0 || record.losses > 0) && (
+              <Text style={styles.recordText}>Record: {record.wins}W - {record.losses}L</Text>
+            )}
+          </View>
+
+          {/* Name input */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Trainer Name</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="Player"
+              placeholderTextColor={colors.textDim}
+              maxLength={16}
+              autoCapitalize="words"
+              autoCorrect={false}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={styles.playNowBtn}
+            onPress={() => setScreen('cpu_setup')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.playNowText}>PLAY NOW</Text>
+            <Text style={styles.btnSubtext}>vs CPU</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.playOnlineBtn}
+            onPress={() => setScreen('online_setup')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.playOnlineText}>PLAY ONLINE</Text>
+            <Text style={styles.btnSubtext}>vs Player</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  // ---------- CPU Setup ----------
+  if (screen === 'cpu_setup') {
+    return (
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        {BG_SPRITES.map((s) => (
+          <View
+            key={s.id}
+            style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity * 0.5 }]}
+            pointerEvents="none"
+          >
+            <PokemonSprite speciesId={s.id} facing="front" size={s.size} />
+          </View>
+        ))}
+
+        <ScrollView contentContainerStyle={styles.setupInner} bounces={false}>
+          <TouchableOpacity onPress={() => setScreen('main')} style={styles.backBtn} activeOpacity={0.7}>
+            <Text style={styles.backText}>{'< Back'}</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.setupTitle}>VS CPU</Text>
+          <Text style={styles.setupSubtitle}>Battle against the computer</Text>
+
+          {/* Item mode toggle */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Item Set</Text>
+            <View style={styles.toggleRow}>
+              <TouchableOpacity
+                style={[styles.toggleBtn, itemMode === 'competitive' && styles.toggleBtnActive]}
+                onPress={() => setItemMode('competitive')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.toggleText, itemMode === 'competitive' && styles.toggleTextActive]}>
+                  Competitive
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleBtn, itemMode === 'casual' && styles.toggleBtnActive]}
+                onPress={() => setItemMode('casual')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.toggleText, itemMode === 'casual' && styles.toggleTextActive]}>
+                  Casual
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modeDesc}>
+              {itemMode === 'competitive'
+                ? 'Choice items lock you into one move. Full competitive rules.'
+                : 'Choice Band/Specs become Life Orb, Choice Scarf becomes Leftovers. More forgiving.'}
+            </Text>
+          </View>
+
+          {/* Difficulty toggle */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Difficulty</Text>
+            <View style={styles.toggleRow}>
+              {(['easy', 'normal', 'hard'] as Difficulty[]).map(d => (
+                <TouchableOpacity
+                  key={d}
+                  style={[styles.toggleBtn, difficulty === d && styles.toggleBtnActive]}
+                  onPress={() => setDifficulty(d)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.toggleText, difficulty === d && styles.toggleTextActive]}>
+                    {d.charAt(0).toUpperCase() + d.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.modeDesc}>
+              {difficulty === 'easy'
+                ? 'Bot picks moves randomly.'
+                : difficulty === 'normal'
+                ? 'Smart with some randomness.'
+                : 'Plays optimally.'}
+            </Text>
+          </View>
+
+          {/* Team options */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Team Options</Text>
+
+            <TouchableOpacity
+              style={styles.checkboxRow}
+              onPress={() => setClassicMode(!classicMode)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, classicMode && styles.checkboxChecked]}>
+                {classicMode && <Text style={styles.checkmark}>{'✓'}</Text>}
+              </View>
+              <View style={styles.checkboxTextWrap}>
+                <Text style={styles.checkboxLabel}>Classic Mode</Text>
+                <Text style={styles.checkboxDesc}>Gen 1-4 only (Kanto through Sinnoh). No Fairy type, classic matchups.</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.checkboxRow}
+              onPress={() => setLegendaryMode(!legendaryMode)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, legendaryMode && styles.checkboxChecked]}>
+                {legendaryMode && <Text style={styles.checkmark}>{'✓'}</Text>}
+              </View>
+              <View style={styles.checkboxTextWrap}>
+                <Text style={styles.checkboxLabel}>Legendary Team</Text>
+                <Text style={styles.checkboxDesc}>Stacked teams of mostly Tier 1 Pokemon. Legendaries, pseudo-legendaries, and top threats. CPU gets one too.</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={styles.startBtn}
+            onPress={() => onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.startBtnText}>START BATTLE</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  // ---------- Online Setup ----------
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Background sprites */}
       {BG_SPRITES.map((s) => (
         <View
           key={s.id}
-          style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity }]}
+          style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity * 0.5 }]}
           pointerEvents="none"
         >
           <PokemonSprite speciesId={s.id} facing="front" size={s.size} />
         </View>
       ))}
 
-      <View style={styles.inner}>
-        {/* Logo */}
-        <View style={styles.logoSection}>
-          <PokeballLogo />
-          <Text style={styles.title}>PBS</Text>
-          <Text style={styles.subtitle}>Pokemon Battle Simulator</Text>
-          {record && (record.wins > 0 || record.losses > 0) && (
-            <Text style={styles.recordText}>Record: {record.wins}W - {record.losses}L</Text>
-          )}
-        </View>
+      <View style={styles.setupInner}>
+        <TouchableOpacity onPress={() => setScreen('main')} style={styles.backBtn} activeOpacity={0.7}>
+          <Text style={styles.backText}>{'< Back'}</Text>
+        </TouchableOpacity>
 
-        {/* Name input */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Trainer Name</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Player"
-            placeholderTextColor={colors.textDim}
-            maxLength={16}
-            autoCapitalize="words"
-            autoCorrect={false}
-          />
-        </View>
+        <Text style={styles.setupTitle}>PLAY ONLINE</Text>
+        <Text style={styles.setupSubtitle}>Battle against another player</Text>
 
-        {/* Item mode toggle */}
+        {/* Item mode toggle (only option for online) */}
         <View style={styles.section}>
-          <Text style={styles.label}>Item Mode</Text>
+          <Text style={styles.label}>Item Set</Text>
           <View style={styles.toggleRow}>
             <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                itemMode === 'competitive' && styles.toggleBtnActive,
-              ]}
+              style={[styles.toggleBtn, itemMode === 'competitive' && styles.toggleBtnActive]}
               onPress={() => setItemMode('competitive')}
               activeOpacity={0.7}
             >
-              <Text style={[
-                styles.toggleText,
-                itemMode === 'competitive' && styles.toggleTextActive,
-              ]}>
+              <Text style={[styles.toggleText, itemMode === 'competitive' && styles.toggleTextActive]}>
                 Competitive
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                itemMode === 'casual' && styles.toggleBtnActive,
-              ]}
+              style={[styles.toggleBtn, itemMode === 'casual' && styles.toggleBtnActive]}
               onPress={() => setItemMode('casual')}
               activeOpacity={0.7}
             >
-              <Text style={[
-                styles.toggleText,
-                itemMode === 'casual' && styles.toggleTextActive,
-              ]}>
+              <Text style={[styles.toggleText, itemMode === 'casual' && styles.toggleTextActive]}>
                 Casual
               </Text>
             </TouchableOpacity>
@@ -169,62 +331,16 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
           </Text>
         </View>
 
-        {/* Difficulty toggle */}
-        <View style={styles.section}>
-          <Text style={styles.label}>CPU Difficulty</Text>
-          <View style={styles.toggleRow}>
-            {(['easy', 'normal', 'hard'] as Difficulty[]).map(d => (
-              <TouchableOpacity
-                key={d}
-                style={[styles.toggleBtn, difficulty === d && styles.toggleBtnActive]}
-                onPress={() => setDifficulty(d)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.toggleText, difficulty === d && styles.toggleTextActive]}>
-                  {d.charAt(0).toUpperCase() + d.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <Text style={styles.modeDesc}>
-            {difficulty === 'easy'
-              ? 'Bot picks moves randomly.'
-              : difficulty === 'normal'
-              ? 'Smart with some randomness.'
-              : 'Plays optimally.'}
-          </Text>
-        </View>
-
-        {/* Classic mode toggle */}
-        <TouchableOpacity
-          style={styles.checkboxRow}
-          onPress={() => setClassicMode(!classicMode)}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.checkbox, classicMode && styles.checkboxChecked]}>
-            {classicMode && <Text style={styles.checkmark}>{'✓'}</Text>}
-          </View>
-          <View style={styles.checkboxTextWrap}>
-            <Text style={styles.checkboxLabel}>Classic Mode</Text>
-            <Text style={styles.checkboxDesc}>Gen 1-4 Pokemon only (Diamond/Pearl and earlier)</Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Buttons */}
-        <TouchableOpacity
-          style={styles.playNowBtn}
-          onPress={() => onStart(displayName, itemMode, classicMode ? 4 : null, difficulty)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.playNowText}>PLAY NOW</Text>
-        </TouchableOpacity>
+        <Text style={styles.onlineNote}>
+          Team options (Classic Mode, Legendary Team) are only available in VS CPU.
+        </Text>
 
         <TouchableOpacity
-          style={styles.playOnlineBtn}
+          style={styles.startBtn}
           onPress={() => onPlayOnline(displayName, itemMode)}
           activeOpacity={0.7}
         >
-          <Text style={styles.playOnlineText}>PLAY ONLINE</Text>
+          <Text style={styles.startBtnText}>FIND MATCH</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -289,10 +405,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 0,
   },
-  inner: {
+  mainMenuInner: {
     flex: 1,
     justifyContent: 'center',
     padding: spacing.xl,
+    zIndex: 1,
+  },
+  setupInner: {
+    flexGrow: 1,
+    padding: spacing.xl,
+    paddingTop: spacing.xl * 2,
     zIndex: 1,
   },
   logoSection: {
@@ -375,8 +497,8 @@ const styles = StyleSheet.create({
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.lg,
-    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   checkbox: {
     width: 22,
@@ -444,5 +566,56 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 2,
+  },
+  btnSubtext: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 11,
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  backBtn: {
+    marginBottom: spacing.lg,
+  },
+  backText: {
+    color: colors.accent,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  setupTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: colors.accent,
+    letterSpacing: 3,
+    marginBottom: spacing.xs,
+  },
+  setupSubtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: spacing.xl,
+  },
+  startBtn: {
+    backgroundColor: colors.accent,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: spacing.lg,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  startBtnText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 2,
+  },
+  onlineNote: {
+    color: colors.textDim,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    lineHeight: 18,
   },
 });

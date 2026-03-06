@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Image, Animated, ImageStyle, View, Text, StyleSheet } from 'react-native';
+import { getCachedUri, cacheSprite } from '../utils/sprite-cache';
 
 interface Props {
   speciesId: string;
@@ -50,9 +51,23 @@ export function PokemonSprite({ speciesId, facing, size = 120, attackTrigger = 0
 
   const [urlIndex, setUrlIndex] = useState(0);
   const [allFailed, setAllFailed] = useState(false);
+  const [cachedUri, setCachedUri] = useState<string | null>(null);
   const lastIdRef = useRef(speciesId);
 
-  const uri = urls[urlIndex];
+  const remoteUri = urls[urlIndex];
+  // Use cached version if available, otherwise use remote URL
+  const uri = cachedUri || remoteUri;
+
+  // Trigger background caching for current URL
+  useEffect(() => {
+    let cancelled = false;
+    cacheSprite(remoteUri).then(localUri => {
+      if (!cancelled && localUri) {
+        setCachedUri(localUri);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [remoteUri]);
 
   // Reset failed state and animations when species changes (new Pokemon sent out)
   const opacity = useRef(new Animated.Value(1)).current;
@@ -64,6 +79,7 @@ export function PokemonSprite({ speciesId, facing, size = 120, attackTrigger = 0
     lastIdRef.current = speciesId;
     setUrlIndex(0);
     setAllFailed(false);
+    setCachedUri(null);
     // Reset position
     translateY.setValue(0);
     translateX.setValue(0);
@@ -79,6 +95,7 @@ export function PokemonSprite({ speciesId, facing, size = 120, attackTrigger = 0
 
   const handleImageError = () => {
     if (urlIndex < urls.length - 1) {
+      setCachedUri(null); // Reset cache for next fallback URL
       setUrlIndex(prev => prev + 1);
     } else {
       setAllFailed(true);

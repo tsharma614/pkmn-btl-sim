@@ -34,8 +34,8 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   },
   transports: ['websocket'],     // skip polling — React Native can't upgrade cleanly
   perMessageDeflate: false,       // compression causes transport errors in RN
-  pingInterval: 25000,            // relaxed pings — avoids false disconnects on busy JS thread
-  pingTimeout: 60000,             // generous timeout for React Native
+  pingInterval: 30000,            // relaxed pings — avoids false disconnects on busy JS thread
+  pingTimeout: 120000,            // very generous timeout — user prefers slow disconnect detection
 });
 
 const roomManager = new RoomManager();
