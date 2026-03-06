@@ -18,12 +18,16 @@ interface Props {
   opponentName: string | null;
   playerName: string;
   itemMode: 'competitive' | 'casual';
-  onCreateRoom: (playerName: string, itemMode: 'competitive' | 'casual') => void;
+  maxGen?: number | null;
+  legendaryMode?: boolean;
+  /** Room options from server (shown to joining player) */
+  roomOptions?: { maxGen: number | null; legendaryMode: boolean } | null;
+  onCreateRoom: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => void;
   onJoinRoom: (playerName: string, itemMode: 'competitive' | 'casual', code: string) => void;
   onCancel: () => void;
 }
 
-export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, onCreateRoom, onJoinRoom, onCancel }: Props) {
+export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, maxGen, legendaryMode, roomOptions, onCreateRoom, onJoinRoom, onCancel }: Props) {
   const [mode, setMode] = useState<'choice' | 'create' | 'join'>(roomCode ? 'create' : 'choice');
   const [joinCode, setJoinCode] = useState('');
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -40,6 +44,14 @@ export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, onCr
           <Text style={styles.codeLabel}>ROOM CODE</Text>
           <Text style={styles.code}>{roomCode}</Text>
         </View>
+
+        {/* Show room settings */}
+        {(maxGen || legendaryMode) && (
+          <View style={styles.settingsTags}>
+            {maxGen && maxGen <= 4 && <Text style={styles.settingsTag}>Classic Mode</Text>}
+            {legendaryMode && <Text style={styles.settingsTag}>Legendary Team</Text>}
+          </View>
+        )}
 
         {!opponentName && (
           <>
@@ -124,7 +136,7 @@ export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, onCr
         style={styles.createBtn}
         onPress={() => {
           setMode('create');
-          onCreateRoom(playerName, itemMode);
+          onCreateRoom(playerName, itemMode, maxGen, legendaryMode);
         }}
         activeOpacity={0.7}
       >
@@ -310,5 +322,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '800',
+  },
+  settingsTags: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: spacing.md,
+  },
+  settingsTag: {
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

@@ -117,8 +117,14 @@ export interface TeamPreviewPayload {
 export interface BattleStartPayload {
   yourTeam: OwnPokemon[];
   yourPlayerIndex: 0 | 1;
+  activePokemonIndex?: number;
   opponentLead?: VisiblePokemon;
   opponentName?: string;
+  /** Room options (sent so joiner knows what settings the host chose) */
+  roomOptions?: {
+    maxGen: number | null;
+    legendaryMode: boolean;
+  };
 }
 
 export interface TurnResultPayload {

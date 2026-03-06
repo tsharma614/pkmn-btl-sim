@@ -194,6 +194,28 @@ describe('battleReducer', () => {
       expect(result.playerName).toBe('Tanmay');
       expect(result.itemMode).toBe('competitive');
     });
+
+    it('stores maxGen and legendaryMode', () => {
+      const result = battleReducer(initialState, {
+        type: 'START_ONLINE',
+        playerName: 'Tanmay',
+        itemMode: 'competitive',
+        maxGen: 4,
+        legendaryMode: true,
+      });
+      expect(result.maxGen).toBe(4);
+      expect(result.legendaryMode).toBe(true);
+    });
+
+    it('defaults maxGen to null and legendaryMode to false', () => {
+      const result = battleReducer(initialState, {
+        type: 'START_ONLINE',
+        playerName: 'Tanmay',
+        itemMode: 'competitive',
+      });
+      expect(result.maxGen).toBeNull();
+      expect(result.legendaryMode).toBe(false);
+    });
   });
 
   // ========== CONNECTED ==========
@@ -302,6 +324,32 @@ describe('battleReducer', () => {
       const payload = makeBattleStartPayload();
       const result = battleReducer(initialState, { type: 'BATTLE_START', payload });
       expect(result.opponentVisible).toBeNull();
+    });
+
+    it('uses activePokemonIndex from payload', () => {
+      const payload = makeBattleStartPayload({ activePokemonIndex: 3 });
+      const result = battleReducer(initialState, { type: 'BATTLE_START', payload });
+      expect(result.yourState!.activePokemonIndex).toBe(3);
+    });
+
+    it('defaults activePokemonIndex to 0 when not provided', () => {
+      const payload = makeBattleStartPayload();
+      const result = battleReducer(initialState, { type: 'BATTLE_START', payload });
+      expect(result.yourState!.activePokemonIndex).toBe(0);
+    });
+
+    it('stores roomOptions from payload', () => {
+      const payload = makeBattleStartPayload({
+        roomOptions: { maxGen: 4, legendaryMode: true },
+      });
+      const result = battleReducer(initialState, { type: 'BATTLE_START', payload });
+      expect(result.roomOptions).toEqual({ maxGen: 4, legendaryMode: true });
+    });
+
+    it('roomOptions is null when not provided in payload', () => {
+      const payload = makeBattleStartPayload();
+      const result = battleReducer(initialState, { type: 'BATTLE_START', payload });
+      expect(result.roomOptions).toBeNull();
     });
 
     it('sets opponentLead but not opponentName when name absent', () => {

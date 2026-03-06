@@ -92,7 +92,7 @@ export function generateTeam(
       }
     }
 
-    if (team.length === 6 && validateTeam(team, options.legendaryMode)) {
+    if (team.length === 6 && validateTeam(team, options.legendaryMode, options.maxGen)) {
       break;
     }
   }
@@ -105,26 +105,37 @@ export function generateTeam(
   }
 
   // Build battle Pokemon from selected species
+  const maxGen = options.maxGen ?? null;
   return team.map(species => {
     const set = pickSet(species, rng, options.itemMode);
-    return createBattlePokemon(species, set);
+    return createBattlePokemon(species, set, 100, maxGen);
   });
 }
 
 /** Get a canonical key for a Pokemon's type combination (sorted, joined). */
-function typeKey(species: PokemonSpecies): string {
-  return [...species.types].sort().join('/');
+function typeKey(species: PokemonSpecies, maxGen?: number | null): string {
+  let types = species.types;
+  if (maxGen && maxGen < 6) {
+    types = types.filter((t: string) => t !== 'Fairy');
+    if (types.length === 0) types = ['Normal'];
+  }
+  return [...types].sort().join('/');
 }
 
 /**
  * Validate team constraints from the plan.
  */
-function validateTeam(team: PokemonSpecies[], legendaryMode?: boolean): boolean {
+function validateTeam(team: PokemonSpecies[], legendaryMode?: boolean, maxGen?: number | null): boolean {
   // No more than 2 of same type (3 in legendary mode since high-tier Pokemon overlap more)
   const maxTypeCount = legendaryMode ? 3 : 2;
   const typeCounts: Record<string, number> = {};
   for (const species of team) {
-    for (const type of species.types) {
+    let types = species.types;
+    if (maxGen && maxGen < 6) {
+      types = types.filter((t: string) => t !== 'Fairy');
+      if (types.length === 0) types = ['Normal'];
+    }
+    for (const type of types) {
       typeCounts[type] = (typeCounts[type] || 0) + 1;
       if (typeCounts[type] > maxTypeCount) return false;
     }
@@ -135,7 +146,7 @@ function validateTeam(team: PokemonSpecies[], legendaryMode?: boolean): boolean 
   // They must differ in at least one type.
   const typeKeyCounts: Record<string, number> = {};
   for (const species of team) {
-    const key = typeKey(species);
+    const key = typeKey(species, maxGen);
     typeKeyCounts[key] = (typeKeyCounts[key] || 0) + 1;
     if (typeKeyCounts[key] > 1) return false;
   }

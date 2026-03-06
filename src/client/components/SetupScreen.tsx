@@ -20,7 +20,7 @@ export type Difficulty = 'easy' | 'normal' | 'hard';
 
 interface Props {
   onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean) => void;
-  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual') => void;
+  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => void;
 }
 
 /** Background sprite positions — 7 rows of 3, filling the whole screen */
@@ -301,7 +301,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
         <Text style={styles.setupTitle}>PLAY ONLINE</Text>
         <Text style={styles.setupSubtitle}>Battle against another player</Text>
 
-        {/* Item mode toggle (only option for online) */}
+        {/* Item mode toggle */}
         <View style={styles.section}>
           <Text style={styles.label}>Item Set</Text>
           <View style={styles.toggleRow}>
@@ -331,13 +331,46 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
           </Text>
         </View>
 
+        {/* Team options (host decides, both players get same settings) */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Team Options (Host Decides)</Text>
+
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setClassicMode(!classicMode)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.checkbox, classicMode && styles.checkboxChecked]}>
+              {classicMode && <Text style={styles.checkmark}>{'✓'}</Text>}
+            </View>
+            <View style={styles.checkboxTextWrap}>
+              <Text style={styles.checkboxLabel}>Classic Mode</Text>
+              <Text style={styles.checkboxDesc}>Gen 1-4 only. No Fairy type, classic matchups.</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setLegendaryMode(!legendaryMode)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.checkbox, legendaryMode && styles.checkboxChecked]}>
+              {legendaryMode && <Text style={styles.checkmark}>{'✓'}</Text>}
+            </View>
+            <View style={styles.checkboxTextWrap}>
+              <Text style={styles.checkboxLabel}>Legendary Team</Text>
+              <Text style={styles.checkboxDesc}>Stacked teams of mostly Tier 1 Pokemon for both players.</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
         <Text style={styles.onlineNote}>
-          Team options (Classic Mode, Legendary Team) are only available in VS CPU.
+          When creating a room, your team settings apply to both players. When joining, the host's settings are used.
         </Text>
 
         <TouchableOpacity
           style={styles.startBtn}
-          onPress={() => onPlayOnline(displayName, itemMode)}
+          onPress={() => onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode)}
           activeOpacity={0.7}
         >
           <Text style={styles.startBtnText}>FIND MATCH</Text>

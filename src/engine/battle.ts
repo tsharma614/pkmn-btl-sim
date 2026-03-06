@@ -778,6 +778,7 @@ export class Battle {
           effectiveness: result.typeEffectiveness,
           remainingHp: defender.currentHp,
           maxHp: defender.maxHp,
+          defenderPlayer: opponentIndex,
         });
       }
 
@@ -1078,6 +1079,7 @@ export class Battle {
           damage: cost,
           remainingHp: attacker.currentHp,
           maxHp: attacker.maxHp,
+          defenderPlayer: playerIndex,
         });
         defender.volatileStatuses.add('curse' as any);
         this.addEvent(events, 'volatile_status', { pokemon: defender.species.name, status: 'curse' });
@@ -1106,6 +1108,7 @@ export class Battle {
           move: 'Pain Split', damage: -attackerDiff,
           remainingHp: attacker.currentHp, maxHp: attacker.maxHp,
           isCritical: false, effectiveness: 1,
+          defenderPlayer: playerIndex,
         });
       }
       if (defenderDiff > 0) {
@@ -1116,6 +1119,7 @@ export class Battle {
           move: 'Pain Split', damage: -defenderDiff,
           remainingHp: defender.currentHp, maxHp: defender.maxHp,
           isCritical: false, effectiveness: 1,
+          defenderPlayer: opponentIndex,
         });
       }
       return;

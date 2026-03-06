@@ -20,8 +20,8 @@ interface BattleContextValue {
   state: BattleState;
   dispatch: React.Dispatch<BattleAction>;
   startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean) => void;
-  startOnline: (playerName: string, itemMode: 'competitive' | 'casual') => void;
-  createRoom: (playerName: string, itemMode: 'competitive' | 'casual') => void;
+  startOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => void;
+  createRoom: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => void;
   joinRoom: (playerName: string, itemMode: 'competitive' | 'casual', code: string) => void;
   selectLead: (index: number) => void;
   selectMove: (moveIndex: number) => void;
@@ -85,20 +85,20 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
 
   // --- Online mode: socket connection ---
 
-  const startOnlineCreate = useCallback((playerName: string, itemMode: 'competitive' | 'casual') => {
+  const startOnlineCreate = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => {
     cleanupAll();
     dispatch({ type: 'RESET' });
-    dispatch({ type: 'START_ONLINE', playerName, itemMode });
-    const conn = createOnlineConnection(SERVER_URL, playerName, itemMode, dispatch);
+    dispatch({ type: 'START_ONLINE', playerName, itemMode, maxGen, legendaryMode });
+    const conn = createOnlineConnection(SERVER_URL, playerName, itemMode, dispatch, maxGen, legendaryMode);
     activeConnection = conn;
     connectionRef.current = conn;
     conn.start();
   }, [cleanupAll]);
 
-  const createRoom = useCallback((playerName: string, itemMode: 'competitive' | 'casual') => {
+  const createRoom = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => {
     const conn = connectionRef.current;
     if (conn) {
-      conn.startCreateRoom?.(itemMode);
+      conn.startCreateRoom?.(itemMode, maxGen, legendaryMode);
     }
   }, []);
 

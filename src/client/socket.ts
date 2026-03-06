@@ -360,7 +360,7 @@ export interface BattleConnection {
   /** Call after creation to wait for sockets and start room flow */
   start: () => void;
   /** Online mode: create a new room */
-  startCreateRoom?: (itemMode: 'competitive' | 'casual') => void;
+  startCreateRoom?: (itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => void;
   /** Online mode: join existing room by code */
   startJoinRoom?: (code: string, itemMode: 'competitive' | 'casual') => void;
   /** Attempt to reconnect after app returns from background */
@@ -635,7 +635,11 @@ export function createOnlineConnection(
   playerName: string,
   itemMode: 'competitive' | 'casual',
   dispatch: (action: any) => void,
+  maxGen?: number | null,
+  legendaryMode?: boolean,
 ): BattleConnection {
+  const onlineMaxGen = maxGen ?? null;
+  const onlineLegendaryMode = legendaryMode ?? false;
   const humanSocket = io(serverUrl, SOCKET_OPTS) as unknown as ClientSocket;
 
   const conn: BattleConnection = {
@@ -672,8 +676,13 @@ export function createOnlineConnection(
     });
   };
 
-  conn.startCreateRoom = (im: 'competitive' | 'casual') => {
-    humanSocket.emit('create_room', { playerName, itemMode: im });
+  conn.startCreateRoom = (im: 'competitive' | 'casual', mg?: number | null, lm?: boolean) => {
+    humanSocket.emit('create_room', {
+      playerName,
+      itemMode: im,
+      maxGen: mg ?? onlineMaxGen,
+      legendaryMode: lm ?? onlineLegendaryMode,
+    });
   };
 
   conn.startJoinRoom = (code: string, im: 'competitive' | 'casual') => {

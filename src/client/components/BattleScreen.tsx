@@ -157,6 +157,9 @@ export function BattleScreen() {
           opponentName={state.opponentName}
           playerName={state.playerName}
           itemMode={state.itemMode}
+          maxGen={state.maxGen}
+          legendaryMode={state.legendaryMode}
+          roomOptions={state.roomOptions}
           onCreateRoom={createRoom}
           onJoinRoom={joinRoom}
           onCancel={returnToMenu}

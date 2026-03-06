@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { generateTeam } from '../../src/engine/team-generator';
+import { createBattlePokemon } from '../../src/engine/pokemon-factory';
 import { SeededRNG } from '../../src/utils/rng';
-import { PokemonType } from '../../src/types';
+import { PokemonType, Nature } from '../../src/types';
 
 describe('Team Generator', () => {
   it('generates a team of 6 Pokemon', () => {
@@ -239,6 +240,113 @@ describe('Team Generator', () => {
         const t1Count = team.filter(p => p.species.tier === 1).length;
         expect(t1Count).toBeGreaterThanOrEqual(2); // might be fewer T1 in Gen 1-4 only
       }
+    });
+  });
+
+  describe('Fairy Type Stripping (Classic Mode)', () => {
+    it('strips Fairy type from Pokemon when maxGen < 6', () => {
+      for (let seed = 0; seed < 30; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, { itemMode: 'competitive', maxGen: 4 });
+        for (const pokemon of team) {
+          expect(
+            pokemon.species.types,
+            `${pokemon.species.name} should not have Fairy type in classic mode`,
+          ).not.toContain('Fairy');
+        }
+      }
+    });
+
+    it('does NOT strip Fairy type when maxGen >= 6 or null', () => {
+      // Over many seeds with all gens, some teams should have Fairy types
+      let foundFairy = false;
+      for (let seed = 0; seed < 100 && !foundFairy; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, { itemMode: 'competitive' });
+        if (team.some(p => (p.species.types as string[]).includes('Fairy'))) {
+          foundFairy = true;
+        }
+      }
+      expect(foundFairy).toBe(true);
+    });
+
+    it('Pokemon with only Fairy type become Normal type in classic mode', () => {
+      // This is a defensive test — if a pure Fairy Pokemon ever appears in Gen 1-4,
+      // it should become Normal. Currently no pure Fairy Gen 1-4 Pokemon exist,
+      // but this validates the fallback logic.
+      const fakeSpecies = {
+        id: 'testfairy',
+        name: 'TestFairy',
+        types: ['Fairy'] as string[],
+        baseStats: { hp: 100, atk: 100, def: 100, spa: 100, spd: 100, spe: 100 },
+        generation: 3,
+        tier: 3 as const,
+        bestAbility: 'Levitate',
+        dexNum: 999,
+        abilities: ['Levitate'],
+        movePool: [],
+        sets: [],
+      } as any;
+      const fakeSet = {
+        moves: [] as string[],
+        ability: 'Levitate',
+        item: 'Leftovers',
+        nature: 'Adamant' as Nature,
+        evs: { atk: 252, spe: 252, hp: 4 },
+      };
+      const pokemon = createBattlePokemon(fakeSpecies, fakeSet, 100, 4);
+      expect(pokemon.species.types).toEqual(['Normal']);
+    });
+
+    it('dual-type Pokemon with Fairy lose only Fairy in classic mode', () => {
+      // Simulates Gardevoir (Psychic/Fairy) in classic mode
+      const gardeviorLike = {
+        id: 'gardevoir',
+        name: 'Gardevoir',
+        types: ['Psychic', 'Fairy'] as string[],
+        baseStats: { hp: 68, atk: 65, def: 65, spa: 125, spd: 115, spe: 80 },
+        generation: 3,
+        tier: 2 as const,
+        bestAbility: 'Trace',
+        dexNum: 282,
+        abilities: ['Trace'],
+        movePool: [],
+        sets: [],
+      } as any;
+      const set = {
+        moves: [] as string[],
+        ability: 'Trace',
+        item: 'Leftovers',
+        nature: 'Modest' as Nature,
+        evs: { spa: 252, spe: 252, hp: 4 },
+      };
+      const pokemon = createBattlePokemon(gardeviorLike, set, 100, 4);
+      expect(pokemon.species.types).toEqual(['Psychic']);
+    });
+
+    it('does not strip Fairy when maxGen is null', () => {
+      const gardeviorLike = {
+        id: 'gardevoir',
+        name: 'Gardevoir',
+        types: ['Psychic', 'Fairy'] as string[],
+        baseStats: { hp: 68, atk: 65, def: 65, spa: 125, spd: 115, spe: 80 },
+        generation: 3,
+        tier: 2 as const,
+        bestAbility: 'Trace',
+        dexNum: 282,
+        abilities: ['Trace'],
+        movePool: [],
+        sets: [],
+      } as any;
+      const set = {
+        moves: [] as string[],
+        ability: 'Trace',
+        item: 'Leftovers',
+        nature: 'Modest' as Nature,
+        evs: { spa: 252, spe: 252, hp: 4 },
+      };
+      const pokemon = createBattlePokemon(gardeviorLike, set, 100, null);
+      expect(pokemon.species.types).toEqual(['Psychic', 'Fairy']);
     });
   });
 });

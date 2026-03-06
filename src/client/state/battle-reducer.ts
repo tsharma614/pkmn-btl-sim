@@ -88,6 +88,11 @@ export interface BattleState {
   battleLog: string[];
   /** True when socket is attempting to reconnect (shown as non-blocking banner) */
   isReconnecting: boolean;
+  /** Team generation options (for online mode, host decides) */
+  maxGen: number | null;
+  legendaryMode: boolean;
+  /** Room options received from server (for joining player to see host's settings) */
+  roomOptions: { maxGen: number | null; legendaryMode: boolean } | null;
 }
 
 function emptyStats(): BattleStats {
@@ -143,11 +148,14 @@ export const initialState: BattleState = {
   battleStats: emptyStats(),
   battleLog: [],
   isReconnecting: false,
+  maxGen: null,
+  legendaryMode: false,
+  roomOptions: null,
 };
 
 export type BattleAction =
   | { type: 'START_GAME'; playerName: string; itemMode: 'competitive' | 'casual' }
-  | { type: 'START_ONLINE'; playerName: string; itemMode: 'competitive' | 'casual' }
+  | { type: 'START_ONLINE'; playerName: string; itemMode: 'competitive' | 'casual'; maxGen?: number | null; legendaryMode?: boolean }
   | { type: 'CONNECTED' }
   | { type: 'ROOM_CREATED'; code: string; botName: string }
   | { type: 'ONLINE_ROOM_CREATED'; code: string }
@@ -440,6 +448,8 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         gameMode: 'online',
         playerName: action.playerName,
         itemMode: action.itemMode,
+        maxGen: action.maxGen ?? null,
+        legendaryMode: action.legendaryMode ?? false,
       };
 
     case 'CONNECTED':
@@ -491,12 +501,16 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         yourPlayerIndex: action.payload.yourPlayerIndex,
         yourState: {
           team: action.payload.yourTeam,
-          activePokemonIndex: 0,
+          activePokemonIndex: action.payload.activePokemonIndex ?? 0,
           sideEffects: { ...EMPTY_SIDE },
         },
         turn: 1,
         battleLog: logHeader,
       };
+      // Store room options from server (joining player sees host's settings)
+      if (action.payload.roomOptions) {
+        newState.roomOptions = action.payload.roomOptions;
+      }
       // For online mode, populate opponent lead from payload
       if (action.payload.opponentLead) {
         newState.opponentVisible = {

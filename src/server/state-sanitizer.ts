@@ -69,6 +69,8 @@ export function buildBattleStartPayload(room: Room, playerIndex: 0 | 1): BattleS
   const payload: BattleStartPayload = {
     yourTeam: team.map(serializeOwnPokemon),
     yourPlayerIndex: playerIndex,
+    // The server swaps lead to index 0 in selectLead, so active is always 0 after swap
+    activePokemonIndex: 0,
   };
 
   // If battle has started, include opponent's lead info
@@ -77,6 +79,12 @@ export function buildBattleStartPayload(room: Room, playerIndex: 0 | 1): BattleS
     payload.opponentLead = serializeVisiblePokemon(oppTeam[0]);
     payload.opponentName = room.players[opponentIndex]?.name;
   }
+
+  // Include room options so joining player can see settings
+  payload.roomOptions = {
+    maxGen: room.maxGen,
+    legendaryMode: room.legendaryMode,
+  };
 
   return payload;
 }

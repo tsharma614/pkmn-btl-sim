@@ -587,10 +587,13 @@ export function useEventQueue(
       }
 
       if (event.type === 'damage') {
-        const defenderName = event.data.defender as string;
         const dmg = event.data.damage as number;
         const isCrit = event.data.isCritical as boolean;
-        const isOpponentHit = defenderName === oppNameRef.current;
+        // Use player index when available (reliable), fall back to name matching
+        const defenderPlayer = event.data.defenderPlayer as number | undefined;
+        const isOpponentHit = defenderPlayer !== undefined
+          ? defenderPlayer !== yourPlayerIndex
+          : (event.data.defender as string) === oppNameRef.current;
         lastDamageWasToOpponent = isOpponentHit;
         indicatorKeyRef.current++;
         const dmgIndicator: IndicatorData = {
@@ -824,8 +827,11 @@ export function useEventQueue(
 
       // Faint: dramatic death + KO indicator
       if (event.type === 'faint') {
-        const faintedName = event.data.pokemon as string;
-        const isOpponentFaint = faintedName === oppNameRef.current;
+        // Use player index when available (reliable), fall back to name matching
+        const faintPlayer = event.data.player as number | undefined;
+        const isOpponentFaint = faintPlayer !== undefined
+          ? faintPlayer !== yourPlayerIndex
+          : (event.data.pokemon as string) === oppNameRef.current;
         indicatorKeyRef.current++;
         if (isOpponentFaint) {
           setAnimations(prev => ({ ...prev, opponentFaint: prev.opponentFaint + 1 }));
