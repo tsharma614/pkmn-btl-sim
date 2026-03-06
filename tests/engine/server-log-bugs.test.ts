@@ -644,6 +644,19 @@ describe('Lead switch-in abilities', () => {
     expect(battle.state.weather).toBe('sun');
   });
 
+  it('should trigger Orichalcum Pulse (sets sun like Drought)', () => {
+    const p1 = createTestPlayer('p1', 'Alice', [
+      {
+        species: { id: 'koraidon', name: 'Koraidon', types: ['Fighting', 'Dragon'] as [PokemonType, PokemonType] },
+        set: { ability: 'Orichalcum Pulse', item: null },
+      },
+    ]);
+    const p2 = createTestPlayer('p2', 'Bob');
+
+    const battle = new Battle(p1, p2, 42);
+    expect(battle.state.weather).toBe('sun');
+  });
+
   it('lead events are prepended to first turn', () => {
     const p1 = createTestPlayer('p1', 'Alice', [
       {

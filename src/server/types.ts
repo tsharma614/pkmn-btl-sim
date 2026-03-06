@@ -3,10 +3,11 @@
  */
 
 import { BattlePokemon, Player, BattleEvent, Weather, SideEffects } from '../types';
+import type { DraftPoolEntry } from '../engine/draft-pool';
 
 // --- Room types ---
 
-export type RoomStatus = 'waiting' | 'team_preview' | 'battling' | 'finished';
+export type RoomStatus = 'waiting' | 'drafting' | 'team_preview' | 'battling' | 'finished';
 
 export interface RoomPlayer {
   socketId: string;
@@ -24,6 +25,11 @@ export interface CreateRoomPayload {
   itemMode?: 'competitive' | 'casual';
   maxGen?: number | null;
   legendaryMode?: boolean;
+  draftMode?: boolean;
+}
+
+export interface DraftPickPayload {
+  poolIndex: number;
 }
 
 export interface JoinRoomPayload {
@@ -107,6 +113,7 @@ export interface OwnPokemon {
   ability: string;
   isAlive: boolean;
   choiceLocked: string | null;
+  encoreMove: string | null;
 }
 
 export interface TeamPreviewPayload {
@@ -173,8 +180,23 @@ export interface ClientToServerEvents {
   select_lead: (payload: SelectLeadPayload) => void;
   submit_action: (payload: SubmitActionPayload) => void;
   submit_force_switch: (payload: SubmitForceSwitchPayload) => void;
+  draft_pick: (payload: DraftPickPayload) => void;
   forfeit: () => void;
   rematch_request: () => void;
+}
+
+export interface DraftStartPayload {
+  pool: DraftPoolEntry[];
+  yourPlayerIndex: 0 | 1;
+}
+
+export interface DraftPickBroadcast {
+  playerIndex: 0 | 1;
+  poolIndex: number;
+}
+
+export interface DraftCompletePayload {
+  yourTeam: OwnPokemon[];
 }
 
 export interface ServerToClientEvents {
@@ -185,6 +207,9 @@ export interface ServerToClientEvents {
   turn_result: (payload: TurnResultPayload) => void;
   needs_switch: (payload: NeedsSwitchPayload) => void;
   battle_end: (payload: BattleEndPayload) => void;
+  draft_start: (payload: DraftStartPayload) => void;
+  draft_pick: (payload: DraftPickBroadcast) => void;
+  draft_complete: (payload: DraftCompletePayload) => void;
   opponent_disconnected: () => void;
   error: (payload: ErrorPayload) => void;
 }

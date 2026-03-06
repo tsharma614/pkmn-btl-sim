@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateTeam } from '../../src/engine/team-generator';
+import { generateTeam, pickSet } from '../../src/engine/team-generator';
 import { createBattlePokemon } from '../../src/engine/pokemon-factory';
 import { SeededRNG } from '../../src/utils/rng';
 import { PokemonType, Nature } from '../../src/types';
@@ -37,12 +37,17 @@ describe('Team Generator', () => {
     }
   });
 
-  it('all Pokemon have moves', () => {
-    const rng = new SeededRNG(42);
-    const team = generateTeam(rng);
-    for (const pokemon of team) {
-      expect(pokemon.moves.length).toBeGreaterThan(0);
-      expect(pokemon.moves.length).toBeLessThanOrEqual(4);
+  it('all Pokemon have exactly 4 moves (except Ditto)', () => {
+    for (let seed = 0; seed < 50; seed++) {
+      const rng = new SeededRNG(seed);
+      const team = generateTeam(rng);
+      for (const pokemon of team) {
+        if (pokemon.species.id === 'ditto') continue;
+        expect(
+          pokemon.moves.length,
+          `${pokemon.species.name} (seed ${seed}) has ${pokemon.moves.length} moves`,
+        ).toBe(4);
+      }
     }
   });
 
@@ -103,13 +108,36 @@ describe('Team Generator', () => {
     expect(tierCounts[4]).toBe(1);
   });
 
-  it('casual mode swaps Choice items', () => {
-    const rng = new SeededRNG(42);
-    const team = generateTeam(rng, { itemMode: 'casual' });
-    for (const pokemon of team) {
-      expect(pokemon.item).not.toBe('Choice Band');
-      expect(pokemon.item).not.toBe('Choice Specs');
-      expect(pokemon.item).not.toBe('Choice Scarf');
+  it('casual mode never has Choice items across many seeds', () => {
+    for (let seed = 0; seed < 100; seed++) {
+      const rng = new SeededRNG(seed);
+      const team = generateTeam(rng, { itemMode: 'casual' });
+      for (const pokemon of team) {
+        expect(
+          pokemon.item,
+          `${pokemon.species.name} has ${pokemon.item} in casual mode (seed ${seed})`,
+        ).not.toMatch(/^Choice/);
+      }
+    }
+  });
+
+  it('casual mode never has Choice items in classic + legendary combos', () => {
+    const configs = [
+      { itemMode: 'casual' as const, maxGen: 4 },
+      { itemMode: 'casual' as const, legendaryMode: true },
+      { itemMode: 'casual' as const, maxGen: 4, legendaryMode: true },
+    ];
+    for (const config of configs) {
+      for (let seed = 0; seed < 50; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, config);
+        for (const pokemon of team) {
+          expect(
+            pokemon.item,
+            `${pokemon.species.name} has ${pokemon.item} in casual mode (seed ${seed}, config ${JSON.stringify(config)})`,
+          ).not.toMatch(/^Choice/);
+        }
+      }
     }
   });
 
@@ -243,22 +271,144 @@ describe('Team Generator', () => {
     });
   });
 
-  describe('Fairy Type Stripping (Classic Mode)', () => {
-    it('strips Fairy type from Pokemon when maxGen < 6', () => {
+  describe('pickSet — Tera move filtering', () => {
+    it('never includes Tera Blast, Tera Shift, or Tera Starstorm', () => {
+      const pokedex = require('../../src/data/pokedex.json');
+      const TERA_MOVES = ['Tera Blast', 'Tera Shift', 'Tera Starstorm'];
       for (let seed = 0; seed < 30; seed++) {
         const rng = new SeededRNG(seed);
-        const team = generateTeam(rng, { itemMode: 'competitive', maxGen: 4 });
+        const team = generateTeam(rng);
         for (const pokemon of team) {
-          expect(
-            pokemon.species.types,
-            `${pokemon.species.name} should not have Fairy type in classic mode`,
-          ).not.toContain('Fairy');
+          for (const move of pokemon.moves) {
+            expect(
+              TERA_MOVES,
+              `${pokemon.species.name} has Tera move ${move.data.name}`,
+            ).not.toContain(move.data.name);
+          }
         }
       }
     });
 
-    it('does NOT strip Fairy type when maxGen >= 6 or null', () => {
-      // Over many seeds with all gens, some teams should have Fairy types
+    it('prefers sets with 4+ moves after Tera filtering', () => {
+      // Gyarados: set 1 has 5 non-Tera moves, set 2 has 3 (Tera Blast filtered out)
+      const pokedex = require('../../src/data/pokedex.json');
+      const gyarados = pokedex['gyarados'];
+      expect(gyarados).toBeTruthy();
+
+      for (let seed = 0; seed < 20; seed++) {
+        const rng = new SeededRNG(seed);
+        const set = pickSet(gyarados, rng, 'competitive');
+        expect(
+          set.moves.length,
+          `Gyarados got ${set.moves.length} moves with seed ${seed}: ${set.moves.join(', ')}`,
+        ).toBe(4);
+      }
+    });
+
+    it('fills from other sets when chosen set has < 4 moves', () => {
+      // Create a species where ALL sets have Tera moves, leaving < 4 each
+      // but combined they have enough unique moves
+      const fakeSpecies = {
+        id: 'fakemon',
+        name: 'Fakemon',
+        types: ['Normal'],
+        baseStats: { hp: 100, atk: 100, def: 100, spa: 100, spd: 100, spe: 100 },
+        generation: 9,
+        tier: 2,
+        bestAbility: 'Intimidate',
+        abilities: ['Intimidate'],
+        movePool: [],
+        sets: [
+          { moves: ['Tackle', 'Tera Blast', 'Return'], ability: 'Intimidate', item: 'Leftovers', nature: 'Adamant', evs: { atk: 252, spe: 252, hp: 4 } },
+          { moves: ['Body Slam', 'Earthquake', 'Tera Blast'], ability: 'Intimidate', item: 'Leftovers', nature: 'Adamant', evs: { atk: 252, spe: 252, hp: 4 } },
+        ],
+      } as any;
+
+      const rng = new SeededRNG(42);
+      const set = pickSet(fakeSpecies, rng, 'competitive');
+      // Should pull from both sets to get 4 moves
+      expect(set.moves.length).toBe(4);
+      expect(set.moves).not.toContain('Tera Blast');
+    });
+
+    it('all Pokemon across many seeds have exactly 4 moves (except Ditto)', () => {
+      const pokedex = require('../../src/data/pokedex.json');
+      const allSpecies = Object.values(pokedex) as any[];
+      const issues: string[] = [];
+
+      for (const species of allSpecies) {
+        if (species.id === 'ditto') continue;
+        if (!species.sets || species.sets.length === 0) continue;
+        for (let seed = 0; seed < 5; seed++) {
+          const rng = new SeededRNG(seed);
+          const set = pickSet(species, rng, 'competitive');
+          if (set.moves.length < 4) {
+            issues.push(`${species.name} (seed ${seed}): ${set.moves.length} moves`);
+          }
+        }
+      }
+
+      expect(issues, `Pokemon with < 4 moves:\n${issues.join('\n')}`).toHaveLength(0);
+    });
+  });
+
+  describe('Truant + Choice item prevention', () => {
+    it('Slaking never gets a Choice item', () => {
+      const pokedex = require('../../src/data/pokedex.json');
+      const slaking = pokedex['slaking'];
+      expect(slaking).toBeTruthy();
+
+      for (let seed = 0; seed < 50; seed++) {
+        const rng = new SeededRNG(seed);
+        const set = pickSet(slaking, rng, 'competitive');
+        expect(
+          set.item,
+          `Slaking got ${set.item} with seed ${seed}`,
+        ).not.toMatch(/^Choice/);
+      }
+    });
+
+    it('Slaking gets Life Orb instead of its Choice Band set', () => {
+      const pokedex = require('../../src/data/pokedex.json');
+      const slaking = pokedex['slaking'];
+
+      const rng = new SeededRNG(42);
+      const set = pickSet(slaking, rng, 'competitive');
+      expect(set.item).toBe('Life Orb');
+    });
+
+    it('Truant Pokemon never appear on generated teams with Choice items', () => {
+      for (let seed = 0; seed < 100; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng);
+        for (const pokemon of team) {
+          if (pokemon.ability === 'Truant') {
+            expect(
+              pokemon.item,
+              `${pokemon.species.name} has Truant + ${pokemon.item} (seed ${seed})`,
+            ).not.toMatch(/^Choice/);
+          }
+        }
+      }
+    });
+  });
+
+  describe('Fairy Type Preservation', () => {
+    it('preserves Fairy type in classic mode (maxGen < 6)', () => {
+      // Fairy type is never stripped — classic mode only restricts to Gen 1-4 Pokemon
+      let foundFairy = false;
+      for (let seed = 0; seed < 100 && !foundFairy; seed++) {
+        const rng = new SeededRNG(seed);
+        const team = generateTeam(rng, { itemMode: 'competitive', maxGen: 4 });
+        if (team.some(p => (p.species.types as string[]).includes('Fairy'))) {
+          foundFairy = true;
+        }
+      }
+      // Some Gen 1-4 Pokemon have Fairy type (e.g. Clefable, Togekiss)
+      expect(foundFairy).toBe(true);
+    });
+
+    it('preserves Fairy type when maxGen is null', () => {
       let foundFairy = false;
       for (let seed = 0; seed < 100 && !foundFairy; seed++) {
         const rng = new SeededRNG(seed);
@@ -270,36 +420,7 @@ describe('Team Generator', () => {
       expect(foundFairy).toBe(true);
     });
 
-    it('Pokemon with only Fairy type become Normal type in classic mode', () => {
-      // This is a defensive test — if a pure Fairy Pokemon ever appears in Gen 1-4,
-      // it should become Normal. Currently no pure Fairy Gen 1-4 Pokemon exist,
-      // but this validates the fallback logic.
-      const fakeSpecies = {
-        id: 'testfairy',
-        name: 'TestFairy',
-        types: ['Fairy'] as string[],
-        baseStats: { hp: 100, atk: 100, def: 100, spa: 100, spd: 100, spe: 100 },
-        generation: 3,
-        tier: 3 as const,
-        bestAbility: 'Levitate',
-        dexNum: 999,
-        abilities: ['Levitate'],
-        movePool: [],
-        sets: [],
-      } as any;
-      const fakeSet = {
-        moves: [] as string[],
-        ability: 'Levitate',
-        item: 'Leftovers',
-        nature: 'Adamant' as Nature,
-        evs: { atk: 252, spe: 252, hp: 4 },
-      };
-      const pokemon = createBattlePokemon(fakeSpecies, fakeSet, 100, 4);
-      expect(pokemon.species.types).toEqual(['Normal']);
-    });
-
-    it('dual-type Pokemon with Fairy lose only Fairy in classic mode', () => {
-      // Simulates Gardevoir (Psychic/Fairy) in classic mode
+    it('Fairy-type Pokemon keep their Fairy type with maxGen=4', () => {
       const gardeviorLike = {
         id: 'gardevoir',
         name: 'Gardevoir',
@@ -321,31 +442,6 @@ describe('Team Generator', () => {
         evs: { spa: 252, spe: 252, hp: 4 },
       };
       const pokemon = createBattlePokemon(gardeviorLike, set, 100, 4);
-      expect(pokemon.species.types).toEqual(['Psychic']);
-    });
-
-    it('does not strip Fairy when maxGen is null', () => {
-      const gardeviorLike = {
-        id: 'gardevoir',
-        name: 'Gardevoir',
-        types: ['Psychic', 'Fairy'] as string[],
-        baseStats: { hp: 68, atk: 65, def: 65, spa: 125, spd: 115, spe: 80 },
-        generation: 3,
-        tier: 2 as const,
-        bestAbility: 'Trace',
-        dexNum: 282,
-        abilities: ['Trace'],
-        movePool: [],
-        sets: [],
-      } as any;
-      const set = {
-        moves: [] as string[],
-        ability: 'Trace',
-        item: 'Leftovers',
-        nature: 'Modest' as Nature,
-        evs: { spa: 252, spe: 252, hp: 4 },
-      };
-      const pokemon = createBattlePokemon(gardeviorLike, set, 100, null);
       expect(pokemon.species.types).toEqual(['Psychic', 'Fairy']);
     });
   });

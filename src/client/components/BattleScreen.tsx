@@ -20,6 +20,7 @@ import { TeamPreview } from './TeamPreview';
 import { SetupScreen } from './SetupScreen';
 import { OnlineLobby } from './OnlineLobby';
 import { PokemonInfoModal } from './PokemonInfoModal';
+import { DraftScreen } from './DraftScreen';
 import { colors, spacing } from '../theme';
 import type { SideEffects } from '../../types';
 
@@ -55,7 +56,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, playAgain, requestRematchOnline, returnToMenu } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, playAgain, requestRematchOnline, returnToMenu } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -187,6 +188,27 @@ export function BattleScreen() {
     );
   }
 
+  // --- Drafting ---
+  if (state.phase === 'drafting') {
+    const yourPicks = state.draftPicks[state.yourPlayerIndex].map(i => state.draftPool[i]);
+    const oppPicks = state.draftPicks[1 - state.yourPlayerIndex as 0 | 1].map(i => state.draftPool[i]);
+    return (
+      <SafeAreaView style={styles.full}>
+        <DraftScreen
+          pool={state.draftPool}
+          yourPicks={yourPicks}
+          opponentPicks={oppPicks}
+          currentPlayer={state.draftCurrentPlayer}
+          yourPlayerIndex={state.yourPlayerIndex}
+          pickNumber={state.draftCurrentPick}
+          onPick={submitDraftPick}
+          opponentName={state.opponentName ?? state.botName ?? 'Opponent'}
+          playerName={state.playerName}
+        />
+      </SafeAreaView>
+    );
+  }
+
   // --- Team Preview ---
   if (state.phase === 'team_preview') {
     return (
@@ -215,7 +237,7 @@ export function BattleScreen() {
   }
 
   const actionsDisabled =
-    state.phase === 'waiting_for_turn' || isProcessing;
+    state.phase === 'waiting_for_turn' || isProcessing || state.queuedPendingEvents.length > 0;
 
   return (
     <SafeAreaView style={styles.full}>

@@ -113,13 +113,8 @@ export function generateTeam(
 }
 
 /** Get a canonical key for a Pokemon's type combination (sorted, joined). */
-function typeKey(species: PokemonSpecies, maxGen?: number | null): string {
-  let types = species.types;
-  if (maxGen && maxGen < 6) {
-    types = types.filter((t: string) => t !== 'Fairy');
-    if (types.length === 0) types = ['Normal'];
-  }
-  return [...types].sort().join('/');
+function typeKey(species: PokemonSpecies): string {
+  return [...species.types].sort().join('/');
 }
 
 /**
@@ -130,11 +125,7 @@ function validateTeam(team: PokemonSpecies[], legendaryMode?: boolean, maxGen?: 
   const maxTypeCount = legendaryMode ? 3 : 2;
   const typeCounts: Record<string, number> = {};
   for (const species of team) {
-    let types = species.types;
-    if (maxGen && maxGen < 6) {
-      types = types.filter((t: string) => t !== 'Fairy');
-      if (types.length === 0) types = ['Normal'];
-    }
+    const types = species.types;
     for (const type of types) {
       typeCounts[type] = (typeCounts[type] || 0) + 1;
       if (typeCounts[type] > maxTypeCount) return false;
@@ -146,7 +137,7 @@ function validateTeam(team: PokemonSpecies[], legendaryMode?: boolean, maxGen?: 
   // They must differ in at least one type.
   const typeKeyCounts: Record<string, number> = {};
   for (const species of team) {
-    const key = typeKey(species, maxGen);
+    const key = typeKey(species);
     typeKeyCounts[key] = (typeKeyCounts[key] || 0) + 1;
     if (typeKeyCounts[key] > 1) return false;
   }
@@ -178,7 +169,7 @@ function validateTeam(team: PokemonSpecies[], legendaryMode?: boolean, maxGen?: 
 /**
  * Pick a competitive set for a Pokemon, choosing moves from the pool.
  */
-function pickSet(
+export function pickSet(
   species: PokemonSpecies,
   rng: SeededRNG,
   itemMode: 'competitive' | 'casual'
@@ -189,11 +180,26 @@ function pickSet(
     return buildFallbackSet(species, rng);
   }
 
-  // Pick a random set from available ones
-  const baseSet = rng.pick(sets);
+  // Exclude Tera moves — no Tera mechanic
+  const EXCLUDED_MOVES = new Set(['Tera Blast', 'Tera Shift', 'Tera Starstorm']);
 
-  // Select 4 moves from the set's move pool
-  const movePool = [...(baseSet.moves || [])];
+  // Shuffle sets and pick first one with 4+ usable moves; fall back to largest pool
+  const shuffledSets = [...sets];
+  rng.shuffle(shuffledSets);
+  let baseSet = shuffledSets[0];
+  let movePool = (baseSet.moves || []).filter(m => !EXCLUDED_MOVES.has(m));
+  for (const s of shuffledSets) {
+    const pool = (s.moves || []).filter(m => !EXCLUDED_MOVES.has(m));
+    if (pool.length >= 4) {
+      baseSet = s;
+      movePool = pool;
+      break;
+    }
+    if (pool.length > movePool.length) {
+      baseSet = s;
+      movePool = pool;
+    }
+  }
   rng.shuffle(movePool);
 
   // Ensure at least 2 attacking moves
@@ -233,6 +239,29 @@ function pickSet(
     }
   }
 
+  // If STILL not 4, pull moves from other sets of the same species
+  if (selectedMoves.length < 4) {
+    for (const s of sets) {
+      if (selectedMoves.length >= 4) break;
+      for (const move of s.moves || []) {
+        if (selectedMoves.length >= 4) break;
+        if (!selectedMoves.includes(move) && !EXCLUDED_MOVES.has(move)) {
+          selectedMoves.push(move);
+        }
+      }
+    }
+  }
+
+  // If STILL not 4, pull from species movePool
+  if (selectedMoves.length < 4 && species.movePool) {
+    const poolMoves = species.movePool.filter(m => !EXCLUDED_MOVES.has(m) && !selectedMoves.includes(m));
+    rng.shuffle(poolMoves);
+    for (const move of poolMoves) {
+      if (selectedMoves.length >= 4) break;
+      selectedMoves.push(move);
+    }
+  }
+
   // Casual mode item swaps
   let item = baseSet.item || 'Leftovers';
   if (itemMode === 'casual') {
@@ -241,6 +270,12 @@ function pickSet(
     } else if (item === 'Choice Scarf') {
       item = 'Leftovers';
     }
+  }
+
+  // Truant + Choice items is a terrible combo — swap to Life Orb
+  const ability = baseSet.ability || species.bestAbility;
+  if (ability === 'Truant' && (item === 'Choice Band' || item === 'Choice Specs' || item === 'Choice Scarf')) {
+    item = 'Life Orb';
   }
 
   return {

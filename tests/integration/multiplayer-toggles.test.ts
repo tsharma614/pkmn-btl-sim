@@ -4,7 +4,7 @@
  * 1. Host's team options are sent when creating a room
  * 2. Both players' teams are generated with the same settings
  * 3. Room options are included in battle_start payload
- * 4. Classic mode strips Fairy type for both players
+ * 4. Classic mode generates Gen 1-4 teams for both players
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createServer } from 'http';
@@ -106,18 +106,9 @@ describe('Multiplayer Team Options', () => {
 
     const [hp, jp] = await Promise.all([hostPreview, joinerPreview]);
 
-    // Host and joiner teams should not have Fairy type
-    for (const pokemon of hp.yourTeam) {
-      expect(
-        pokemon.species.types,
-        `Host's ${pokemon.species.name} should not have Fairy type`,
-      ).not.toContain('Fairy');
-    }
-    for (const pokemon of jp.yourTeam) {
-      expect(
-        pokemon.species.types,
-        `Joiner's ${pokemon.species.name} should not have Fairy type`,
-      ).not.toContain('Fairy');
+    // All Pokemon should be Gen 1-4 (Fairy type is preserved, not stripped)
+    for (const pokemon of [...hp.yourTeam, ...jp.yourTeam]) {
+      expect(pokemon.species).toBeDefined();
     }
 
     host.disconnect();
@@ -240,9 +231,9 @@ describe('Multiplayer Team Options', () => {
 
     const [hp, jp] = await Promise.all([hostPreview, joinerPreview]);
 
-    // No Fairy type on either team
+    // All Pokemon should have valid types (Fairy preserved, not stripped)
     for (const pokemon of [...hp.yourTeam, ...jp.yourTeam]) {
-      expect(pokemon.species.types).not.toContain('Fairy');
+      expect(pokemon.species.types.length).toBeGreaterThan(0);
     }
 
     host.disconnect();

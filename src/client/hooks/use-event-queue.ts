@@ -88,7 +88,30 @@ const NUKE_REACTIONS = [
   "WHAT THE ACTUAL FUCK WAS THAT DAMAGE", "I'm actually shaking rn",
 ];
 
-// Crits — RNG rage
+// --- Opponent lands a hit on YOU (they gloat) ---
+
+// Big hit on you (40%+ damage)
+const GLOAT_BIG_HIT = [
+  "GET FUCKED LMAOOO", "Did that hurt? GOOD.", "Sit DOWN",
+  "That's what I thought", "You felt that one huh",
+  "EAT THAT", "How's that taste bitch", "I'm built different",
+  "You're so cooked it's not even funny", "Where's your HP going? Oh right. GONE.",
+  "That's called damage sweetheart", "I barely even tried",
+  "You should forfeit honestly", "My Pokemon said sit the fuck down",
+  "BOOM. You felt that in your soul.", "That was personal.",
+  "Your HP bar is crying", "I'm not even warmed up yet",
+];
+
+// Crit on you — opponent gloats about RNG blessing
+const GLOAT_CRIT = [
+  "CRIT BABY LET'S GOOO", "The RNG gods love me",
+  "CALCULATED CRIT", "I manifested that crit", "Crits are a skill issue",
+  "That crit was EARNED", "Thank you RNG, very cool",
+  "Imagine getting crit on", "That's karma bitch",
+  "The game WANTS me to win", "Crit merchant and PROUD",
+];
+
+// Crits — RNG rage (opponent gets crit on THEIR mon)
 const CRIT_REACTIONS = [
   "ARE YOU FUCKING KIDDING ME", "CRIT?! FUCK THIS GAME",
   "Oh FUCK OFF with that crit", "This game is fucking rigged",
@@ -123,17 +146,44 @@ const ENEMY_MISS_REACTIONS = [
   "Nice aim dipshit", "Air ball",
 ];
 
-// Hazard reactions — when opponent takes entry hazard damage
-const HAZARD_REACTIONS = [
+// Hazard reactions — opponent takes entry hazard damage (they're pissed)
+const HAZARD_OWN_REACTIONS = [
+  "FUCK YOUR SPIKES", "I hate entry hazards so much",
+  "Where are my Heavy-Duty Boots", "God damn rocks",
+  "Stealth Rock is a war crime", "Great, free damage. Cool. Love it.",
+  "Can you NOT set hazards for five seconds", "I'm losing HP for breathing",
+  "Oh nice, more chip damage, just what I needed", "Hazard stacking piece of shit",
+  "My Pokemon shouldn't have to deal with this", "Entry hazard andy over here",
+  "I swear if I lose because of hazards", "That's coming out of my HP bar asshole",
+  "THE ROCKS. THE FUCKING ROCKS.", "I'm switching and dying. Great.",
+];
+
+// Hazard reactions — YOUR Pokemon takes entry hazard damage (opponent gloats)
+const HAZARD_ENEMY_REACTIONS = [
   "Spikes?? LMAO", "Should've worn boots", "Entry hazard diff",
   "Walk it off", "That's gotta sting", "Free damage babyyy",
   "Welcome to the field, bitch", "Surprise!", "Eat rocks idiot",
   "Hazard tax collected", "The floor is lava", "That's what you get for switching",
   "Step on a Lego", "Nice entrance dipshit",
+  "I set those just for you", "How's the ground feel, bitch?",
 ];
 
-// Faint reactions — when opponent's Pokemon faints
-const FAINT_REACTIONS = [
+// Faint reactions — opponent's Pokemon faints (they're devastated)
+const OWN_FAINT_REACTIONS = [
+  "WHAT THE FUCK NO", "Are you KIDDING me right now",
+  "I literally just lost my best Pokemon", "NOOOOO NOT THAT ONE",
+  "This is actually over for me", "I'm going to be sick",
+  "That was my sweeper you piece of shit", "HOW DID THAT DIE",
+  "I'm down bad. I'm actually down bad.", "RIP to a real one holy shit",
+  "You're going to pay for that", "I swear to GOD",
+  "My whole game plan just died", "I needed that Pokemon alive",
+  "Fuck fuck fuck fuck fuck", "That's it I'm tilted",
+  "You got lucky with that kill", "I hate everything about this",
+  "This is the worst day of my life", "BRO THAT WAS MY CARRY",
+];
+
+// Faint reactions — YOUR Pokemon faints (opponent gloats)
+const ENEMY_FAINT_REACTIONS = [
   "LMAO BYE", "GET THAT OUTTA HERE", "REST IN PISS",
   "See ya, wouldn't wanna be ya", "Another one bites the dust",
   "Get absolutely bodied", "DOWN GOES FRAZIER",
@@ -141,6 +191,12 @@ const FAINT_REACTIONS = [
   "And stay down", "Deleted.", "Next victim please",
   "Should've stayed in the ball", "Return to sender",
   "Skill issue + ratio", "Couldn't be my Pokemon",
+  "Pack your bags", "Shipped to the shadow realm",
+  "Tell your friends", "That one's going in the montage",
+  "BODIEDDDD", "Gone. Reduced to atoms.", "Not even close babyyy",
+  "Send in the next one so I can kill that too", "Obituary incoming",
+  "Get that weak shit out of my face", "Go back to the daycare",
+  "Your Pokemon just ragequit", "That KO was free as fuck",
 ];
 
 // Super effective reactions — when you land a SE hit on them
@@ -148,6 +204,10 @@ const SE_REACTIONS = [
   "Oh come ON", "Type advantage andy over here", "Wow so skilled picking super effective",
   "Congratulations you know the type chart", "Real original",
   "Yeah that's super effective, asshole", "I hate this matchup",
+  "No shit it's super effective", "Wow you can read a type chart, want a medal?",
+  "Matchup fishing ass player", "You literally picked that move just to piss me off",
+  "Super effective deez nuts", "That's not skill that's just types",
+  "My grandmother knows the type chart too", "Ground into Water wow revolutionary",
 ];
 
 // Not very effective reactions — when your hit barely does anything
@@ -155,6 +215,123 @@ const NVE_REACTIONS = [
   "Nice try dumbass", "Learn your type chart", "Did you forget types exist?",
   "Resisted lol", "That was NOT it", "Read a book maybe",
   "Imagine not knowing type matchups", "Thanks for the tickle",
+  "Bro really just clicked that huh", "RESISTED. Sit down.",
+  "My Pokemon literally yawned", "Did you even look at my typing?",
+  "That was embarrassing for both of us", "I could tank that in my sleep",
+  "Bro tried to Ice Beam my Water type", "Google type chart challenge (IMPOSSIBLE)",
+];
+
+// --- Item trigger reactions ---
+
+// Focus Sash saved OPPONENT's Pokemon (they're gloating)
+const FOCUS_SASH_OWN_REACTIONS = [
+  "FOCUS SASH BABY LET'S GOOO", "You thought you had me LMAOOO",
+  "Sash diff, stay mad", "NOT TODAY BITCH", "1 HP AND A DREAM",
+  "Imagine not running Sash", "CLUTCH SASH LETS FUCKING GO",
+  "Did you really think that was gonna kill me?", "Sash gaming",
+  "I LIVE BITCH", "You literally can't kill me right now",
+  "That's what Focus Sash is for, dipshit", "Hold this 1 HP",
+  "Nice try but I built different", "SASH ACTIVATED GET FUCKED",
+  "You just wasted your move lmaooo", "I paid good money for this sash",
+  "1 HP is all I need to end you", "Surviving on pure spite and a sash",
+];
+
+// Focus Sash saved YOUR Pokemon (opponent is furious)
+const FOCUS_SASH_ENEMY_REACTIONS = [
+  "FUCK YOUR FOCUS SASH", "ARE YOU SERIOUS RIGHT NOW",
+  "That should have been a kill what the FUCK", "I hate Focus Sash so much",
+  "Oh COME ON that's such bullshit", "Die already holy shit",
+  "1 HP?? FUCKING ONE???", "Focus Sash is the most degenerate item in this game",
+  "I swear to god if you set up on me", "Great now I have to hit you AGAIN",
+  "Just die already you cockroach", "SASH?? IN THIS ECONOMY??",
+  "That's the most annoying shit I've ever seen", "WHO GAVE YOU A FOCUS SASH",
+  "I'm going to lose my mind", "You and your bullshit sash can go to hell",
+  "BRO JUST FUCKING DIE", "That kill was MINE and you know it",
+];
+
+// Air Balloon popped on OPPONENT's Pokemon (they're annoyed)
+const BALLOON_OWN_REACTIONS = [
+  "Shit there goes my balloon", "Well that's fucking great",
+  "RIP Air Balloon, you served well", "I needed that balloon you asshole",
+  "Whatever, it was gonna pop eventually", "My poor balloon...",
+  "You just HAD to pop it didn't you", "Fuck, no more Ground immunity",
+  "Great, now I'm grounded. Happy?", "That balloon cost me everything",
+  "Pop my balloon one more time I dare you", "So much for flying",
+];
+
+// Air Balloon popped on YOUR Pokemon (opponent is happy)
+const BALLOON_ENEMY_REACTIONS = [
+  "POP goes the balloon bitch", "LMAO bye bye balloon",
+  "No more floating for you dipshit", "Get grounded loser",
+  "Should've brought a better item", "Air Balloon? More like Air Gone",
+  "Time to eat some Earthquakes", "Welcome back to the ground, bitch",
+  "That balloon was living on borrowed time", "POP POP motherfucker",
+  "Imagine thinking a balloon would save you", "Back to earth, idiot",
+];
+
+// Weakness Policy activated on OPPONENT's Pokemon (they're hyped — you powered them up)
+const WP_OWN_REACTIONS = [
+  "WEAKNESS POLICY LETS FUCKING GOOO", "THANKS FOR THE BOOST IDIOT",
+  "You just made me STRONGER dumbass", "LMAOOO +2/+2 BABY",
+  "I literally baited you into that", "YOU ACTIVATED MY TRAP CARD",
+  "Thanks for the free boosts dipshit", "Oh you're SO dead now",
+  "I was WAITING for you to do that", "Big mistake. HUGE mistake.",
+  "You just signed your own death warrant", "Weakness Policy diff",
+  "That super effective was a gift. For ME.", "+2 attack and you can't take it back",
+  "I'm about to sweep your whole team thanks to you", "All according to plan",
+  "Keep hitting me with super effective see what happens",
+];
+
+// Weakness Policy activated on YOUR Pokemon (opponent is scared)
+const WP_ENEMY_REACTIONS = [
+  "Oh fuck. Weakness Policy.", "SHIT SHIT SHIT SHIT",
+  "I just boosted them didn't I... fuck", "Oh no oh fuck oh god",
+  "WHY DOES EVERYTHING HAVE WEAKNESS POLICY", "I'm actually so dead",
+  "Wait no go back I take it back", "That was a mistake I KNOW it was a mistake",
+  "Please don't sweep me please don't sweep me", "+2 is fine. This is fine. I'm fine.",
+  "I literally handed them the game on a silver platter", "Well I'm fucked",
+  "I should have just clicked something else", "WEAKNESS POLICY?? REALLY??",
+  "Great I just lost the game", "I'm going to be sick",
+];
+
+// Toxic Orb activated on OPPONENT's Pokemon (they're scheming — Guts/Poison Heal user)
+const TOXIC_ORB_OWN_REACTIONS = [
+  "All part of the plan", "Toxic Orb gaming let's go",
+  "Yeah I poisoned myself. Problem?", "This is big brain you wouldn't understand",
+  "Trust the process", "Poison makes me STRONGER bitch",
+  "You see toxic, I see a power spike", "Calculated.",
+  "Status is a feature not a bug", "You have no idea what's about to happen",
+  "Guts go BRRRR", "I'm built different, literally",
+];
+
+// Toxic Orb activated on YOUR Pokemon (opponent is confused/mocking)
+const TOXIC_ORB_ENEMY_REACTIONS = [
+  "Bro just poisoned himself LMAOOO", "You good bro??",
+  "Sir your Pokemon is killing itself", "Self-sabotage speedrun any%",
+  "Oh great a Guts user, fuck me sideways", "Not the Toxic Orb tech",
+  "Imagine willingly poisoning yourself", "This dude is built different and not in a good way",
+  "I hope you know what you're doing", "Self-harm is not the answer",
+  "Great, now I gotta deal with Guts", "Oh so we're doing THAT kind of set",
+];
+
+// Flame Orb activated on OPPONENT's Pokemon (they're scheming)
+const FLAME_ORB_OWN_REACTIONS = [
+  "Flame Orb activated. You're fucked.", "Guts boost incoming bitch",
+  "Yeah I burned myself. And?", "Trust me bro this is a good thing",
+  "Fire gives me strength", "Calculated self-immolation",
+  "The burn is a BUFF where I come from", "My pain is your problem now",
+  "Flame Orb is peak game design", "Watch what happens next",
+  "I am literally on fire and I've never been stronger",
+];
+
+// Flame Orb activated on YOUR Pokemon (opponent is wary/mocking)
+const FLAME_ORB_ENEMY_REACTIONS = [
+  "Oh GREAT a Flame Orb Guts set", "Bro really just set himself on fire",
+  "Is your Pokemon okay??", "Self-burn any% world record",
+  "Oh so you're one of THOSE players", "This is about to hurt isn't it",
+  "Why would you do that to your own Pokemon", "Sir that's arson",
+  "Great now everything's gonna hit like a truck", "I already hate this",
+  "Flame Orb players are a different breed of psychopath",
 ];
 
 function pickReaction(reactions: string[]): string {
@@ -180,8 +357,8 @@ export function getMissReaction(isOpponentMiss: boolean): string {
   return pickReaction(isOpponentMiss ? OWN_MISS_REACTIONS : ENEMY_MISS_REACTIONS);
 }
 
-export function getFaintReaction(): string {
-  return pickReaction(FAINT_REACTIONS);
+export function getFaintReaction(isOwnFaint: boolean): string {
+  return pickReaction(isOwnFaint ? OWN_FAINT_REACTIONS : ENEMY_FAINT_REACTIONS);
 }
 
 export function getEffectivenessReaction(type: 'super_effective' | 'not_very_effective'): string | null {
@@ -260,10 +437,11 @@ export function formatEventMessage(event: BattleEvent): { text: string; segments
       break;
     case 'damage': {
       const crit = d.isCritical ? ' Critical hit!' : '';
+      const hitLabel = d.hit ? ` (hit ${d.hit})` : '';
       text = pick([
-        `${d.defender} took ${d.damage} damage!${crit}`,
-        `${d.defender} takes ${d.damage} damage!${crit}`,
-        `Dealt ${d.damage} to ${d.defender}!${crit}`,
+        `${d.defender} took ${d.damage} damage!${hitLabel}${crit}`,
+        `${d.defender} takes ${d.damage} damage!${hitLabel}${crit}`,
+        `Dealt ${d.damage} to ${d.defender}!${hitLabel}${crit}`,
       ]);
       break;
     }
@@ -357,7 +535,12 @@ export function formatEventMessage(event: BattleEvent): { text: string; segments
       text = `${d.pokemon} took recoil damage!`;
       break;
     case 'heal':
-      text = `${d.pokemon} restored HP!`;
+      text = d.source === 'Wish'
+        ? `${d.pokemon}'s wish came true!`
+        : `${d.pokemon} restored HP!`;
+      break;
+    case 'wish_start':
+      text = `${d.pokemon} made a wish!`;
       break;
     case 'drain':
       text = `${d.pokemon} drained HP!`;
@@ -371,6 +554,15 @@ export function formatEventMessage(event: BattleEvent): { text: string; segments
     case 'ability_trigger':
       text = `${d.pokemon}'s ${d.ability} activated!`;
       break;
+    case 'item_trigger': {
+      const item = d.item as string;
+      if (d.message === 'popped') {
+        text = `${d.pokemon}'s ${item} popped!`;
+      } else {
+        text = `${d.pokemon}'s ${item} activated!`;
+      }
+      break;
+    }
     case 'ability_heal':
       text = `${d.pokemon} healed HP from ${d.ability}!`;
       break;
@@ -501,6 +693,9 @@ export function useEventQueue(
   initialPlayerHpRef.current = initialPlayerHp;
   const initialOpponentHpRef = useRef(initialOpponentHp);
   initialOpponentHpRef.current = initialOpponentHp;
+  // Track last override values so subsequent event batches don't snap HP back
+  const lastPlayerHpRef = useRef<DisplayedHp | null>(null);
+  const lastOpponentHpRef = useRef<DisplayedHp | null>(null);
 
   // Clear all stale state when both pokemon names become null (game reset).
   // Without this, messages and overrides from the previous game leak into the next.
@@ -508,6 +703,10 @@ export function useEventQueue(
     if (yourPokemonName === null && opponentPokemonName === null) {
       setMessages([]);
       setIsProcessing(false);
+      setAnimations({
+        playerAttack: 0, playerDamage: 0, playerFaint: 0, playerSwitchOut: 0,
+        opponentAttack: 0, opponentDamage: 0, opponentFaint: 0, opponentSwitchOut: 0,
+      });
       setPlayerNameOverride(null);
       setPlayerSpriteOverride(null);
       setOpponentNameOverride(null);
@@ -517,6 +716,9 @@ export function useEventQueue(
       setOpponentHpOverride(null);
       setPlayerIndicator(null);
       setOpponentIndicator(null);
+      setScreenFlash(null);
+      lastPlayerHpRef.current = null;
+      lastOpponentHpRef.current = null;
       lastEventsRef.current = [];
       return;
     }
@@ -537,13 +739,18 @@ export function useEventQueue(
     setIsProcessing(true);
     setDamageReaction(null);
 
-    // Initialize displayed HP from pre-turn state
-    const runningPlayerHp = initialPlayerHpRef.current
-      ? { current: initialPlayerHpRef.current.current, max: initialPlayerHpRef.current.max }
-      : null;
-    const runningOpponentHp = initialOpponentHpRef.current
-      ? { current: initialOpponentHpRef.current.current, max: initialOpponentHpRef.current.max }
-      : null;
+    // Initialize displayed HP: prefer last tracked override (from previous batch)
+    // over the initial prop (which may have jumped to the engine's post-turn value)
+    const runningPlayerHp = lastPlayerHpRef.current
+      ? { ...lastPlayerHpRef.current }
+      : initialPlayerHpRef.current
+        ? { current: initialPlayerHpRef.current.current, max: initialPlayerHpRef.current.max }
+        : null;
+    const runningOpponentHp = lastOpponentHpRef.current
+      ? { ...lastOpponentHpRef.current }
+      : initialOpponentHpRef.current
+        ? { current: initialOpponentHpRef.current.current, max: initialOpponentHpRef.current.max }
+        : null;
 
     if (runningPlayerHp) setPlayerHpOverride({ ...runningPlayerHp });
     if (runningOpponentHp) setOpponentHpOverride({ ...runningOpponentHp });
@@ -552,11 +759,27 @@ export function useEventQueue(
     let cancelled = false;
     // Track who was last hit — used to contextualize SE/NVE reactions
     let lastDamageWasToOpponent = false;
+    // Cooldown: avoid rapid-fire speech bubbles (e.g. multi-hit moves)
+    let lastReactionTime = 0;
+    const REACTION_COOLDOWN = 1800; // ms between low-priority reactions
+
+    /** Set a reaction with cooldown. High-priority always fires; low-priority respects cooldown. */
+    const tryReaction = (text: string | null, priority: 'high' | 'low' = 'low') => {
+      if (!text) return;
+      const now = Date.now();
+      if (priority === 'high' || now - lastReactionTime >= REACTION_COOLDOWN) {
+        setDamageReaction(text);
+        lastReactionTime = now;
+      }
+    };
 
     const processNext = () => {
       if (cancelled) return;
       if (i >= events.length) {
         setIsProcessing(false);
+        // Save running HP so the next batch doesn't snap to the engine's post-turn value
+        lastPlayerHpRef.current = runningPlayerHp ? { ...runningPlayerHp } : null;
+        lastOpponentHpRef.current = runningOpponentHp ? { ...runningOpponentHp } : null;
         // Clear HP overrides — real state will be applied by EVENTS_PROCESSED
         setPlayerHpOverride(null);
         setOpponentHpOverride(null);
@@ -606,7 +829,7 @@ export function useEventQueue(
           setAnimations(prev => ({ ...prev, opponentDamage: prev.opponentDamage + 1 }));
           setOpponentIndicator(dmgIndicator);
           const reaction = getDamageReaction(dmg, event.data.maxHp as number, isCrit);
-          if (reaction) setDamageReaction(reaction);
+          if (reaction) tryReaction(reaction, isCrit ? 'high' : 'low');
           if (isCrit) {
             flashKeyRef.current++;
             setScreenFlash({ color: '#FFD700', key: flashKeyRef.current });
@@ -614,7 +837,16 @@ export function useEventQueue(
         } else {
           setAnimations(prev => ({ ...prev, playerDamage: prev.playerDamage + 1 }));
           setPlayerIndicator(dmgIndicator);
-          setDamageReaction(null);
+          // Opponent gloats when they land a big hit or crit on you
+          if (isCrit) {
+            tryReaction(pickReaction(GLOAT_CRIT), 'high');
+          } else {
+            const pct = (dmg / (event.data.maxHp as number)) * 100;
+            if (pct >= 40) {
+              tryReaction(pickReaction(GLOAT_BIG_HIT), 'low');
+            }
+            // small hits: don't clear — let previous reaction linger
+          }
         }
       }
 
@@ -628,7 +860,7 @@ export function useEventQueue(
         } else {
           setPlayerIndicator({ text: 'MISS!', color: '#888', key: indicatorKeyRef.current });
         }
-        setDamageReaction(getMissReaction(isOpponentMiss));
+        tryReaction(getMissReaction(isOpponentMiss), 'high');
       }
 
       // Immune
@@ -649,7 +881,7 @@ export function useEventQueue(
           indicatorKeyRef.current++;
           setOpponentIndicator({ text: 'SUPER EFFECTIVE!', color: '#EE8130', key: indicatorKeyRef.current, big: true });
           const reaction = getEffectivenessReaction(event.type);
-          if (reaction) setDamageReaction(reaction);
+          if (reaction) tryReaction(reaction, 'low');
         }
       }
       if (event.type === 'not_very_effective') {
@@ -657,7 +889,7 @@ export function useEventQueue(
           indicatorKeyRef.current++;
           setOpponentIndicator({ text: 'Not very effective...', color: '#888', key: indicatorKeyRef.current });
           const reaction = getEffectivenessReaction(event.type);
-          if (reaction) setDamageReaction(reaction);
+          if (reaction) tryReaction(reaction, 'low');
         }
       }
 
@@ -708,10 +940,11 @@ export function useEventQueue(
         if (pokemon === oppNameRef.current) {
           setAnimations(prev => ({ ...prev, opponentDamage: prev.opponentDamage + 1 }));
           setOpponentIndicator(ind);
-          setDamageReaction(pickReaction(HAZARD_REACTIONS));
+          tryReaction(pickReaction(HAZARD_OWN_REACTIONS), 'low'); // their mon took hazards — they're mad
         } else if (pokemon === yourNameRef.current) {
           setAnimations(prev => ({ ...prev, playerDamage: prev.playerDamage + 1 }));
           setPlayerIndicator(ind);
+          tryReaction(pickReaction(HAZARD_ENEMY_REACTIONS), 'low'); // your mon took hazards — they gloat
         }
       }
 
@@ -757,14 +990,36 @@ export function useEventQueue(
         }
       }
 
+      // Item triggers — opponent reacts with item-specific quips
+      if (event.type === 'item_trigger') {
+        const item = event.data.item as string;
+        const pokemon = event.data.pokemon as string;
+        const isOpponentItem = pokemon === oppNameRef.current;
+
+        if (item === 'Focus Sash') {
+          tryReaction(pickReaction(isOpponentItem ? FOCUS_SASH_OWN_REACTIONS : FOCUS_SASH_ENEMY_REACTIONS), 'high');
+        } else if (item === 'Air Balloon') {
+          tryReaction(pickReaction(isOpponentItem ? BALLOON_OWN_REACTIONS : BALLOON_ENEMY_REACTIONS), 'high');
+        } else if (item === 'Weakness Policy') {
+          tryReaction(pickReaction(isOpponentItem ? WP_OWN_REACTIONS : WP_ENEMY_REACTIONS), 'high');
+        } else if (item === 'Toxic Orb') {
+          tryReaction(pickReaction(isOpponentItem ? TOXIC_ORB_OWN_REACTIONS : TOXIC_ORB_ENEMY_REACTIONS), 'high');
+        } else if (item === 'Flame Orb') {
+          tryReaction(pickReaction(isOpponentItem ? FLAME_ORB_OWN_REACTIONS : FLAME_ORB_ENEMY_REACTIONS), 'high');
+        }
+      }
+
       // Switch: trigger switch-out animation, then show new Pokemon
       if (event.type === 'switch') {
-        const fromName = event.data.from as string;
         const toName = event.data.to as string;
         const toId = event.data.toId as string;
         const toHp = event.data.toHp as number;
         const toMaxHp = event.data.toMaxHp as number;
-        if (fromName === oppNameRef.current) {
+        // Use player index (reliable) to determine which side switched
+        const switchPlayer = event.data.player as number;
+        const isOpponentSwitch = switchPlayer !== yourPlayerIndex;
+        console.log(`[event-queue] SWITCH: player=${switchPlayer}, → ${toName} (id: ${toId}), isOpponent: ${isOpponentSwitch}`);
+        if (isOpponentSwitch) {
           setAnimations(prev => ({ ...prev, opponentSwitchOut: prev.opponentSwitchOut + 1 }));
           setDamageReaction(null);
           // After switch-out animation (300ms), show new Pokemon
@@ -779,7 +1034,7 @@ export function useEventQueue(
             }
             setOpponentHpOverride({ current: toHp, max: toMaxHp });
           }, 400);
-        } else if (fromName === yourNameRef.current) {
+        } else {
           setAnimations(prev => ({ ...prev, playerSwitchOut: prev.playerSwitchOut + 1 }));
           setTimeout(() => {
             if (cancelled) return;
@@ -800,6 +1055,7 @@ export function useEventQueue(
         const player = event.data.player as number;
         const name = event.data.pokemon as string;
         const speciesId = event.data.speciesId as string;
+        console.log(`[event-queue] SEND_OUT: player=${player}, name=${name}, id=${speciesId}, yourPlayerIndex=${yourPlayerIndex}`);
         const hp = event.data.currentHp as number;
         const maxHp = event.data.maxHp as number;
         if (player !== yourPlayerIndex) {
@@ -827,6 +1083,7 @@ export function useEventQueue(
 
       // Faint: dramatic death + KO indicator
       if (event.type === 'faint') {
+        console.log(`[event-queue] FAINT: ${event.data.pokemon}, player=${event.data.player}, oppRef=${oppNameRef.current}, yourRef=${yourNameRef.current}`);
         // Use player index when available (reliable), fall back to name matching
         const faintPlayer = event.data.player as number | undefined;
         const isOpponentFaint = faintPlayer !== undefined
@@ -836,7 +1093,7 @@ export function useEventQueue(
         if (isOpponentFaint) {
           setAnimations(prev => ({ ...prev, opponentFaint: prev.opponentFaint + 1 }));
           setOpponentIndicator({ text: 'KO!', color: '#e94560', key: indicatorKeyRef.current, big: true });
-          setDamageReaction(getFaintReaction());
+          tryReaction(getFaintReaction(true), 'high'); // their mon died — they're upset
           if (runningOpponentHp) {
             runningOpponentHp.current = 0;
             setOpponentHpOverride({ ...runningOpponentHp });
@@ -844,6 +1101,7 @@ export function useEventQueue(
         } else {
           setAnimations(prev => ({ ...prev, playerFaint: prev.playerFaint + 1 }));
           setPlayerIndicator({ text: 'KO!', color: '#e94560', key: indicatorKeyRef.current, big: true });
+          tryReaction(getFaintReaction(false), 'high'); // your mon died — they gloat
           if (runningPlayerHp) {
             runningPlayerHp.current = 0;
             setPlayerHpOverride({ ...runningPlayerHp });
@@ -887,6 +1145,8 @@ export function useEventQueue(
       else if (event.type === 'send_out') delay = 1500;
       else if (event.type === 'super_effective' || event.type === 'not_very_effective') delay = 800;
       else if (event.type === 'use_move') delay = 1300;
+      else if (event.type === 'damage' && event.data.hit) delay = 500; // multi-hit: fast per-hit
+      else if (event.type === 'multi_hit') delay = 600; // summary after multi-hit
       setTimeout(processNext, delay);
     };
 

@@ -21,6 +21,7 @@ function createTestBattle(overrides: {
     maxGen: null,
     difficulty: overrides.difficulty ?? 'normal',
     legendaryMode: false,
+    draftMode: false,
     dispatch,
   });
 
@@ -69,7 +70,7 @@ describe('createLocalBattle', () => {
   });
 
   describe('selectLead()', () => {
-    it('dispatches BATTLE_START then BOT_LEAD_REVEALED', () => {
+    it('dispatches BATTLE_START with opponentLead then BOT_LEAD_REVEALED', () => {
       const { lb, dispatched } = createTestBattle();
       lb.start();
       dispatched.length = 0; // clear start dispatches
@@ -81,6 +82,10 @@ describe('createLocalBattle', () => {
       if (dispatched[0].type === 'BATTLE_START') {
         expect(dispatched[0].payload.yourTeam).toHaveLength(6);
         expect(dispatched[0].payload.yourPlayerIndex).toBe(0);
+        // opponentLead should be populated to avoid "???" flash
+        expect(dispatched[0].payload.opponentLead).toBeDefined();
+        expect(dispatched[0].payload.opponentLead?.species).toBeDefined();
+        expect(dispatched[0].payload.opponentName).toBe(lb.botName);
       }
 
       expect(dispatched[1].type).toBe('BOT_LEAD_REVEALED');

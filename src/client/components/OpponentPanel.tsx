@@ -33,6 +33,11 @@ export function OpponentPanel({ opponentVisible, botName, attackTrigger = 0, dam
   const active = opponentVisible?.activePokemon;
   const displaySpeciesId = speciesIdOverride ?? active?.species.id ?? 'unknown';
   const displayName = nameOverride ?? active?.species.name ?? '???';
+
+  // Debug: log when opponent display changes
+  if (displayName === '???' || !active) {
+    console.log(`[OpponentPanel] SHOWING ??? — active: ${active ? active.species.name : 'null'}, spriteOverride: ${speciesIdOverride ?? 'none'}, nameOverride: ${nameOverride ?? 'none'}, opponentVisible: ${opponentVisible ? 'yes' : 'null'}`);
+  }
   const teamSize = opponentVisible?.teamSize ?? 6;
   const faintedCount = opponentVisible?.faintedCount ?? 0;
   const displayHp = hpOverride?.current ?? active?.currentHp ?? 1;
@@ -54,7 +59,7 @@ export function OpponentPanel({ opponentVisible, botName, attackTrigger = 0, dam
             height={6}
           />
           <Text style={styles.hpText}>{hpPct}%</Text>
-          <StatusBadge status={active?.status ?? null} />
+          <StatusBadge status={(nameOverride && nameOverride !== active?.species.name) ? null : (active?.status ?? null)} />
         </View>
         <View style={styles.metaRow}>
           <Text style={styles.trainer}>{botName}</Text>

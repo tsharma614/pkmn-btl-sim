@@ -5,6 +5,8 @@
 
 import { Battle } from '../engine/battle';
 import { generateTeam } from '../engine/team-generator';
+import { generateDraftPool, buildTeamFromDraftPicks, SNAKE_ORDER } from '../engine/draft-pool';
+import type { DraftPoolEntry } from '../engine/draft-pool';
 import { SeededRNG } from '../utils/rng';
 import { Player, BattlePokemon, BattleAction, BattleEvent } from '../types';
 import { RoomStatus, RoomPlayer } from './types';
@@ -31,6 +33,13 @@ export class Room {
   isProcessingTurn: boolean;
   /** Accumulated events from force switches (both players) */
   forceSwitchEvents: import('../types').BattleEvent[];
+  /** Draft mode state */
+  draftMode: boolean;
+  draftPool: DraftPoolEntry[];
+  draftPicks: [number[], number[]];
+  draftCurrentPick: number;
+  /** Randomized draft order: maps SNAKE_ORDER slot 0/1 to actual playerIndex */
+  draftSlotMap: [0 | 1, 0 | 1];
   createdAt: number;
   rng: SeededRNG;
 
@@ -48,6 +57,11 @@ export class Room {
     this.legendaryMode = false;
     this.isProcessingTurn = false;
     this.forceSwitchEvents = [];
+    this.draftMode = false;
+    this.draftPool = [];
+    this.draftPicks = [[], []];
+    this.draftCurrentPick = 0;
+    this.draftSlotMap = [0, 1];
     this.createdAt = Date.now();
     this.rng = new SeededRNG(seed);
   }
@@ -83,10 +97,19 @@ export class Room {
 
     this.players[slot as 0 | 1] = player;
 
-    // If both players are in, move to team_preview
+    // If both players are in, move to drafting or team_preview
     if (this.players[0] !== null && this.players[1] !== null) {
-      this.status = 'team_preview';
-      this.generateTeams();
+      if (this.draftMode) {
+        this.status = 'drafting';
+        this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode });
+        this.draftPicks = [[], []];
+        this.draftCurrentPick = 0;
+        // Randomize who picks first
+        this.draftSlotMap = this.rng.next() < 0.5 ? [0, 1] : [1, 0];
+      } else {
+        this.status = 'team_preview';
+        this.generateTeams();
+      }
     }
 
     return { player, index: slot as 0 | 1 };
@@ -95,6 +118,42 @@ export class Room {
   private generateTeams(): void {
     this.teams[0] = generateTeam(this.rng, { itemMode: this.players[0]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode });
     this.teams[1] = generateTeam(this.rng, { itemMode: this.players[1]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode });
+  }
+
+  submitDraftPick(playerIndex: 0 | 1, poolIndex: number): { valid: boolean; draftComplete: boolean; error?: string } {
+    if (this.status !== 'drafting') {
+      return { valid: false, draftComplete: false, error: 'Not in drafting phase' };
+    }
+    if (this.draftCurrentPick >= SNAKE_ORDER.length) {
+      return { valid: false, draftComplete: false, error: 'Draft already complete' };
+    }
+    // draftSlotMap maps SNAKE_ORDER slots to actual playerIndex
+    const expectedPlayer = this.draftSlotMap[SNAKE_ORDER[this.draftCurrentPick]];
+    if (expectedPlayer !== playerIndex) {
+      return { valid: false, draftComplete: false, error: 'Not your turn to pick' };
+    }
+    if (poolIndex < 0 || poolIndex >= this.draftPool.length) {
+      return { valid: false, draftComplete: false, error: 'Invalid pool index' };
+    }
+    const allPicked = [...this.draftPicks[0], ...this.draftPicks[1]];
+    if (allPicked.includes(poolIndex)) {
+      return { valid: false, draftComplete: false, error: 'Pokemon already picked' };
+    }
+
+    this.draftPicks[playerIndex].push(poolIndex);
+    this.draftCurrentPick++;
+
+    if (this.draftCurrentPick >= SNAKE_ORDER.length) {
+      // Draft complete — build teams
+      const p0Species = this.draftPicks[0].map(i => this.draftPool[i].species);
+      const p1Species = this.draftPicks[1].map(i => this.draftPool[i].species);
+      this.teams[0] = buildTeamFromDraftPicks(p0Species, this.rng, { itemMode: this.players[0]!.itemMode, maxGen: this.maxGen });
+      this.teams[1] = buildTeamFromDraftPicks(p1Species, this.rng, { itemMode: this.players[1]!.itemMode, maxGen: this.maxGen });
+      this.status = 'team_preview';
+      return { valid: true, draftComplete: true };
+    }
+
+    return { valid: true, draftComplete: false };
   }
 
   selectLead(playerIndex: 0 | 1, pokemonIndex: number, itemMode: 'competitive' | 'casual'): boolean {
@@ -318,7 +377,6 @@ export class Room {
 
     if (this.rematchRequested[0] && this.rematchRequested[1]) {
       // Reset for rematch
-      this.status = 'team_preview';
       this.battle = null;
       this.scoutedPokemon = [new Set(), new Set()];
       this.pendingActions = [null, null];
@@ -326,7 +384,17 @@ export class Room {
       this.rematchRequested = [false, false];
       this.players[0]!.leadSelected = false;
       this.players[1]!.leadSelected = false;
-      this.generateTeams();
+
+      if (this.draftMode) {
+        this.status = 'drafting';
+        this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode });
+        this.draftPicks = [[], []];
+        this.draftCurrentPick = 0;
+        this.draftSlotMap = this.rng.next() < 0.5 ? [0, 1] : [1, 0];
+      } else {
+        this.status = 'team_preview';
+        this.generateTeams();
+      }
       return true;
     }
 

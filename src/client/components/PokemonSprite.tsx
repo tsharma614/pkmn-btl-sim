@@ -46,16 +46,23 @@ function getSpriteUrls(speciesId: string, facing: 'front' | 'back'): string[] {
   ];
 }
 
-export function PokemonSprite({ speciesId, facing, size = 120, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0 }: Props) {
+/**
+ * Wrapper that adds a key based on speciesId so React fully remounts the
+ * inner component when the Pokemon changes.  This guarantees fresh
+ * Animated.Values — no stale faint/switch-out animations can linger.
+ */
+export function PokemonSprite(props: Props) {
+  return <PokemonSpriteInner key={props.speciesId} {...props} />;
+}
+
+function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0 }: Props) {
   const urls = getSpriteUrls(speciesId, facing);
 
   const [urlIndex, setUrlIndex] = useState(0);
   const [allFailed, setAllFailed] = useState(false);
   const [cachedUri, setCachedUri] = useState<string | null>(null);
-  const lastIdRef = useRef(speciesId);
 
   const remoteUri = urls[urlIndex];
-  // Use cached version if available, otherwise use remote URL
   const uri = cachedUri || remoteUri;
 
   // Trigger background caching for current URL
@@ -69,43 +76,33 @@ export function PokemonSprite({ speciesId, facing, size = 120, attackTrigger = 0
     return () => { cancelled = true; };
   }, [remoteUri]);
 
-  // Reset failed state and animations when species changes (new Pokemon sent out)
-  const opacity = useRef(new Animated.Value(1)).current;
+  // Animated values — fresh on every mount (key={speciesId} forces remount)
+  const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const translateX = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useRef(new Animated.Value(0.6)).current;
 
-  if (speciesId !== lastIdRef.current) {
-    lastIdRef.current = speciesId;
-    setUrlIndex(0);
-    setAllFailed(false);
-    setCachedUri(null);
-    // Reset position
-    translateY.setValue(0);
-    translateX.setValue(0);
-
-    // Animate in: fade + scale up for a "send out" effect
-    opacity.setValue(0);
-    scale.setValue(0.6);
+  // Animate in on mount: fade + scale up for a "send out" effect
+  useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, friction: 6, tension: 80, useNativeDriver: true }),
     ]).start();
-  }
+  }, []);
 
   const handleImageError = () => {
     if (urlIndex < urls.length - 1) {
-      setCachedUri(null); // Reset cache for next fallback URL
+      setCachedUri(null);
       setUrlIndex(prev => prev + 1);
     } else {
       setAllFailed(true);
     }
   };
 
-  const lastAttack = useRef(0);
-  const lastDamage = useRef(0);
-  const lastFaint = useRef(0);
-  const lastSwitchOut = useRef(0);
+  const lastAttack = useRef(attackTrigger);
+  const lastDamage = useRef(damageTrigger);
+  const lastFaint = useRef(faintTrigger);
+  const lastSwitchOut = useRef(switchOutTrigger);
 
   // Attack: quick hop forward
   useEffect(() => {

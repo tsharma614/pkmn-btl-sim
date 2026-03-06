@@ -134,7 +134,8 @@ export interface BattlePokemon {
   hasMovedThisTurn: boolean;
   tookDamageThisTurn: boolean;
   protectedLastTurn: boolean;
-  timesHit: number;        // for tracking
+  timesHit: number;        // for Rage Fist tracking
+  lastDamageTaken: { amount: number; physical: boolean } | null; // for Counter/Mirror Coat
   encoreTurns: number;     // turns remaining under Encore
   encoreMove: string | null; // move name locked by Encore
   truantNextTurn: boolean;  // Truant: skip next turn

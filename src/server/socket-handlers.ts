@@ -15,6 +15,7 @@ import {
   buildTurnResultPayload,
   buildNeedsSwitchPayload,
   buildBattleEndPayload,
+  serializeOwnPokemon,
 } from './state-sanitizer';
 
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -32,16 +33,17 @@ export function registerSocketHandlers(
     console.log(`[connect] ${socket.id}`);
 
     socket.on('create_room', (payload) => {
-      const { playerName, itemMode, maxGen, legendaryMode } = payload;
+      const { playerName, itemMode, maxGen, legendaryMode, draftMode } = payload;
       if (!playerName || typeof playerName !== 'string') {
         socket.emit('error', { message: 'Player name is required' });
         return;
       }
 
       const { room, code } = roomManager.createRoom(socket.id, playerName, itemMode || 'competitive', maxGen ?? null, legendaryMode ?? false);
+      room.draftMode = draftMode ?? false;
       socket.join(code);
       socket.emit('room_created', { code });
-      console.log(`[room] ${playerName} created room ${code}`);
+      console.log(`[room] ${playerName} created room ${code}${draftMode ? ' (draft)' : ''}`);
     });
 
     socket.on('join_room', (payload) => {
@@ -117,6 +119,23 @@ export function registerSocketHandlers(
       socket.to(room.code).emit('opponent_joined', { name: playerName });
       socket.emit('opponent_joined', { name: otherPlayer.name });
 
+      // If draft mode and both players joined, start draft
+      if (room.status === 'drafting' && room.draftPool.length > 0) {
+        for (let i = 0; i < 2; i++) {
+          const p = room.players[i as 0 | 1]!;
+          const targetSocket = i === 1 ? socket : io.sockets.sockets.get(p.socketId);
+          if (targetSocket) {
+            // draftSlotMap maps SNAKE_ORDER slot → playerIndex
+            // Find which snake slot this player maps to
+            const snakeSlot = room.draftSlotMap[0] === i ? 0 : 1;
+            targetSocket.emit('draft_start', {
+              pool: room.draftPool,
+              yourPlayerIndex: snakeSlot as 0 | 1,
+            });
+          }
+        }
+      }
+
       // If both players joined and teams are ready, send team_preview
       if (room.status === 'team_preview' && room.teams[0] && room.teams[1]) {
         for (let i = 0; i < 2; i++) {
@@ -130,6 +149,53 @@ export function registerSocketHandlers(
       }
 
       console.log(`[room] ${playerName} joined room ${room.code}`);
+    });
+
+    socket.on('draft_pick', (payload) => {
+      const room = roomManager.getRoomBySocketId(socket.id);
+      if (!room) {
+        socket.emit('error', { message: 'Not in a room' });
+        return;
+      }
+
+      const playerData = room.getPlayerBySocketId(socket.id);
+      if (!playerData) {
+        socket.emit('error', { message: 'Player not found in room' });
+        return;
+      }
+
+      const { poolIndex } = payload;
+      const result = room.submitDraftPick(playerData.index, poolIndex);
+      if (!result.valid) {
+        socket.emit('error', { message: result.error || 'Invalid draft pick' });
+        return;
+      }
+
+      // Broadcast pick to both players (use snake slot, not server player index)
+      const pickerSnakeSlot = room.draftSlotMap[0] === playerData.index ? 0 : 1;
+      for (let i = 0; i < 2; i++) {
+        const p = room.players[i as 0 | 1]!;
+        const targetSocket = io.sockets.sockets.get(p.socketId);
+        if (targetSocket) {
+          targetSocket.emit('draft_pick', { playerIndex: pickerSnakeSlot, poolIndex });
+        }
+      }
+
+      // If draft complete, send teams for team preview
+      if (result.draftComplete && room.teams[0] && room.teams[1]) {
+        for (let i = 0; i < 2; i++) {
+          const p = room.players[i as 0 | 1]!;
+          const targetSocket = io.sockets.sockets.get(p.socketId);
+          if (targetSocket) {
+            targetSocket.emit('draft_complete', {
+              yourTeam: room.teams[i as 0 | 1]!.map(serializeOwnPokemon),
+            });
+            const previewPayload = buildBattleStartPayload(room, i as 0 | 1);
+            targetSocket.emit('team_preview', previewPayload);
+          }
+        }
+        console.log(`[draft] Draft complete in room ${room.code}`);
+      }
     });
 
     socket.on('select_lead', (payload) => {
@@ -281,16 +347,32 @@ export function registerSocketHandlers(
 
       const bothReady = room.requestRematch(playerData.index);
       if (bothReady) {
-        // Both want rematch — send new teams for team preview
-        for (let i = 0; i < 2; i++) {
-          const p = room.players[i as 0 | 1]!;
-          const targetSocket = io.sockets.sockets.get(p.socketId);
-          if (targetSocket) {
-            const previewPayload = buildBattleStartPayload(room, i as 0 | 1);
-            targetSocket.emit('team_preview', previewPayload);
+        if (room.status === 'drafting') {
+          // Draft mode rematch — start new draft
+          for (let i = 0; i < 2; i++) {
+            const p = room.players[i as 0 | 1]!;
+            const targetSocket = io.sockets.sockets.get(p.socketId);
+            if (targetSocket) {
+              const snakeSlot = room.draftSlotMap[0] === i ? 0 : 1;
+              targetSocket.emit('draft_start', {
+                pool: room.draftPool,
+                yourPlayerIndex: snakeSlot as 0 | 1,
+              });
+            }
           }
+          console.log(`[rematch] Draft rematch started in room ${room.code}`);
+        } else {
+          // Normal rematch — send new teams for team preview
+          for (let i = 0; i < 2; i++) {
+            const p = room.players[i as 0 | 1]!;
+            const targetSocket = io.sockets.sockets.get(p.socketId);
+            if (targetSocket) {
+              const previewPayload = buildBattleStartPayload(room, i as 0 | 1);
+              targetSocket.emit('team_preview', previewPayload);
+            }
+          }
+          console.log(`[rematch] Rematch started in room ${room.code}`);
         }
-        console.log(`[rematch] Rematch started in room ${room.code}`);
       }
     });
 
@@ -321,12 +403,12 @@ export function registerSocketHandlers(
       pendingDisconnectNotify.set(disconnectKey, setTimeout(() => {
         pendingDisconnectNotify.delete(disconnectKey);
         // Only notify if room still exists and is active
-        if (room.status === 'battling' || room.status === 'team_preview') {
+        if (room.status === 'battling' || room.status === 'team_preview' || room.status === 'drafting') {
           io.to(room.code).emit('opponent_disconnected');
         }
       }, 5000));
 
-      if (room.status === 'battling' || room.status === 'team_preview') {
+      if (room.status === 'battling' || room.status === 'team_preview' || room.status === 'drafting') {
         // Start auto-forfeit timer
         disconnectTracker.startTimer(
           room.code,
@@ -335,8 +417,10 @@ export function registerSocketHandlers(
           () => {
             // Timer expired — auto-forfeit
             console.log(`[auto-forfeit] ${playerData.player.name} auto-forfeited in room ${room.code}`);
-            room.forfeit(playerData.index);
-            broadcastBattleEnd(io, room, 'disconnect');
+            if (room.battle) {
+              room.forfeit(playerData.index);
+              broadcastBattleEnd(io, room, 'disconnect');
+            }
           }
         );
       }

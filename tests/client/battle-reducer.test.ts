@@ -772,6 +772,223 @@ describe('battleReducer', () => {
     });
   });
 
+  // ========== Rematch: stale state clearing ==========
+  describe('TEAM_PREVIEW clears stale battle state (rematch)', () => {
+    it('clears yourState and opponentVisible from previous battle', () => {
+      // Simulate end-of-battle state
+      const state = battlingState({
+        phase: 'battle_end',
+        gameMode: 'online',
+        battleEndData: makeBattleEndPayload(),
+        weather: 'rain',
+        turn: 15,
+      });
+      expect(state.yourState).not.toBeNull();
+      expect(state.opponentVisible).not.toBeNull();
+
+      // Rematch triggers TEAM_PREVIEW
+      const result = battleReducer(state, {
+        type: 'TEAM_PREVIEW',
+        payload: { yourTeam: makeTeam(), yourPlayerIndex: 1 },
+      });
+
+      expect(result.phase).toBe('team_preview');
+      expect(result.yourState).toBeNull();
+      expect(result.opponentVisible).toBeNull();
+      expect(result.pendingEvents).toEqual([]);
+      expect(result.queuedPendingEvents).toEqual([]);
+      expect(result.queuedYourState).toBeNull();
+      expect(result.queuedOpponentVisible).toBeNull();
+      expect(result.queuedSwitch).toBeNull();
+      expect(result.queuedEnd).toBeNull();
+      expect(result.battleEndData).toBeNull();
+      expect(result.weather).toBe('none');
+      expect(result.turn).toBe(0);
+    });
+
+    it('preserves battleStats across rematch (TEAM_PREVIEW)', () => {
+      const stats = {
+        ...battlingState().battleStats,
+        playerKOs: 5,
+        playerDamageDealt: 1200,
+        opponentKOs: 3,
+      };
+      const state = battlingState({
+        phase: 'battle_end',
+        gameMode: 'online',
+        battleStats: stats,
+      });
+
+      const result = battleReducer(state, {
+        type: 'TEAM_PREVIEW',
+        payload: { yourTeam: makeTeam(), yourPlayerIndex: 0 },
+      });
+
+      expect(result.battleStats.playerKOs).toBe(5);
+      expect(result.battleStats.playerDamageDealt).toBe(1200);
+      expect(result.battleStats.opponentKOs).toBe(3);
+    });
+
+    it('clears queued events from previous battle on rematch', () => {
+      const state = battlingState({
+        phase: 'battle_end',
+        pendingEvents: [{ type: 'faint', data: { pokemon: 'Garchomp' } }],
+        queuedPendingEvents: [{ type: 'send_out', data: { pokemon: 'Dragonite' } }],
+        queuedSwitch: makeNeedsSwitchPayload(),
+        queuedEnd: makeBattleEndPayload(),
+      });
+
+      const result = battleReducer(state, {
+        type: 'TEAM_PREVIEW',
+        payload: { yourTeam: makeTeam(), yourPlayerIndex: 0 },
+      });
+
+      expect(result.pendingEvents).toEqual([]);
+      expect(result.queuedPendingEvents).toEqual([]);
+      expect(result.queuedSwitch).toBeNull();
+      expect(result.queuedEnd).toBeNull();
+    });
+
+    it('preserves non-battle fields (roomCode, opponentName, gameMode)', () => {
+      const state = battlingState({
+        phase: 'battle_end',
+        gameMode: 'online',
+        roomCode: 'ABC123',
+        opponentName: 'Nikhil',
+        playerName: 'Tanmay',
+      });
+
+      const result = battleReducer(state, {
+        type: 'TEAM_PREVIEW',
+        payload: { yourTeam: makeTeam(), yourPlayerIndex: 0 },
+      });
+
+      expect(result.roomCode).toBe('ABC123');
+      expect(result.opponentName).toBe('Nikhil');
+      expect(result.playerName).toBe('Tanmay');
+      expect(result.gameMode).toBe('online');
+    });
+  });
+
+  describe('DRAFT_START clears stale battle state (rematch)', () => {
+    it('clears yourState and opponentVisible from previous battle', () => {
+      const state = battlingState({
+        phase: 'battle_end',
+        gameMode: 'online',
+        weather: 'sandstorm',
+        turn: 20,
+      });
+
+      const pool = Array.from({ length: 18 }, (_, i) => ({
+        species: { id: `mon${i}`, name: `Mon${i}`, types: ['Normal'], baseStats: { hp: 80, atk: 80, def: 80, spa: 80, spd: 80, spe: 80 }, generation: 9, tier: 2, bestAbility: 'Ability', abilities: ['Ability'], movePool: [], sets: [] },
+        tier: 2,
+      })) as any;
+
+      const result = battleReducer(state, {
+        type: 'DRAFT_START',
+        pool,
+        yourPlayerIndex: 1,
+      });
+
+      expect(result.phase).toBe('drafting');
+      expect(result.yourState).toBeNull();
+      expect(result.opponentVisible).toBeNull();
+      expect(result.pendingEvents).toEqual([]);
+      expect(result.queuedPendingEvents).toEqual([]);
+      expect(result.queuedYourState).toBeNull();
+      expect(result.queuedOpponentVisible).toBeNull();
+      expect(result.battleEndData).toBeNull();
+      expect(result.weather).toBe('none');
+      expect(result.turn).toBe(0);
+    });
+
+    it('preserves battleStats across draft rematch', () => {
+      const stats = {
+        ...battlingState().battleStats,
+        playerKOs: 12,
+        opponentDamageDealt: 800,
+      };
+      const state = battlingState({
+        phase: 'battle_end',
+        gameMode: 'online',
+        battleStats: stats,
+      });
+
+      const pool = [] as any;
+      const result = battleReducer(state, {
+        type: 'DRAFT_START',
+        pool,
+        yourPlayerIndex: 0,
+      });
+
+      expect(result.battleStats.playerKOs).toBe(12);
+      expect(result.battleStats.opponentDamageDealt).toBe(800);
+    });
+  });
+
+  describe('Stats accumulate across multiple battles (rematch)', () => {
+    it('stats from first battle carry into second battle via TEAM_PREVIEW + BATTLE_START + TURN_RESULT', () => {
+      // Simulate first battle with some stats
+      let state = battlingState({
+        gameMode: 'online',
+        battleStats: {
+          ...battlingState().battleStats,
+          playerKOs: 3,
+          playerDamageDealt: 500,
+        },
+      });
+
+      // Simulate end of first battle
+      state = battleReducer(state, {
+        type: 'BATTLE_END',
+        payload: makeBattleEndPayload(),
+      });
+      expect(state.battleStats.playerKOs).toBe(3);
+
+      // Rematch: TEAM_PREVIEW preserves stats
+      state = battleReducer(state, {
+        type: 'TEAM_PREVIEW',
+        payload: { yourTeam: makeTeam(), yourPlayerIndex: 0 },
+      });
+      expect(state.battleStats.playerKOs).toBe(3);
+
+      // BATTLE_START preserves stats
+      state = battleReducer(state, {
+        type: 'BATTLE_START',
+        payload: makeBattleStartPayload({ opponentLead: makeMockVisiblePokemon() }),
+      });
+      expect(state.battleStats.playerKOs).toBe(3);
+
+      // Second battle: more damage events add to existing stats
+      const events: BattleEvent[] = [
+        { type: 'use_move', data: { pokemon: 'Charizard', move: 'Flamethrower' } },
+        { type: 'damage', data: { pokemon: 'Tyranitar', damage: 200, currentHp: 157, maxHp: 357 } },
+        { type: 'faint', data: { pokemon: 'Tyranitar' } },
+      ];
+      state = battleReducer(state, {
+        type: 'TURN_RESULT',
+        payload: makeTurnResultPayload({ events }),
+      });
+
+      expect(state.battleStats.playerKOs).toBe(4); // 3 + 1
+      expect(state.battleStats.playerDamageDealt).toBe(700); // 500 + 200
+    });
+
+    it('RESET clears stats (CPU play again)', () => {
+      const state = battlingState({
+        battleStats: {
+          ...battlingState().battleStats,
+          playerKOs: 10,
+          playerDamageDealt: 3000,
+        },
+      });
+
+      const result = battleReducer(state, { type: 'RESET' });
+      expect(result.battleStats.playerKOs).toBe(0);
+      expect(result.battleStats.playerDamageDealt).toBe(0);
+    });
+  });
+
   // ========== RESET ==========
   describe('RESET', () => {
     it('resets to initial state but preserves playerName and itemMode', () => {
@@ -912,6 +1129,88 @@ describe('battleReducer', () => {
         teamSize: 6,
       });
       expect(state.opponentVisible).not.toBeNull();
+    });
+  });
+
+  // ========== useEventQueue reset trigger ==========
+  describe('rematch clears state so useEventQueue resets (null pokemon names)', () => {
+    it('TEAM_PREVIEW after battle nullifies active pokemon derivations', () => {
+      // When BattleScreen computes active = yourState?.team[activePokemonIndex],
+      // yourState being null means active is null → pokemon names are null →
+      // useEventQueue resets all sprite overrides
+      const state = battlingState({
+        phase: 'battle_end',
+        gameMode: 'online',
+      });
+
+      // Verify pre-condition: yourState is populated
+      expect(state.yourState).not.toBeNull();
+      expect(state.opponentVisible).not.toBeNull();
+
+      const result = battleReducer(state, {
+        type: 'TEAM_PREVIEW',
+        payload: { yourTeam: makeTeam(), yourPlayerIndex: 0 },
+      });
+
+      // Post-condition: derivations would produce null pokemon names
+      const active = result.yourState?.team[result.yourState.activePokemonIndex ?? 0];
+      const oppActive = result.opponentVisible?.activePokemon;
+      expect(active).toBeUndefined();
+      expect(oppActive).toBeUndefined();
+    });
+
+    it('DRAFT_START after battle nullifies active pokemon derivations', () => {
+      const state = battlingState({
+        phase: 'battle_end',
+        gameMode: 'online',
+      });
+
+      const pool = [] as any;
+      const result = battleReducer(state, {
+        type: 'DRAFT_START',
+        pool,
+        yourPlayerIndex: 0,
+      });
+
+      const active = result.yourState?.team[result.yourState.activePokemonIndex ?? 0];
+      const oppActive = result.opponentVisible?.activePokemon;
+      expect(active).toBeUndefined();
+      expect(oppActive).toBeUndefined();
+    });
+
+    it('full rematch flow: battle_end → TEAM_PREVIEW → BATTLE_START restores state cleanly', () => {
+      // Start with mid-battle state
+      let state = battlingState({
+        gameMode: 'online',
+        weather: 'rain',
+        turn: 8,
+      });
+
+      // End battle
+      state = battleReducer(state, { type: 'BATTLE_END', payload: makeBattleEndPayload() });
+      expect(state.phase).toBe('battle_end');
+      expect(state.yourState).not.toBeNull(); // still there
+
+      // Rematch: TEAM_PREVIEW clears
+      state = battleReducer(state, {
+        type: 'TEAM_PREVIEW',
+        payload: { yourTeam: makeTeam(), yourPlayerIndex: 1 },
+      });
+      expect(state.yourState).toBeNull();
+      expect(state.opponentVisible).toBeNull();
+      expect(state.weather).toBe('none');
+      expect(state.turn).toBe(0);
+
+      // New battle start
+      const lead = makeMockVisiblePokemon();
+      state = battleReducer(state, {
+        type: 'BATTLE_START',
+        payload: makeBattleStartPayload({ opponentLead: lead, opponentName: 'Nikhil' }),
+      });
+      expect(state.phase).toBe('battling');
+      expect(state.yourState).not.toBeNull();
+      expect(state.opponentVisible).not.toBeNull();
+      expect(state.turn).toBe(1);
     });
   });
 

@@ -505,12 +505,18 @@ describe('Air Balloon', () => {
       disabled: false,
     };
 
-    battle.processTurn(
+    const events = battle.processTurn(
       { type: 'move', moveIndex: 0 },
       { type: 'move', moveIndex: 0 }
     );
 
     expect(defender.itemConsumed).toBe(true);
+
+    // Verify item_trigger event is emitted with correct data
+    const triggerEvents = events.filter(e => e.type === 'item_trigger' && e.data.item === 'Air Balloon');
+    expect(triggerEvents.length).toBeGreaterThanOrEqual(1);
+    expect(triggerEvents[0].data.message).toBe('popped');
+    expect(triggerEvents[0].data.pokemon).toBe(defender.species.name);
   });
 });
 

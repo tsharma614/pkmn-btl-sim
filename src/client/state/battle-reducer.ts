@@ -15,11 +15,14 @@ import type {
   OwnPokemon,
 } from '../../server/types';
 import type { BattleEvent, Weather, SideEffects } from '../../types';
+import type { DraftPoolEntry } from '../../engine/draft-pool';
+import { SNAKE_ORDER } from '../../engine/draft-pool';
 
 export type BattlePhase =
   | 'setup'
   | 'connecting'
   | 'online_lobby'
+  | 'drafting'
   | 'team_preview'
   | 'battling'
   | 'waiting_for_turn'
@@ -93,6 +96,12 @@ export interface BattleState {
   legendaryMode: boolean;
   /** Room options received from server (for joining player to see host's settings) */
   roomOptions: { maxGen: number | null; legendaryMode: boolean } | null;
+  /** Draft mode state */
+  draftMode: boolean;
+  draftPool: DraftPoolEntry[];
+  draftPicks: [number[], number[]];
+  draftCurrentPick: number;
+  draftCurrentPlayer: 0 | 1;
 }
 
 function emptyStats(): BattleStats {
@@ -151,6 +160,11 @@ export const initialState: BattleState = {
   maxGen: null,
   legendaryMode: false,
   roomOptions: null,
+  draftMode: false,
+  draftPool: [],
+  draftPicks: [[], []],
+  draftCurrentPick: 0,
+  draftCurrentPlayer: 0,
 };
 
 export type BattleAction =
@@ -173,6 +187,9 @@ export type BattleAction =
   | { type: 'RECONNECTING' }
   | { type: 'RECONNECTED' }
   | { type: 'OPPONENT_DISCONNECTED' }
+  | { type: 'DRAFT_START'; pool: DraftPoolEntry[]; yourPlayerIndex: 0 | 1 }
+  | { type: 'DRAFT_PICK'; playerIndex: 0 | 1; poolIndex: number }
+  | { type: 'DRAFT_COMPLETE'; yourTeam: OwnPokemon[] }
   | { type: 'RESET' };
 
 const EMPTY_SIDE: SideEffects = {
@@ -476,6 +493,19 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         phase: 'team_preview',
         yourTeam: action.payload.yourTeam,
         yourPlayerIndex: action.payload.yourPlayerIndex,
+        // Clear previous battle state so useEventQueue resets sprite overrides on rematch
+        yourState: null,
+        opponentVisible: null,
+        pendingEvents: [],
+        queuedPendingEvents: [],
+        queuedYourState: null,
+        queuedOpponentVisible: null,
+        queuedSwitch: null,
+        queuedEnd: null,
+        battleEndData: null,
+        weather: 'none',
+        turn: 0,
+        // battleStats intentionally preserved across rematches
       };
 
     case 'BATTLE_START': {
@@ -558,6 +588,8 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       const hasEvents = action.payload.events.length > 0;
       const currentlyAnimating = state.pendingEvents.length > 0;
 
+      console.log(`[reducer] TURN_RESULT — events: ${action.payload.events.length}, animating: ${currentlyAnimating}, oppActive: ${action.payload.opponentVisible.activePokemon?.species.name ?? 'NULL'}, eventTypes: [${action.payload.events.map(e => e.type).join(', ')}]`);
+
       // Accumulate battle stats from events
       const playerNames = new Set(
         (state.yourState?.team || state.yourTeam).map(p => p.species.name)
@@ -635,6 +667,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
 
       // If there are queued events from a second turn_result, animate those FIRST
       if (next.queuedPendingEvents.length > 0) {
+        console.log(`[reducer] EVENTS_PROCESSED — flushing ${next.queuedPendingEvents.length} queued events, types: [${next.queuedPendingEvents.map(e => e.type).join(', ')}]`);
         return {
           ...next,
           pendingEvents: next.queuedPendingEvents,
@@ -649,6 +682,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         next = { ...next, yourState: next.queuedYourState, queuedYourState: null };
       }
       if (next.queuedOpponentVisible) {
+        console.log(`[reducer] EVENTS_PROCESSED — flushing queued opponent: ${next.queuedOpponentVisible.activePokemon?.species.name ?? 'NULL'}`);
         next = { ...next, opponentVisible: next.queuedOpponentVisible, queuedOpponentVisible: null };
       }
 
@@ -706,6 +740,53 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         };
       }
       return state;
+
+    case 'DRAFT_START':
+      return {
+        ...state,
+        phase: 'drafting',
+        draftMode: true,
+        draftPool: action.pool,
+        draftPicks: [[], []],
+        draftCurrentPick: 0,
+        draftCurrentPlayer: SNAKE_ORDER[0],
+        yourPlayerIndex: action.yourPlayerIndex,
+        // Clear previous battle state so useEventQueue resets sprite overrides on rematch
+        yourState: null,
+        opponentVisible: null,
+        pendingEvents: [],
+        queuedPendingEvents: [],
+        queuedYourState: null,
+        queuedOpponentVisible: null,
+        queuedSwitch: null,
+        queuedEnd: null,
+        battleEndData: null,
+        weather: 'none',
+        turn: 0,
+        // battleStats intentionally preserved across rematches
+      };
+
+    case 'DRAFT_PICK': {
+      const newPicks: [number[], number[]] = [
+        [...state.draftPicks[0]],
+        [...state.draftPicks[1]],
+      ];
+      newPicks[action.playerIndex].push(action.poolIndex);
+      const nextPick = state.draftCurrentPick + 1;
+      return {
+        ...state,
+        draftPicks: newPicks,
+        draftCurrentPick: nextPick,
+        draftCurrentPlayer: nextPick < SNAKE_ORDER.length ? SNAKE_ORDER[nextPick] : 0,
+      };
+    }
+
+    case 'DRAFT_COMPLETE':
+      return {
+        ...state,
+        phase: 'team_preview',
+        yourTeam: action.yourTeam,
+      };
 
     case 'RESET':
       return {

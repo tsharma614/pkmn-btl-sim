@@ -11,14 +11,6 @@ export function createBattlePokemon(
   level: number = 100,
   maxGen?: number | null,
 ): BattlePokemon {
-  // Classic mode (maxGen < 6): strip Fairy type since it didn't exist before Gen 6
-  if (maxGen && maxGen < 6) {
-    const stripped = species.types.filter((t: string) => t !== 'Fairy');
-    if (stripped.length < species.types.length) {
-      // Create a shallow copy with Fairy removed; if all types were Fairy, fall back to Normal
-      species = { ...species, types: stripped.length > 0 ? stripped : ['Normal'] };
-    }
-  }
   const stats = calculateAllStats(
     species.baseStats,
     set.evs,
@@ -104,6 +96,7 @@ export function createBattlePokemon(
     tookDamageThisTurn: false,
     protectedLastTurn: false,
     timesHit: 0,
+    lastDamageTaken: null,
     encoreTurns: 0,
     encoreMove: null,
     truantNextTurn: false,

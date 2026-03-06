@@ -38,6 +38,7 @@ function createMockPokemon(overrides: Partial<BattlePokemon> = {}): BattlePokemo
     choiceLocked: null,
     hasMovedThisTurn: false,
     timesHit: 0,
+    lastDamageTaken: null,
     ...overrides,
   } as BattlePokemon;
 }

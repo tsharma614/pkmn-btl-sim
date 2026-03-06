@@ -39,6 +39,7 @@ export function serializeOwnPokemon(pokemon: BattlePokemon): OwnPokemon {
     ability: pokemon.ability,
     isAlive: pokemon.isAlive,
     choiceLocked: pokemon.choiceLocked,
+    encoreMove: pokemon.encoreMove,
   };
 }
 

@@ -20,6 +20,9 @@ import type {
   TurnResultPayload,
   NeedsSwitchPayload,
   BattleEndPayload,
+  DraftStartPayload,
+  DraftPickBroadcast,
+  DraftCompletePayload,
   OwnPokemon,
   VisiblePokemon,
 } from '../server/types';
@@ -360,7 +363,7 @@ export interface BattleConnection {
   /** Call after creation to wait for sockets and start room flow */
   start: () => void;
   /** Online mode: create a new room */
-  startCreateRoom?: (itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => void;
+  startCreateRoom?: (itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean) => void;
   /** Online mode: join existing room by code */
   startJoinRoom?: (code: string, itemMode: 'competitive' | 'casual') => void;
   /** Attempt to reconnect after app returns from background */
@@ -406,6 +409,18 @@ function wireHumanEvents(
 
   humanSocket.on('battle_end', (payload: BattleEndPayload) => {
     dispatch({ type: 'BATTLE_END', payload });
+  });
+
+  humanSocket.on('draft_start', (payload: DraftStartPayload) => {
+    dispatch({ type: 'DRAFT_START', pool: payload.pool, yourPlayerIndex: payload.yourPlayerIndex });
+  });
+
+  humanSocket.on('draft_pick', (payload: DraftPickBroadcast) => {
+    dispatch({ type: 'DRAFT_PICK', playerIndex: payload.playerIndex, poolIndex: payload.poolIndex });
+  });
+
+  humanSocket.on('draft_complete', (payload: DraftCompletePayload) => {
+    dispatch({ type: 'DRAFT_COMPLETE', yourTeam: payload.yourTeam });
   });
 
   humanSocket.on('error', (payload) => {
@@ -676,12 +691,13 @@ export function createOnlineConnection(
     });
   };
 
-  conn.startCreateRoom = (im: 'competitive' | 'casual', mg?: number | null, lm?: boolean) => {
+  conn.startCreateRoom = (im: 'competitive' | 'casual', mg?: number | null, lm?: boolean, dm?: boolean) => {
     humanSocket.emit('create_room', {
       playerName,
       itemMode: im,
       maxGen: mg ?? onlineMaxGen,
       legendaryMode: lm ?? onlineLegendaryMode,
+      draftMode: dm ?? false,
     });
   };
 

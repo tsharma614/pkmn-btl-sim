@@ -19,8 +19,8 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
 interface Props {
-  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean) => void;
-  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => void;
+  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean) => void;
+  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean) => void;
 }
 
 /** Background sprite positions — 7 rows of 3, filling the whole screen */
@@ -82,6 +82,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [classicMode, setClassicMode] = useState(false);
   const [legendaryMode, setLegendaryMode] = useState(false);
+  const [draftMode, setDraftMode] = useState(false);
   const [record, setRecord] = useState<{ wins: number; losses: number } | null>(null);
 
   useEffect(() => {
@@ -246,7 +247,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
               </View>
               <View style={styles.checkboxTextWrap}>
                 <Text style={styles.checkboxLabel}>Classic Mode</Text>
-                <Text style={styles.checkboxDesc}>Gen 1-4 only (Kanto through Sinnoh). No Fairy type, classic matchups.</Text>
+                <Text style={styles.checkboxDesc}>Gen 1-4 only (Kanto through Sinnoh). Classic matchups.</Text>
               </View>
             </TouchableOpacity>
 
@@ -263,11 +264,25 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
                 <Text style={styles.checkboxDesc}>Stacked teams of mostly Tier 1 Pokemon. Legendaries, pseudo-legendaries, and top threats. CPU gets one too.</Text>
               </View>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.checkboxRow}
+              onPress={() => setDraftMode(!draftMode)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, draftMode && styles.checkboxChecked]}>
+                {draftMode && <Text style={styles.checkmark}>{'✓'}</Text>}
+              </View>
+              <View style={styles.checkboxTextWrap}>
+                <Text style={styles.checkboxLabel}>Draft Mode</Text>
+                <Text style={styles.checkboxDesc}>Snake draft: pick Pokemon from a shared pool of 21. Alternate picks with your opponent.</Text>
+              </View>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
             style={styles.startBtn}
-            onPress={() => onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode)}
+            onPress={() => onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode, draftMode)}
             activeOpacity={0.7}
           >
             <Text style={styles.startBtnText}>START BATTLE</Text>
@@ -345,7 +360,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
             </View>
             <View style={styles.checkboxTextWrap}>
               <Text style={styles.checkboxLabel}>Classic Mode</Text>
-              <Text style={styles.checkboxDesc}>Gen 1-4 only. No Fairy type, classic matchups.</Text>
+              <Text style={styles.checkboxDesc}>Gen 1-4 only. Classic matchups.</Text>
             </View>
           </TouchableOpacity>
 
@@ -362,6 +377,20 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
               <Text style={styles.checkboxDesc}>Stacked teams of mostly Tier 1 Pokemon for both players.</Text>
             </View>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setDraftMode(!draftMode)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.checkbox, draftMode && styles.checkboxChecked]}>
+              {draftMode && <Text style={styles.checkmark}>{'✓'}</Text>}
+            </View>
+            <View style={styles.checkboxTextWrap}>
+              <Text style={styles.checkboxLabel}>Draft Mode</Text>
+              <Text style={styles.checkboxDesc}>Snake draft: pick Pokemon from a shared pool of 21.</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.onlineNote}>
@@ -370,7 +399,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
 
         <TouchableOpacity
           style={styles.startBtn}
-          onPress={() => onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode)}
+          onPress={() => onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode, draftMode)}
           activeOpacity={0.7}
         >
           <Text style={styles.startBtnText}>FIND MATCH</Text>

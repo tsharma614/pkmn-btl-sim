@@ -37,6 +37,8 @@ export class Battle {
   logger: BattleLogger;
   /** Flags set during turn when a selfSwitch move (U-Turn etc.) needs a switch after the turn */
   pendingSelfSwitch: [boolean, boolean] = [false, false];
+  /** Wish: pending heals per side — [turnsLeft, healAmount, playerIndex][] */
+  pendingWish: { turnsLeft: number; healAmount: number; playerIndex: number }[] = [];
 
   constructor(
     player1: Player,
@@ -424,6 +426,14 @@ export class Battle {
     const attacker = this.getActivePokemon(playerIndex);
     const defender = this.getActivePokemon(opponentIndex);
 
+    // Encore override: force the encored move
+    if (attacker.encoreTurns > 0 && attacker.encoreMove) {
+      const encoreIdx = attacker.moves.findIndex(m => m.data.name === attacker.encoreMove);
+      if (encoreIdx !== -1 && attacker.moves[encoreIdx].currentPp > 0) {
+        moveIndex = encoreIdx;
+      }
+    }
+
     // Check for all PP used — use Struggle
     let move: MoveData;
     let isStruggle = false;
@@ -577,6 +587,20 @@ export class Battle {
       }
     }
 
+    // OHKO moves: fail if user's level < target's level
+    const ohkoMoves = ['Fissure', 'Horn Drill', 'Guillotine', 'Sheer Cold'];
+    if (ohkoMoves.includes(move.name)) {
+      if (attacker.level < defender.level) {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'level too low' });
+        return;
+      }
+      // Sheer Cold fails against Ice types
+      if (move.name === 'Sheer Cold' && (defender.species.types as PokemonType[]).includes('Ice' as PokemonType)) {
+        this.addEvent(events, 'immune', { target: defender.species.name, move: move.name, reason: 'type_immunity' });
+        return;
+      }
+    }
+
     // Accuracy check
     if (!rollAccuracy(this.rng, move.accuracy, attacker.boosts.accuracy, defender.boosts.evasion, {
       moveName: move.name,
@@ -718,15 +742,25 @@ export class Battle {
     const isCritical = move.willCrit || rollCritical(this.rng, critStage);
 
     // Multi-hit moves
-    const hits = this.getHitCount(move);
+    const hits = this.getHitCount(move, attacker);
     let totalDamage = 0;
 
     for (let hit = 0; hit < hits; hit++) {
       if (!defender.isAlive) break;
 
+      // Triple Axel: power escalates 20→40→60 per hit
+      // Population Bomb / similar: use original power for all hits
+      let hitMove = move;
+      const moveId = move.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (moveId === 'tripleaxel') {
+        hitMove = { ...move, power: 20 * (hit + 1) };
+      } else if (moveId === 'triplekick') {
+        hitMove = { ...move, power: 10 * (hit + 1) };
+      }
+
       const defenderTypes = this.getEffectiveTypes(defender);
       const result = calculateDamage(
-        attacker, defender, move, this.state.weather,
+        attacker, defender, hitMove, this.state.weather,
         this.rng, isCritical && hit === 0, modifiers, defenderTypes
       );
 
@@ -753,6 +787,8 @@ export class Battle {
       defender.currentHp = clampHp(defender.currentHp - damage, defender.maxHp);
       if (damage > 0) {
         defender.tookDamageThisTurn = true;
+        defender.timesHit++;
+        defender.lastDamageTaken = { amount: damage, physical: move.category === 'Physical' };
         // Air Balloon pops when hit
         if (defender.item === 'Air Balloon' && !defender.itemConsumed) {
           defender.itemConsumed = true;
@@ -767,20 +803,19 @@ export class Battle {
         remainingHp: defender.currentHp,
       });
 
-      if (hit === 0) {
-        this.addEvent(events, 'damage', {
-          attacker: attacker.species.name,
-          defender: defender.species.name,
-          move: move.name,
-          damage,
-          totalDamage: hits > 1 ? undefined : damage,
-          isCritical,
-          effectiveness: result.typeEffectiveness,
-          remainingHp: defender.currentHp,
-          maxHp: defender.maxHp,
-          defenderPlayer: opponentIndex,
-        });
-      }
+      this.addEvent(events, 'damage', {
+        attacker: attacker.species.name,
+        defender: defender.species.name,
+        move: move.name,
+        damage,
+        totalDamage: hits > 1 ? undefined : damage,
+        isCritical: isCritical && hit === 0,
+        effectiveness: result.typeEffectiveness,
+        remainingHp: defender.currentHp,
+        maxHp: defender.maxHp,
+        defenderPlayer: opponentIndex,
+        hit: hits > 1 ? hit + 1 : undefined,
+      });
 
       this.checkFaint(defender, opponentIndex, events, true);
     }
@@ -816,6 +851,12 @@ export class Battle {
 
     // Self-destruct moves (Explosion, Self-Destruct) — user faints
     if ((move as any).selfdestruct && attacker.isAlive) {
+      attacker.currentHp = 0;
+      this.checkFaint(attacker, playerIndex, events);
+    }
+
+    // Final Gambit: user faints after dealing damage
+    if (move.name === 'Final Gambit' && attacker.isAlive) {
       attacker.currentHp = 0;
       this.checkFaint(attacker, playerIndex, events);
     }
@@ -1062,6 +1103,22 @@ export class Battle {
       attacker.status = 'sleep';
       attacker.sleepTurns = 2;
       this.addEvent(events, 'status', { pokemon: attacker.species.name, status: 'sleep' });
+      return;
+    }
+
+    // Wish: heal active Pokemon at end of next turn
+    if (move.name === 'Wish') {
+      const alreadyPending = this.pendingWish.some(w => w.playerIndex === playerIndex);
+      if (alreadyPending) {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: 'Wish', reason: 'already active' });
+        return;
+      }
+      this.pendingWish.push({
+        turnsLeft: 2, // decremented at end of this turn (→1), resolves at end of NEXT turn (→0)
+        healAmount: Math.floor(attacker.maxHp / 2),
+        playerIndex,
+      });
+      this.addEvent(events, 'wish_start', { pokemon: attacker.species.name });
       return;
     }
 
@@ -1701,6 +1758,7 @@ export class Battle {
         this.setWeather('rain', events);
         break;
       case 'Drought':
+      case 'Orichalcum Pulse':
         this.setWeather('sun', events);
         break;
       case 'Sand Stream':
@@ -2034,6 +2092,21 @@ export class Battle {
       }
     }
 
+    // Wish resolution
+    for (let w = this.pendingWish.length - 1; w >= 0; w--) {
+      const wish = this.pendingWish[w];
+      wish.turnsLeft--;
+      if (wish.turnsLeft <= 0) {
+        this.pendingWish.splice(w, 1);
+        const target = this.getActivePokemon(wish.playerIndex);
+        if (target.isAlive && target.currentHp < target.maxHp) {
+          const healed = Math.min(wish.healAmount, target.maxHp - target.currentHp);
+          target.currentHp = clampHp(target.currentHp + healed, target.maxHp);
+          this.addEvent(events, 'heal', { pokemon: target.species.name, amount: healed, source: 'Wish' });
+        }
+      }
+    }
+
     // Screens countdown
     for (let i = 0; i < 2; i++) {
       const side = this.getSideEffects(i);
@@ -2340,10 +2413,12 @@ export class Battle {
 
   // --- Utility ---
 
-  private getHitCount(move: MoveData): number {
+  private getHitCount(move: MoveData, attacker?: BattlePokemon): number {
     if (!move.flags.multiHit) return 1;
     const [min, max] = move.flags.multiHit as [number, number];
     if (min === max) return min;
+    // Skill Link: always max hits
+    if (attacker?.ability === 'Skill Link') return max;
     // Standard distribution: 2 hits 35%, 3 hits 35%, 4 hits 15%, 5 hits 15%
     const roll = this.rng.int(1, 100);
     if (roll <= 35) return 2;

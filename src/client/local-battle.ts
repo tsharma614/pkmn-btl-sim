@@ -8,6 +8,8 @@
 
 import { Battle } from '../engine/battle';
 import { generateTeam } from '../engine/team-generator';
+import { generateDraftPool, pickBotDraftPick, buildTeamFromDraftPicks, SNAKE_ORDER } from '../engine/draft-pool';
+import type { DraftPoolEntry } from '../engine/draft-pool';
 import { SeededRNG } from '../utils/rng';
 import { Player, BattlePokemon, BattleEvent, BattleAction } from '../types';
 import { serializeOwnPokemon, serializeVisiblePokemon } from '../server/state-sanitizer';
@@ -37,6 +39,7 @@ interface LocalBattleOptions {
   maxGen: number | null;
   difficulty: BotDifficulty;
   legendaryMode: boolean;
+  draftMode: boolean;
   dispatch: (action: ReducerAction) => void;
 }
 
@@ -45,15 +48,29 @@ interface LocalBattleOptions {
  * Returns a handle with start/action/switch methods.
  */
 export function createLocalBattle(options: LocalBattleOptions) {
-  const { playerName, itemMode, maxGen, difficulty, legendaryMode, dispatch } = options;
+  const { playerName, itemMode, maxGen, difficulty, legendaryMode, draftMode, dispatch } = options;
 
   const rng = new SeededRNG();
   const botCandidates = BOT_NAMES.filter(n => n.toLowerCase() !== playerName.toLowerCase());
   const botName = botCandidates[Math.floor(Math.random() * botCandidates.length)];
 
-  // Generate teams
-  const humanTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode });
-  const botTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode });
+  // Draft state
+  let draftPool: DraftPoolEntry[] = [];
+  let draftHumanPicks: number[] = [];
+  let draftBotPicks: number[] = [];
+  let draftCurrentPick = 0;
+  // Randomize who picks first: 0 = human first, 1 = bot first
+  const draftHumanSlot: 0 | 1 = rng.next() < 0.5 ? 0 : 1;
+  const draftBotSlot: 0 | 1 = (1 - draftHumanSlot) as 0 | 1;
+
+  // Teams — generated immediately in normal mode, after draft in draft mode
+  let humanTeam: BattlePokemon[] = [];
+  let botTeam: BattlePokemon[] = [];
+
+  if (!draftMode) {
+    humanTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode });
+    botTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode });
+  }
 
   const humanPlayer: Player = {
     id: 'p1',
@@ -192,16 +209,25 @@ export function createLocalBattle(options: LocalBattleOptions) {
         if (m.category === 'Physical') score *= (1 + active.boosts.atk * 0.15);
         else score *= (1 + active.boosts.spa * 0.15);
         if (m.accuracy && m.accuracy < 100) score *= (m.accuracy / 100);
-        if (isHard && m.priority > 0 && oppHpPct < 0.25 && score > 0) score *= 1.8;
-        if (isHard && oppHpPct < 0.3 && score > 0) score *= 1.3;
-        if (isHard && oppHpPct > 0.7 && score > 0) score *= 1 + (m.power / 500);
+        if (isHard && m.priority > 0 && oppHpPct < 0.25 && score > 0) score *= 2.0;
+        if (isHard && oppHpPct < 0.3 && score > 0) score *= 1.5;
+        if (isHard && oppHpPct > 0.7 && score > 0) score *= 1 + (m.power / 400);
+        // Hard: factor in stat matchup — use the right attacking stat vs defensive stat
+        if (isHard && m.power && score > 0) {
+          const atkStat = m.category === 'Physical' ? (active.species.baseStats?.atk ?? 100) : (active.species.baseStats?.spa ?? 100);
+          score *= (atkStat / 100);
+        }
+        // Hard: prefer multi-hit moves for breaking sashes/substitutes
+        if (isHard && m.name && ['Bullet Seed', 'Rock Blast', 'Icicle Spear', 'Pin Missile', 'Scale Shot', 'Tail Slap', 'Population Bomb', 'Bone Rush', 'Water Shuriken'].includes(m.name)) {
+          score *= 1.15;
+        }
       } else {
         score = 35;
         const healMoves = ['Recover', 'Roost', 'Moonlight', 'Synthesis', 'Soft-Boiled',
           'Rest', 'Slack Off', 'Morning Sun', 'Milk Drink', 'Shore Up', 'Strength Sap'];
         if (healMoves.includes(m.name)) {
           if (isHard) {
-            score = oppHpPct < 0.2 ? 10 : hpPct < 0.35 ? 150 : hpPct < 0.6 ? 100 : hpPct < 0.8 ? 40 : 5;
+            score = oppHpPct < 0.2 ? 10 : hpPct < 0.35 ? 160 : hpPct < 0.5 ? 120 : hpPct < 0.7 ? 80 : hpPct < 0.85 ? 30 : 5;
           } else {
             score = hpPct < 0.5 ? 120 : hpPct < 0.75 ? 60 : 10;
           }
@@ -222,22 +248,26 @@ export function createLocalBattle(options: LocalBattleOptions) {
           if (isHard) {
             if (oppThreat >= 2 && hpPct < 0.8) score = 5;
             else if (currentBoost >= 4) score = 5;
-            else if (hpPct > 0.7 && oppHpPct > 0.5) score = 110 - currentBoost * 15;
-            else if (hpPct > 0.5 && oppThreat <= 1) score = 60 - currentBoost * 10;
+            else if (hpPct > 0.8 && oppHpPct > 0.5) score = 130 - currentBoost * 20;
+            else if (hpPct > 0.6 && oppThreat <= 1) score = 80 - currentBoost * 15;
             else score = 15;
           } else {
             score = hpPct > 0.6 ? 70 : 25;
           }
         }
         if (m.name === 'Stealth Rock' || m.name === 'Spikes' || m.name === 'Toxic Spikes') {
-          score = isHard ? 85 : 65;
+          score = isHard ? 90 : 65;
         }
         if (['Toxic', 'Will-O-Wisp', 'Thunder Wave', 'Sleep Powder', 'Spore', 'Hypnosis', 'Stun Spore', 'Nuzzle'].includes(m.name)) {
           if (botOpponent?.status) score = 5;
           else if (isHard) {
             const isSleep = ['Sleep Powder', 'Spore', 'Hypnosis'].includes(m.name);
-            score = oppHpPct < 0.2 ? 15 : isSleep ? 90 : 70;
+            score = oppHpPct < 0.2 ? 15 : isSleep ? 100 : 75;
           } else score = 60;
+        }
+        // Hard: Trick/Switcheroo with choice items is powerful
+        if (isHard && ['Trick', 'Switcheroo'].includes(m.name) && active.item && ['Choice Band', 'Choice Specs', 'Choice Scarf'].includes(active.item)) {
+          score = 85;
         }
       }
 
@@ -253,16 +283,24 @@ export function createLocalBattle(options: LocalBattleOptions) {
       return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, isHard) };
     }
     if (isHard && switches.length > 0 && oppTypes.length > 0) {
-      if (oppThreat > 1 && bestScore < 100 && Math.random() < 0.65) {
+      // Switch out if opponent threatens us heavily and we can't KO
+      if (oppThreat >= 4 && bestScore < 200) {
         return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
       }
-      if (oppThreat >= 4 && bestScore < 150) {
+      if (oppThreat >= 2 && bestScore < 100 && Math.random() < 0.75) {
+        return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
+      }
+      if (oppThreat > 1 && bestScore < 60 && Math.random() < 0.85) {
         return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
       }
     }
-    const lowHpSwitchChance = isHard ? 0.4 : 0.15;
+    const lowHpSwitchChance = isHard ? 0.5 : 0.15;
     if (switches.length > 0 && hpPct < 0.25 && bestScore < 80 && Math.random() < lowHpSwitchChance) {
       return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, isHard) };
+    }
+    // Hard: if our best move is really weak, consider switching
+    if (isHard && switches.length > 0 && bestScore < 50 && Math.random() < 0.5) {
+      return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
     }
 
     return { type: 'move', playerId: 'p2', moveIndex: scoredMoves[0].idx };
@@ -296,25 +334,36 @@ export function createLocalBattle(options: LocalBattleOptions) {
       const pTypes = p.species.types as PokemonType[];
       let score = p.currentHp / p.maxHp;
       if (oppTypes.length > 0) {
+        // Offensive advantage: super-effective moves
+        let bestMoveEff = 0;
         for (const move of p.moves) {
           if (move.category !== 'Status' && move.power && move.currentPp > 0) {
             const eff = getTypeEffectiveness(move.type as PokemonType, oppTypes);
-            if (eff > 1) score += isHard ? 0.7 : 0.5;
-            if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) score += 0.3;
+            if (eff > bestMoveEff) bestMoveEff = eff;
+            if (eff > 1) score += isHard ? 0.8 : 0.5;
+            if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) score += 0.4; // STAB SE
           }
         }
+        // Defensive advantage: resist opponent's types
         for (const oppType of oppTypes) {
           const eff = getTypeEffectiveness(oppType, pTypes);
-          if (eff < 1) score += isHard ? 0.35 : 0.2;
-          if (eff === 0) score += isHard ? 0.8 : 0.5;
+          if (eff < 1) score += isHard ? 0.4 : 0.2;
+          if (eff === 0) score += isHard ? 1.0 : 0.5;
         }
         if (isHard) {
+          // Penalty for being weak to opponent
           for (const oppType of oppTypes) {
             const eff = getTypeEffectiveness(oppType, pTypes);
-            if (eff > 1) score -= 0.3;
-            if (eff >= 4) score -= 0.5;
+            if (eff > 1) score -= 0.4;
+            if (eff >= 4) score -= 0.8;
           }
-          score += (p.species.baseStats?.spe ?? 0) / 500;
+          // Speed matters — faster Pokemon can strike first
+          score += (p.species.baseStats?.spe ?? 0) / 400;
+          // Bulk matters — prefer Pokemon with HP left
+          const hpPctSwitch = p.currentHp / p.maxHp;
+          if (hpPctSwitch < 0.3) score -= 0.3;
+          // Bonus for having a strong STAB move that hits SE
+          if (bestMoveEff > 1) score += 0.3;
         }
       }
       return { ...s, score };
@@ -329,25 +378,35 @@ export function createLocalBattle(options: LocalBattleOptions) {
     if (available.length === 0) return 0;
 
     const oppTypes = (botOpponent?.species.types ?? []) as PokemonType[];
-    if (difficulty === 'hard' && oppTypes.length > 0 && botState) {
+    if ((difficulty === 'hard' || difficulty === 'normal') && oppTypes.length > 0 && botState) {
+      const isHard = difficulty === 'hard';
       const ranked = available.map(idx => {
         const p = botState!.team[idx];
         const pTypes = p.species.types as PokemonType[];
         let score = p.currentHp / p.maxHp;
         for (const move of p.moves) {
           if (move.category !== 'Status' && move.power && move.currentPp > 0) {
-            if (getTypeEffectiveness(move.type as PokemonType, oppTypes) > 1) score += 0.5;
+            const eff = getTypeEffectiveness(move.type as PokemonType, oppTypes);
+            if (eff > 1) score += isHard ? 0.8 : 0.4;
+            if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) score += 0.3;
           }
         }
         for (const oppType of oppTypes) {
-          if (getTypeEffectiveness(oppType, pTypes) < 1) score += 0.2;
+          const eff = getTypeEffectiveness(oppType, pTypes);
+          if (eff < 1) score += isHard ? 0.4 : 0.2;
+          if (eff === 0) score += isHard ? 1.0 : 0.4;
+          if (isHard && eff > 1) score -= 0.4;
+          if (isHard && eff >= 4) score -= 0.8;
+        }
+        if (isHard) {
+          score += (p.species.baseStats?.spe ?? 0) / 400;
         }
         return { idx, score };
       }).sort((a, b) => b.score - a.score);
       return ranked[0].idx;
     }
 
-    // Default: pick healthiest
+    // Default (easy): pick healthiest
     let bestIdx = available[0];
     let bestHp = 0;
     for (const idx of available) {
@@ -376,6 +435,55 @@ export function createLocalBattle(options: LocalBattleOptions) {
     return events;
   }
 
+  // --- Draft helpers ---
+
+  function scheduleBotDraftPicks() {
+    if (draftCurrentPick >= SNAKE_ORDER.length) return;
+    if (SNAKE_ORDER[draftCurrentPick] !== draftBotSlot) return; // not bot's turn
+
+    setTimeout(() => {
+      if (draftCurrentPick >= SNAKE_ORDER.length) return;
+
+      const pickIdx = pickBotDraftPick(
+        draftPool,
+        draftBotPicks,
+        draftHumanPicks,
+        difficulty,
+        rng,
+      );
+
+      draftBotPicks.push(pickIdx);
+      dispatch({ type: 'DRAFT_PICK', playerIndex: draftBotSlot, poolIndex: pickIdx });
+      draftCurrentPick++;
+
+      if (draftCurrentPick >= SNAKE_ORDER.length) {
+        finalizeDraft();
+        return;
+      }
+
+      // Bot may have consecutive picks (snake draft)
+      if (SNAKE_ORDER[draftCurrentPick] === draftBotSlot) {
+        scheduleBotDraftPicks();
+      }
+    }, 1200);
+  }
+
+  function finalizeDraft() {
+    const humanSpecies = draftHumanPicks.map(i => draftPool[i].species);
+    const botSpecies = draftBotPicks.map(i => draftPool[i].species);
+
+    humanTeam = buildTeamFromDraftPicks(humanSpecies, rng, { itemMode, maxGen });
+    botTeam = buildTeamFromDraftPicks(botSpecies, rng, { itemMode, maxGen });
+
+    humanPlayer.team = humanTeam;
+    botPlayer.team = botTeam;
+
+    dispatch({
+      type: 'DRAFT_COMPLETE',
+      yourTeam: humanTeam.map(serializeOwnPokemon),
+    });
+  }
+
   // --- Public interface ---
 
   return {
@@ -385,34 +493,95 @@ export function createLocalBattle(options: LocalBattleOptions) {
       // Dispatch setup sequence mimicking socket flow
       dispatch({ type: 'ROOM_CREATED', code: 'LOCAL', botName });
 
-      // Team preview
-      dispatch({
-        type: 'TEAM_PREVIEW',
-        payload: {
-          yourTeam: humanTeam.map(serializeOwnPokemon),
-          yourPlayerIndex: 0,
-        },
-      });
+      if (draftMode) {
+        // Generate draft pool instead of teams
+        console.log(`[local-battle] Draft mode start — generating pool (maxGen: ${maxGen}, legendary: ${legendaryMode}), humanSlot: ${draftHumanSlot}`);
+        draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode });
+        draftHumanPicks = [];
+        draftBotPicks = [];
+        draftCurrentPick = 0;
+
+        dispatch({
+          type: 'DRAFT_START',
+          pool: draftPool,
+          yourPlayerIndex: draftHumanSlot,
+        });
+
+        // If bot picks first (SNAKE_ORDER[0] matches bot's slot)
+        if (SNAKE_ORDER[0] === draftBotSlot) {
+          scheduleBotDraftPicks();
+        }
+      } else {
+        // Normal flow: team preview
+        dispatch({
+          type: 'TEAM_PREVIEW',
+          payload: {
+            yourTeam: humanTeam.map(serializeOwnPokemon),
+            yourPlayerIndex: 0,
+          },
+        });
+      }
+    },
+
+    submitDraftPick(poolIndex: number) {
+      if (!draftMode || draftCurrentPick >= SNAKE_ORDER.length) return;
+      if (SNAKE_ORDER[draftCurrentPick] !== draftHumanSlot) return; // not human's turn
+      const picked = new Set([...draftHumanPicks, ...draftBotPicks]);
+      if (picked.has(poolIndex)) return; // already picked
+
+      // Record human pick
+      draftHumanPicks.push(poolIndex);
+      dispatch({ type: 'DRAFT_PICK', playerIndex: draftHumanSlot, poolIndex });
+      draftCurrentPick++;
+
+      // Check if draft is complete
+      if (draftCurrentPick >= SNAKE_ORDER.length) {
+        finalizeDraft();
+        return;
+      }
+
+      // Schedule bot picks if it's bot's turn
+      if (SNAKE_ORDER[draftCurrentPick] === draftBotSlot) {
+        scheduleBotDraftPicks();
+      }
     },
 
     selectLead(leadIndex: number) {
-      // Set the human's lead
-      humanPlayer.activePokemonIndex = leadIndex;
-      // Bot always leads with index 0
+      // Guard: prevent calling selectLead twice on the same battle
+      if (battle) {
+        console.warn(`[local-battle] selectLead called but battle already exists — ignoring`);
+        return;
+      }
+
+      // Swap chosen lead to front (mirrors server Room.selectLead)
+      if (leadIndex !== 0) {
+        const temp = humanPlayer.team[leadIndex];
+        humanPlayer.team[leadIndex] = humanPlayer.team[0];
+        humanPlayer.team[0] = temp;
+      }
+      humanPlayer.activePokemonIndex = 0;
 
       // Create the battle
       battle = new Battle(humanPlayer, botPlayer);
 
-      // Dispatch battle start
+      // Serialize bot lead for opponent display
+      const botLeadPokemon = botPlayer.team[0];
+      const botLeadVisible = serializeVisiblePokemon(botLeadPokemon);
+      console.log(`[local-battle] selectLead(${leadIndex}) — lead: ${humanPlayer.team[0].species.name}, bot lead: ${botLeadPokemon.species.name} (${botLeadPokemon.species.id})`);
+
+      // Dispatch battle start with opponent lead included to avoid "???" flash
       dispatch({
         type: 'BATTLE_START',
         payload: {
           yourTeam: humanPlayer.team.map(serializeOwnPokemon),
           yourPlayerIndex: 0,
+          activePokemonIndex: 0,
+          opponentLead: botLeadVisible,
+          opponentName: botName,
         },
       });
 
-      // Reveal bot's lead
+      // Also dispatch BOT_LEAD_REVEALED for compatibility
       const botLead = serializeOwnPokemon(botPlayer.team[0]);
       dispatch({
         type: 'BOT_LEAD_REVEALED',
@@ -431,59 +600,29 @@ export function createLocalBattle(options: LocalBattleOptions) {
     submitAction(action: { type: 'move' | 'switch'; index: number }) {
       if (!battle) return;
 
-      // Convert UI action to engine action
-      const humanAction: BattleAction = action.type === 'move'
-        ? { type: 'move', playerId: 'p1', moveIndex: action.index }
-        : { type: 'switch', playerId: 'p1', pokemonIndex: action.index };
+      try {
+        // Convert UI action to engine action
+        const humanAction: BattleAction = action.type === 'move'
+          ? { type: 'move', playerId: 'p1', moveIndex: action.index }
+          : { type: 'switch', playerId: 'p1', pokemonIndex: action.index };
 
-      // Get bot's action
-      const botAction = pickBotAction();
+        // Get bot's action
+        const botAction = pickBotAction();
 
-      // Process the turn
-      const events = battle.processTurn(humanAction, botAction);
+        // Process the turn
+        const events = battle.processTurn(humanAction, botAction);
 
-      // Update bot state
-      const botResult = buildTurnResult(1, events);
-      botState = botResult.yourState;
-      botOpponent = botResult.opponentVisible.activePokemon;
+        // Update bot state
+        const botResult = buildTurnResult(1, events);
+        botState = botResult.yourState;
+        botOpponent = botResult.opponentVisible.activePokemon;
 
-      // Dispatch turn result to human
-      const humanResult = buildTurnResult(0, events);
-      dispatch({ type: 'TURN_RESULT', payload: humanResult });
+        // Dispatch turn result to human
+        const humanResult = buildTurnResult(0, events);
+        console.log(`[local-battle] TURN_RESULT — opponent active: ${humanResult.opponentVisible.activePokemon?.species.name ?? 'NULL'}, fainted: ${humanResult.opponentVisible.faintedCount}, events: ${events.length}`);
+        dispatch({ type: 'TURN_RESULT', payload: humanResult });
 
-      // Check for battle end
-      if ((battle.state.status as string) === 'finished') {
-        const winnerName = battle.state.winner === 'p1' ? playerName : botName;
-        dispatch({
-          type: 'BATTLE_END',
-          payload: {
-            winner: winnerName,
-            reason: 'all_fainted',
-            finalState: {
-              yourTeam: humanPlayer.team.map(serializeOwnPokemon),
-              opponentTeam: botPlayer.team.map(serializeOwnPokemon),
-              turn: battle.state.turn,
-              weather: battle.state.weather,
-            },
-          },
-        });
-        return;
-      }
-
-      // Check for force switches
-      const humanNeedsSwitch = battle.needsSwitch(0) || battle.needsSelfSwitch(0);
-      const botNeedsSwitch = battle.needsSwitch(1) || battle.needsSelfSwitch(1);
-
-      // Resolve bot's force switch first (silently)
-      if (botNeedsSwitch) {
-        const botSwitchIdx = pickBotForceSwitch();
-        const switchEvents = resolveForceSwitch(1, botSwitchIdx);
-        // Update bot state after switch
-        const updatedBotResult = buildTurnResult(1, switchEvents);
-        botState = updatedBotResult.yourState;
-        botOpponent = updatedBotResult.opponentVisible.activePokemon;
-
-        // Check for battle end after bot switch (e.g. hazard KO)
+        // Check for battle end
         if ((battle.state.status as string) === 'finished') {
           const winnerName = battle.state.winner === 'p1' ? playerName : botName;
           dispatch({
@@ -501,50 +640,101 @@ export function createLocalBattle(options: LocalBattleOptions) {
           });
           return;
         }
-      }
 
-      // Human needs to switch
-      if (humanNeedsSwitch) {
-        dispatch({ type: 'NEEDS_SWITCH', payload: buildNeedsSwitch(0) });
+        // Check for force switches
+        const humanNeedsSwitch = battle.needsSwitch(0) || battle.needsSelfSwitch(0);
+        const botNeedsSwitch = battle.needsSwitch(1) || battle.needsSelfSwitch(1);
+
+        // Resolve bot's force switch and dispatch events so UI shows the new opponent
+        if (botNeedsSwitch) {
+          const botSwitchIdx = pickBotForceSwitch();
+          console.log(`[local-battle] Bot force switch to index ${botSwitchIdx} (${botPlayer.team[botSwitchIdx]?.species.name})`);
+          const switchEvents = resolveForceSwitch(1, botSwitchIdx);
+          console.log(`[local-battle] Switch events:`, switchEvents.map(e => `${e.type}:${JSON.stringify(e.data)}`));
+          // Update bot state after switch
+          const updatedBotResult = buildTurnResult(1, switchEvents);
+          botState = updatedBotResult.yourState;
+          botOpponent = updatedBotResult.opponentVisible.activePokemon;
+
+          // Dispatch the switch events so the UI shows the new opponent Pokemon
+          const humanSwitchResult = buildTurnResult(0, switchEvents);
+          console.log(`[local-battle] Dispatching bot switch TURN_RESULT — opponent active: ${humanSwitchResult.opponentVisible.activePokemon?.species.name ?? 'NULL'}, events: ${switchEvents.length}`);
+          dispatch({ type: 'TURN_RESULT', payload: humanSwitchResult });
+
+          // Check for battle end after bot switch (e.g. hazard KO)
+          if ((battle.state.status as string) === 'finished') {
+            const winnerName = battle.state.winner === 'p1' ? playerName : botName;
+            dispatch({
+              type: 'BATTLE_END',
+              payload: {
+                winner: winnerName,
+                reason: 'all_fainted',
+                finalState: {
+                  yourTeam: humanPlayer.team.map(serializeOwnPokemon),
+                  opponentTeam: botPlayer.team.map(serializeOwnPokemon),
+                  turn: battle.state.turn,
+                  weather: battle.state.weather,
+                },
+              },
+            });
+            return;
+          }
+        }
+
+        // Human needs to switch
+        if (humanNeedsSwitch) {
+          dispatch({ type: 'NEEDS_SWITCH', payload: buildNeedsSwitch(0) });
+        }
+      } catch (err) {
+        console.error(`[local-battle] submitAction CRASHED:`, err);
+        // Recover: dispatch an empty turn result to unstick from waiting_for_turn
+        const recoveryResult = buildTurnResult(0, []);
+        dispatch({ type: 'TURN_RESULT', payload: recoveryResult });
       }
     },
 
     submitForceSwitch(pokemonIndex: number) {
       if (!battle) return;
 
-      const events = resolveForceSwitch(0, pokemonIndex);
+      try {
+        const events = resolveForceSwitch(0, pokemonIndex);
 
-      // Check if hazard KO needs another switch
-      if (battle.needsSwitch(0)) {
-        // Dispatch events first, then re-prompt
+        // Check if hazard KO needs another switch
+        if (battle.needsSwitch(0)) {
+          // Dispatch events first, then re-prompt
+          const humanResult = buildTurnResult(0, events);
+          dispatch({ type: 'TURN_RESULT', payload: humanResult });
+          dispatch({ type: 'NEEDS_SWITCH', payload: buildNeedsSwitch(0) });
+          return;
+        }
+
+        // Check for battle end
+        if ((battle.state.status as string) === 'finished') {
+          const winnerName = battle.state.winner === 'p1' ? playerName : botName;
+          dispatch({
+            type: 'BATTLE_END',
+            payload: {
+              winner: winnerName,
+              reason: 'all_fainted',
+              finalState: {
+                yourTeam: humanPlayer.team.map(serializeOwnPokemon),
+                opponentTeam: botPlayer.team.map(serializeOwnPokemon),
+                turn: battle.state.turn,
+                weather: battle.state.weather,
+              },
+            },
+          });
+          return;
+        }
+
+        // Send updated state (switch-in events, hazard damage, etc.)
         const humanResult = buildTurnResult(0, events);
         dispatch({ type: 'TURN_RESULT', payload: humanResult });
-        dispatch({ type: 'NEEDS_SWITCH', payload: buildNeedsSwitch(0) });
-        return;
+      } catch (err) {
+        console.error(`[local-battle] submitForceSwitch CRASHED:`, err);
+        const recoveryResult = buildTurnResult(0, []);
+        dispatch({ type: 'TURN_RESULT', payload: recoveryResult });
       }
-
-      // Check for battle end
-      if ((battle.state.status as string) === 'finished') {
-        const winnerName = battle.state.winner === 'p1' ? playerName : botName;
-        dispatch({
-          type: 'BATTLE_END',
-          payload: {
-            winner: winnerName,
-            reason: 'all_fainted',
-            finalState: {
-              yourTeam: humanPlayer.team.map(serializeOwnPokemon),
-              opponentTeam: botPlayer.team.map(serializeOwnPokemon),
-              turn: battle.state.turn,
-              weather: battle.state.weather,
-            },
-          },
-        });
-        return;
-      }
-
-      // Send updated state (switch-in events, hazard damage, etc.)
-      const humanResult = buildTurnResult(0, events);
-      dispatch({ type: 'TURN_RESULT', payload: humanResult });
     },
 
     disconnect() {

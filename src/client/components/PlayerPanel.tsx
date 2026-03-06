@@ -66,7 +66,7 @@ export function PlayerPanel({ active, team, attackTrigger = 0, damageTrigger = 0
           <Text style={styles.hpText}>
             {displayHp}/{displayMaxHp}
           </Text>
-          <StatusBadge status={active.status} />
+          <StatusBadge status={(nameOverride && nameOverride !== active.species.name) ? null : active.status} />
         </View>
         {active.item && (
           <Text style={styles.item} numberOfLines={1}>@ {active.item}</Text>

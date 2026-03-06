@@ -43,7 +43,8 @@ export function MoveGrid({ active, onSelectMove, disabled, opponentTypes }: Prop
           disabled ||
           move.currentPp <= 0 ||
           move.disabled ||
-          (active.choiceLocked !== null && move.name !== active.choiceLocked);
+          (active.choiceLocked !== null && move.name !== active.choiceLocked) ||
+          (active.encoreMove != null && move.name !== active.encoreMove);
 
         const bg = typeColors[move.type] || '#555';
         const ppRatio = move.maxPp > 0 ? move.currentPp / move.maxPp : 0;

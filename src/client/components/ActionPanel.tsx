@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { MoveGrid } from './MoveGrid';
 import { SwitchList } from './SwitchList';
 import { colors, spacing } from '../theme';
@@ -22,7 +22,8 @@ export function ActionPanel({ disabled }: Props) {
   // Check if must switch (all moves unusable)
   const usableMoves = active.moves.filter(
     m => m.currentPp > 0 && !m.disabled &&
-      !(active.choiceLocked && m.name !== active.choiceLocked),
+      !(active.choiceLocked && m.name !== active.choiceLocked) &&
+      !(active.encoreMove != null && m.name !== active.encoreMove),
   );
   const aliveSwitches = yourState.team.filter(
     (p, i) => i !== yourState.activePokemonIndex && p.isAlive,
@@ -31,6 +32,18 @@ export function ActionPanel({ disabled }: Props) {
 
   // Auto-struggle if no moves and no switches
   const canStruggle = usableMoves.length === 0 && aliveSwitches.length === 0;
+
+  // Show waiting state when action has been submitted
+  if (disabled) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.waitingContainer}>
+          <ActivityIndicator size="small" color={colors.accent} />
+          <Text style={styles.waitingLabel}>Waiting for opponent...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -63,7 +76,6 @@ export function ActionPanel({ disabled }: Props) {
           <TouchableOpacity
             style={styles.struggleBtn}
             onPress={() => selectMove(0)}
-            disabled={disabled}
           >
             <Text style={styles.struggleBtnText}>Struggle</Text>
           </TouchableOpacity>
@@ -75,14 +87,14 @@ export function ActionPanel({ disabled }: Props) {
             team={yourState.team}
             activePokemonIndex={yourState.activePokemonIndex}
             onSelectSwitch={selectSwitch}
-            disabled={disabled}
+            disabled={false}
           />
         </View>
       ) : actionView === 'moves' ? (
         <MoveGrid
           active={active}
           onSelectMove={selectMove}
-          disabled={disabled}
+          disabled={false}
           opponentTypes={opponentTypes}
         />
       ) : (
@@ -90,7 +102,7 @@ export function ActionPanel({ disabled }: Props) {
           team={yourState.team}
           activePokemonIndex={yourState.activePokemonIndex}
           onSelectSwitch={selectSwitch}
-          disabled={disabled}
+          disabled={false}
         />
       )}
     </View>
@@ -149,5 +161,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     paddingVertical: spacing.sm,
+  },
+  waitingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.xl,
+    minHeight: 140,
+  },
+  waitingLabel: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+    fontStyle: 'italic',
   },
 });

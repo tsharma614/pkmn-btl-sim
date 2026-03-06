@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
 import { TypeBadge } from './TypeBadge';
@@ -19,6 +20,7 @@ interface Props {
 
 export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
   const [selected, setSelected] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
 
   const p = team[selected];
 
@@ -68,11 +70,11 @@ export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
       </View>
 
       {/* Team grid */}
-      <ScrollView horizontal contentContainerStyle={styles.teamRow}>
+      <ScrollView horizontal contentContainerStyle={styles.teamRow} pointerEvents={submitted ? 'none' : 'auto'}>
         {team.map((mon, i) => (
           <TouchableOpacity
             key={i}
-            style={[styles.teamSlot, i === selected && styles.teamSlotSelected]}
+            style={[styles.teamSlot, i === selected && styles.teamSlotSelected, submitted && { opacity: 0.5 }]}
             onPress={() => setSelected(i)}
             activeOpacity={0.7}
           >
@@ -89,25 +91,37 @@ export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
         ))}
       </ScrollView>
 
-      {/* Confirm button */}
-      <TouchableOpacity
-        style={styles.confirmBtn}
-        onPress={() => onSelectLead(selected)}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.confirmText}>
-          Go, {p.species.name}!
-        </Text>
-      </TouchableOpacity>
+      {/* Confirm button / waiting state */}
+      {submitted ? (
+        <View style={styles.waitingRow}>
+          <ActivityIndicator size="small" color={colors.accent} />
+          <Text style={styles.waitingText}>Waiting for opponent...</Text>
+        </View>
+      ) : (
+        <>
+          <TouchableOpacity
+            style={styles.confirmBtn}
+            onPress={() => {
+              setSubmitted(true);
+              onSelectLead(selected);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.confirmText}>
+              Go, {p.species.name}!
+            </Text>
+          </TouchableOpacity>
 
-      {onExitToMenu && (
-        <TouchableOpacity
-          style={styles.exitBtn}
-          onPress={onExitToMenu}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.exitText}>Exit to Menu</Text>
-        </TouchableOpacity>
+          {onExitToMenu && (
+            <TouchableOpacity
+              style={styles.exitBtn}
+              onPress={onExitToMenu}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.exitText}>Exit to Menu</Text>
+            </TouchableOpacity>
+          )}
+        </>
       )}
     </View>
   );
@@ -246,5 +260,19 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 14,
     fontWeight: '600',
+  },
+  waitingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    paddingVertical: 14,
+    marginTop: spacing.lg,
+  },
+  waitingText: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '600',
+    fontStyle: 'italic',
   },
 });

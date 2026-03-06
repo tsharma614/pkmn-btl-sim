@@ -24,10 +24,19 @@ export function calculateDamage(
     return zeroDamageResult();
   }
 
-  // Fixed-damage moves (Seismic Toss, Night Shade)
-  if (basePower === -1) {
+  // Fixed-damage moves (Seismic Toss, Night Shade, Super Fang, Dragon Rage, etc.)
+  // Sentinel -1 = user's level, -2 = 50% target HP, -3..-N = fixed amount (abs value)
+  if (basePower < 0) {
+    let fixedDmg: number;
+    if (basePower === -1) {
+      fixedDmg = level; // Seismic Toss, Night Shade
+    } else if (basePower === -2) {
+      fixedDmg = Math.max(1, Math.floor(defender.currentHp / 2)); // Super Fang
+    } else {
+      fixedDmg = Math.abs(basePower); // Dragon Rage (-40), Sonic Boom (-20)
+    }
     return {
-      damage: level,
+      damage: fixedDmg,
       basePower: 0,
       attackStat: 0,
       defenseStat: 0,
@@ -38,7 +47,7 @@ export function calculateDamage(
       itemModifier: 1,
       criticalHit: false,
       randomFactor: 1,
-      finalDamage: level,
+      finalDamage: fixedDmg,
     };
   }
 
@@ -303,7 +312,60 @@ function getVariablePower(move: MoveData, attacker: BattlePokemon, defender: Bat
     // Seismic Toss / Night Shade: damage = user's level (handled as fixed damage)
     case 'seismictoss':
     case 'nightshade': {
-      return -1; // Sentinel: fixed damage handled in battle.ts
+      return -1; // Sentinel: level-based fixed damage
+    }
+
+    // Super Fang: 50% of target's current HP
+    case 'superfang': {
+      return -2; // Sentinel: half target HP
+    }
+
+    // Dragon Rage: fixed 40 damage
+    case 'dragonrage': {
+      return -40; // Sentinel: fixed damage (abs value)
+    }
+
+    // Sonic Boom: fixed 20 damage
+    case 'sonicboom': {
+      return -20; // Sentinel: fixed damage (abs value)
+    }
+
+    // Final Gambit: damage = user's current HP (user faints after)
+    case 'finalgambit': {
+      return -(attacker.currentHp); // Sentinel: fixed damage
+    }
+
+    // Endeavor: reduce target HP to user's HP
+    case 'endeavor': {
+      const diff = defender.currentHp - attacker.currentHp;
+      return diff > 0 ? -diff : -1; // min 1 damage sentinel
+    }
+
+    // OHKO moves: instant KO (damage = target's current HP)
+    case 'fissure':
+    case 'horndrill':
+    case 'guillotine':
+    case 'sheercold': {
+      return -(defender.currentHp); // Sentinel: KO damage
+    }
+
+    // Counter: return 2x physical damage taken
+    case 'counter': {
+      return attacker.lastDamageTaken && attacker.lastDamageTaken.physical
+        ? -(attacker.lastDamageTaken.amount * 2)
+        : 0; // fail if no physical hit
+    }
+
+    // Mirror Coat: return 2x special damage taken
+    case 'mirrorcoat': {
+      return attacker.lastDamageTaken && !attacker.lastDamageTaken.physical
+        ? -(attacker.lastDamageTaken.amount * 2)
+        : 0; // fail if no special hit
+    }
+
+    // Rage Fist: 50 + 50 per time user was hit (max 350)
+    case 'ragefist': {
+      return Math.min(350, 50 + 50 * attacker.timesHit);
     }
 
     // Stored Power / Power Trip: 20 + 20 per positive boost
