@@ -20,7 +20,8 @@ export function StatsScreen({ onBack }: Props) {
     getBadges().then(setBadges);
   }, []);
 
-  const earnedCount = badges ? Object.keys(badges.gymBadges).length : 0;
+  const earnedCount = badges ? Object.keys(badges.gymBadges).filter(k => badges.gymBadges[k].length > 0).length : 0;
+  const totalWins = badges ? Object.values(badges.gymBadges).reduce((sum, arr) => sum + arr.length, 0) : 0;
 
   return (
     <View style={styles.container}>
@@ -63,13 +64,14 @@ export function StatsScreen({ onBack }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>GYM BADGES</Text>
           <Text style={styles.sectionSubtitle}>
-            Defeat the Gym Leaders in Monotype Draft ({earnedCount}/{MONOTYPE_TYPES.length})
+            Defeat the Gym Leaders in Monotype Draft ({earnedCount}/{MONOTYPE_TYPES.length}){totalWins > earnedCount ? ` · ${totalWins} total wins` : ''}
           </Text>
           <View style={styles.badgeGrid}>
             {MONOTYPE_TYPES.map(type => {
-              const gymBadge = badges?.gymBadges[type];
+              const gymBadges = badges?.gymBadges[type] ?? [];
               const leader = GYM_LEADERS[type];
-              const earned = !!gymBadge;
+              const earned = gymBadges.length > 0;
+              const latestBadge = earned ? gymBadges[gymBadges.length - 1] : null;
               return (
                 <View
                   key={type}
@@ -89,9 +91,9 @@ export function StatsScreen({ onBack }: Props) {
                   <Text style={[styles.badgeTypeLabel, earned ? styles.badgeTypeLabelEarned : styles.badgeTypeLabelLocked]}>
                     {type}
                   </Text>
-                  {earned && gymBadge && (
+                  {earned && latestBadge && (
                     <Text style={styles.badgeDate}>
-                      {new Date(gymBadge.earnedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      {gymBadges.length > 1 ? `×${gymBadges.length} · ` : ''}{new Date(latestBadge.earnedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </Text>
                   )}
                 </View>

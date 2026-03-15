@@ -196,7 +196,7 @@ export function BattleScreen() {
   if (state.phase === 'drafting') {
     const yourPicks = state.draftPicks[state.yourPlayerIndex].map(i => state.draftPool[i]);
     const oppPicks = state.draftPicks[1 - state.yourPlayerIndex as 0 | 1].map(i => state.draftPool[i]);
-    const gymTitle = state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.monotype
+    const gymTitle = state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftType !== 'role' && state.monotype
       ? (() => { const gl = getGymLeader(state.monotype); return gl ? `GYM LEADER ${gl.name.toUpperCase()}` : null; })()
       : null;
     const oppName = state.opponentName ?? state.botName ?? 'Opponent';
@@ -421,9 +421,9 @@ export function BattleScreen() {
           gameMode={state.gameMode}
           onPlayAgain={state.gameMode === 'online' ? requestRematchOnline : playAgain}
           onExitToMenu={returnToMenu}
-          badgeType={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.monotype ? state.monotype : null}
-          gymLeaderName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.monotype ? getGymLeader(state.monotype)?.name ?? null : null}
-          badgeName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.monotype ? getGymLeader(state.monotype)?.badgeName ?? null : null}
+          badgeType={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? state.monotype : null}
+          gymLeaderName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? getGymLeader(state.monotype)?.name ?? null : null}
+          badgeName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? getGymLeader(state.monotype)?.badgeName ?? null : null}
         />
       )}
 

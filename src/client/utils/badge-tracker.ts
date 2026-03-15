@@ -11,38 +11,46 @@ export interface GymBadgeInfo {
 export interface BadgeData {
   /** Map of type name → date earned (ISO string) — legacy format */
   monotypeBadges: Record<string, string>;
-  /** Map of type name → gym badge info — new format */
-  gymBadges: Record<string, GymBadgeInfo>;
+  /** Map of type name → array of gym badge wins */
+  gymBadges: Record<string, GymBadgeInfo[]>;
 }
 
-const EMPTY: BadgeData = { monotypeBadges: {}, gymBadges: {} };
+function emptyBadgeData(): BadgeData {
+  return { monotypeBadges: {}, gymBadges: {} };
+}
 
-/** Migrate old monotypeBadges to gymBadges format if needed. */
-function migrate(data: BadgeData): BadgeData {
+/** Migrate old formats to current array-based format. */
+function migrate(data: any): BadgeData {
   if (!data.gymBadges) {
     data.gymBadges = {};
   }
-  // Migrate any monotypeBadges that don't have a gymBadges entry
-  for (const [type, date] of Object.entries(data.monotypeBadges)) {
-    if (!data.gymBadges[type]) {
-      data.gymBadges[type] = {
-        earnedDate: date,
-        gymLeaderName: '',
-        badgeName: '',
-      };
+  // Migrate single-object gymBadges to arrays
+  for (const [type, val] of Object.entries(data.gymBadges)) {
+    if (val && !Array.isArray(val)) {
+      data.gymBadges[type] = [val as GymBadgeInfo];
     }
   }
-  return data;
+  // Migrate monotypeBadges that don't have a gymBadges entry
+  for (const [type, date] of Object.entries(data.monotypeBadges)) {
+    if (!data.gymBadges[type] || data.gymBadges[type].length === 0) {
+      data.gymBadges[type] = [{
+        earnedDate: date as string,
+        gymLeaderName: '',
+        badgeName: '',
+      }];
+    }
+  }
+  return data as BadgeData;
 }
 
 export async function getBadges(): Promise<BadgeData> {
   try {
     const raw = await AsyncStorage.getItem(BADGES_KEY);
-    if (!raw) return EMPTY;
-    const data = JSON.parse(raw) as BadgeData;
+    if (!raw) return emptyBadgeData();
+    const data = JSON.parse(raw);
     return migrate(data);
   } catch {
-    return EMPTY;
+    return emptyBadgeData();
   }
 }
 
@@ -53,21 +61,21 @@ export async function earnBadge(
 ): Promise<boolean> {
   try {
     const data = await getBadges();
-    if (data.gymBadges[type]) return false; // already earned
     const now = new Date().toISOString();
     data.monotypeBadges[type] = now; // backward compat
-    data.gymBadges[type] = {
+    if (!data.gymBadges[type]) data.gymBadges[type] = [];
+    data.gymBadges[type].push({
       earnedDate: now,
       gymLeaderName: gymLeaderName ?? '',
       badgeName: badgeName ?? '',
-    };
+    });
     await AsyncStorage.setItem(BADGES_KEY, JSON.stringify(data));
-    return true; // newly earned
+    return true;
   } catch {
     return false;
   }
 }
 
 export async function resetBadges(): Promise<void> {
-  await AsyncStorage.setItem(BADGES_KEY, JSON.stringify(EMPTY));
+  await AsyncStorage.setItem(BADGES_KEY, JSON.stringify(emptyBadgeData()));
 }

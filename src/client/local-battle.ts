@@ -56,7 +56,7 @@ export function createLocalBattle(options: LocalBattleOptions) {
   const { playerName, itemMode, maxGen, difficulty, legendaryMode, draftMode, draftType, monotype, poolSize, dispatch } = options;
 
   // Gym leader challenge: legendary + draft + hard + monotype = gym leader mode
-  const isGymLeaderChallenge = draftMode && monotype && difficulty === 'hard' && legendaryMode;
+  const isGymLeaderChallenge = draftMode && draftType !== 'role' && monotype && difficulty === 'hard' && legendaryMode;
   const gymLeader = isGymLeaderChallenge ? getGymLeader(monotype) : null;
 
   const rng = new SeededRNG();
@@ -106,6 +106,7 @@ export function createLocalBattle(options: LocalBattleOptions) {
   let battle: Battle | null = null;
   let botState: TurnResultPayload['yourState'] | null = null;
   let botOpponent: VisiblePokemon | null = null;
+  let oppSideEffects: import('../types').SideEffects | null = null;
 
   // --- Serialization helpers (mirror state-sanitizer but without Room dependency) ---
 
@@ -200,11 +201,20 @@ export function createLocalBattle(options: LocalBattleOptions) {
       return { type: 'move', playerId: 'p2', moveIndex: 0 }; // Struggle
     }
 
-    // Estimate opponent threat
+    // Estimate opponent threat (includes stat boosts)
     let oppThreat = 1;
     if (isHard && oppTypes.length > 0) {
       for (const oppType of oppTypes) {
         oppThreat *= getTypeEffectiveness(oppType, botTypes);
+      }
+      // Factor in opponent's offensive boosts — a +2 Gyarados is much scarier
+      if (botOpponent?.boosts) {
+        const oppAtkBoost = Math.max(botOpponent.boosts.atk ?? 0, botOpponent.boosts.spa ?? 0);
+        if (oppAtkBoost >= 2) oppThreat *= 1.8;
+        else if (oppAtkBoost >= 1) oppThreat *= 1.3;
+        // Speed boosts mean they'll outrun us
+        const oppSpeBoost = botOpponent.boosts.spe ?? 0;
+        if (oppSpeBoost >= 1) oppThreat *= 1.2;
       }
     }
 
@@ -282,8 +292,17 @@ export function createLocalBattle(options: LocalBattleOptions) {
             score = hpPct > 0.6 ? 70 : 25;
           }
         }
-        if (m.name === 'Stealth Rock' || m.name === 'Spikes' || m.name === 'Toxic Spikes') {
-          score = isHard ? 90 : 65;
+        if (m.name === 'Stealth Rock' || m.name === 'Spikes' || m.name === 'Toxic Spikes' || m.name === 'Sticky Web') {
+          if (isHard && oppSideEffects) {
+            // Don't use hazards that are already set on the opponent's side
+            if (m.name === 'Stealth Rock' && oppSideEffects.stealthRock) score = 0;
+            else if (m.name === 'Spikes' && oppSideEffects.spikesLayers >= 3) score = 0;
+            else if (m.name === 'Toxic Spikes' && oppSideEffects.toxicSpikesLayers >= 2) score = 0;
+            else if (m.name === 'Sticky Web' && oppSideEffects.stickyWeb) score = 0;
+            else score = 90;
+          } else {
+            score = isHard ? 90 : 65;
+          }
         }
         if (['Toxic', 'Will-O-Wisp', 'Thunder Wave', 'Sleep Powder', 'Spore', 'Hypnosis', 'Stun Spore', 'Nuzzle'].includes(m.name)) {
           if (botOpponent?.status) score = 5;
@@ -322,37 +341,19 @@ export function createLocalBattle(options: LocalBattleOptions) {
     scoredMoves.sort((a, b) => b.score - a.score);
 
     const bestScore = scoredMoves[0].score;
-    const switchThreshold = isHard ? 0.9 : 0.6;
-    if (bestScore < 20 && switches.length > 0 && Math.random() < switchThreshold) {
-      return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, isHard) };
-    }
+
+    // Only switch when truly necessary — prefer attacking
     if (isHard && switches.length > 0 && oppTypes.length > 0) {
-      // Switch out if opponent threatens us heavily and we can't KO
-      if (oppThreat >= 4 && bestScore < 200) {
+      // Only switch if move is truly useless (immune or near-zero damage) AND opponent is dangerous
+      if (bestScore <= 0 && oppThreat >= 2) {
         return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
       }
-      if (oppThreat >= 2 && bestScore < 100 && Math.random() < 0.75) {
+      // 4x weakness + weak best move — get out
+      if (oppThreat >= 4 && bestScore < 100) {
         return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
       }
-      if (oppThreat > 1 && bestScore < 60 && Math.random() < 0.85) {
-        return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
-      }
-    }
-    const lowHpSwitchChance = isHard ? 0.5 : 0.15;
-    if (switches.length > 0 && hpPct < 0.25 && bestScore < 80 && Math.random() < lowHpSwitchChance) {
-      return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, isHard) };
-    }
-    // Hard: if our best move is really weak, consider switching
-    if (isHard && switches.length > 0 && bestScore < 50 && Math.random() < 0.5) {
-      return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
-    }
-    // Hard: predictive switching — opponent is faster + SE STAB threatens us
-    if (isHard && switches.length > 0 && oppTypes.length > 0 && botOpponent) {
-      const oppSpeed = botOpponent.species.baseStats?.spe ?? 0;
-      const mySpeed = active.species.baseStats?.spe ?? 0;
-      if (oppThreat >= 2 && oppSpeed > mySpeed && hpPct < 0.6 && bestScore < 150) {
-        return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
-      }
+    } else if (!isHard && switches.length > 0 && bestScore < 15 && Math.random() < 0.4) {
+      return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, false) };
     }
 
     return { type: 'move', playerId: 'p2', moveIndex: scoredMoves[0].idx };
@@ -384,37 +385,36 @@ export function createLocalBattle(options: LocalBattleOptions) {
     const ranked = switches.map(s => {
       const p = botState!.team[s.idx];
       const pTypes = p.species.types as PokemonType[];
-      let score = p.currentHp / p.maxHp;
+      const hpRatio = p.currentHp / p.maxHp;
+      let score = hpRatio;
+
+      // Never switch to nearly-dead Pokemon
+      if (hpRatio < 0.05) score -= 3.0;
+      else if (hpRatio < 0.15) score -= 1.5;
+      else if (hpRatio < 0.3) score -= 0.5;
+
       if (oppTypes.length > 0) {
-        // Offensive advantage: super-effective moves
         let bestMoveEff = 0;
         for (const move of p.moves) {
           if (move.category !== 'Status' && move.power && move.currentPp > 0) {
             const eff = getTypeEffectiveness(move.type as PokemonType, oppTypes);
             if (eff > bestMoveEff) bestMoveEff = eff;
             if (eff > 1) score += isHard ? 0.8 : 0.5;
-            if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) score += 0.4; // STAB SE
+            if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) score += 0.4;
           }
         }
-        // Defensive advantage: resist opponent's types
         for (const oppType of oppTypes) {
           const eff = getTypeEffectiveness(oppType, pTypes);
-          if (eff < 1) score += isHard ? 0.4 : 0.2;
-          if (eff === 0) score += isHard ? 1.0 : 0.5;
+          if (eff < 1) score += isHard ? 0.5 : 0.2;
+          if (eff === 0) score += isHard ? 1.5 : 0.5;
         }
         if (isHard) {
-          // Penalty for being weak to opponent
           for (const oppType of oppTypes) {
             const eff = getTypeEffectiveness(oppType, pTypes);
-            if (eff > 1) score -= 0.4;
-            if (eff >= 4) score -= 0.8;
+            if (eff > 1) score -= 0.6;
+            if (eff >= 4) score -= 1.2;
           }
-          // Speed matters — faster Pokemon can strike first
           score += (p.species.baseStats?.spe ?? 0) / 400;
-          // Bulk matters — prefer Pokemon with HP left
-          const hpPctSwitch = p.currentHp / p.maxHp;
-          if (hpPctSwitch < 0.3) score -= 0.3;
-          // Bonus for having a strong STAB move that hits SE
           if (bestMoveEff > 1) score += 0.3;
         }
       }
@@ -432,26 +432,59 @@ export function createLocalBattle(options: LocalBattleOptions) {
     const oppTypes = (botOpponent?.species.types ?? []) as PokemonType[];
     if ((difficulty === 'hard' || difficulty === 'normal') && oppTypes.length > 0 && botState) {
       const isHard = difficulty === 'hard';
+
+      // Estimate how dangerous the opponent is (including boosts)
+      let oppBoosted = false;
+      if (isHard && botOpponent?.boosts) {
+        const oppAtkBoost = Math.max(botOpponent.boosts.atk ?? 0, botOpponent.boosts.spa ?? 0);
+        const oppSpeBoost = botOpponent.boosts.spe ?? 0;
+        oppBoosted = oppAtkBoost >= 1 || oppSpeBoost >= 1;
+      }
+
       const ranked = available.map(idx => {
         const p = botState!.team[idx];
         const pTypes = p.species.types as PokemonType[];
-        let score = p.currentHp / p.maxHp;
+        const hpRatio = p.currentHp / p.maxHp;
+        let score = hpRatio;
+
+        // Heavily penalize nearly-dead Pokemon — never send in a 1 HP mon
+        if (hpRatio < 0.05) score -= 3.0;
+        else if (hpRatio < 0.15) score -= 1.5;
+        else if (hpRatio < 0.3) score -= 0.5;
+
+        // Offensive advantage: super-effective moves
         for (const move of p.moves) {
           if (move.category !== 'Status' && move.power && move.currentPp > 0) {
             const eff = getTypeEffectiveness(move.type as PokemonType, oppTypes);
             if (eff > 1) score += isHard ? 0.8 : 0.4;
-            if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) score += 0.3;
+            if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) score += 0.4;
           }
         }
+
+        // Defensive advantage: resist/immune to opponent's types
         for (const oppType of oppTypes) {
           const eff = getTypeEffectiveness(oppType, pTypes);
-          if (eff < 1) score += isHard ? 0.4 : 0.2;
-          if (eff === 0) score += isHard ? 1.0 : 0.4;
-          if (isHard && eff > 1) score -= 0.4;
-          if (isHard && eff >= 4) score -= 0.8;
+          if (eff < 1) score += isHard ? 0.5 : 0.2;
+          if (eff === 0) score += isHard ? 1.5 : 0.5;
+          if (isHard && eff > 1) score -= 0.6;
+          if (isHard && eff >= 4) score -= 1.2;
         }
+
         if (isHard) {
           score += (p.species.baseStats?.spe ?? 0) / 400;
+          // Against a boosted opponent, heavily prioritize defensive matchups
+          if (oppBoosted) {
+            // Extra penalty for being weak, extra bonus for resisting
+            for (const oppType of oppTypes) {
+              const eff = getTypeEffectiveness(oppType, pTypes);
+              if (eff > 1) score -= 0.5;
+              if (eff < 1) score += 0.3;
+              if (eff === 0) score += 0.8;
+            }
+            // Prioritize bulk when opponent is boosted
+            const bulkScore = ((p.species.baseStats?.hp ?? 0) + (p.species.baseStats?.def ?? 0) + (p.species.baseStats?.spd ?? 0)) / 600;
+            score += bulkScore * 0.5;
+          }
         }
         return { idx, score };
       }).sort((a, b) => b.score - a.score);
@@ -579,7 +612,7 @@ export function createLocalBattle(options: LocalBattleOptions) {
           draftPool = generateRoleDraftPool(rng, { maxGen, legendaryMode, itemMode });
           rng.shuffle(roleOrder);
         } else if (gymLeader && monotype) {
-          draftPool = generateGymLeaderPool(rng, monotype, { maxGen, itemMode, poolSize });
+          draftPool = generateGymLeaderPool(rng, monotype, { maxGen, legendaryMode, itemMode, poolSize });
         } else {
           draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode, monotype, poolSize });
         }
@@ -655,7 +688,7 @@ export function createLocalBattle(options: LocalBattleOptions) {
         draftPool = generateRoleDraftPool(rng, { maxGen, legendaryMode, itemMode });
         rng.shuffle(roleOrder);
       } else if (gymLeader && monotype) {
-        draftPool = generateGymLeaderPool(rng, monotype, { maxGen, itemMode, poolSize });
+        draftPool = generateGymLeaderPool(rng, monotype, { maxGen, legendaryMode, itemMode, poolSize });
       } else {
         draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode, monotype, poolSize });
       }
@@ -769,6 +802,7 @@ export function createLocalBattle(options: LocalBattleOptions) {
         const botResult = buildTurnResult(1, events);
         botState = botResult.yourState;
         botOpponent = botResult.opponentVisible.activePokemon;
+        oppSideEffects = botResult.opponentVisible.sideEffects;
 
         // Dispatch turn result to human
         const humanResult = buildTurnResult(0, events);
@@ -808,6 +842,7 @@ export function createLocalBattle(options: LocalBattleOptions) {
           const updatedBotResult = buildTurnResult(1, switchEvents);
           botState = updatedBotResult.yourState;
           botOpponent = updatedBotResult.opponentVisible.activePokemon;
+          oppSideEffects = updatedBotResult.opponentVisible.sideEffects;
 
           // Dispatch the switch events so the UI shows the new opponent Pokemon
           const humanSwitchResult = buildTurnResult(0, switchEvents);

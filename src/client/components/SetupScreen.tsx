@@ -291,7 +291,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
                   draftMode && (draftTypeMode === 'role' ? 'Role draft from shared pool' : 'Snake draft from shared pool'),
                   draftMode && poolSize !== 21 && `${poolSize} Pokemon pool`,
                   monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
-                  monotype && monotype !== 'random' && difficulty === 'hard' && draftMode && legendaryMode && GYM_LEADERS[monotype]
+                  monotype && monotype !== 'random' && difficulty === 'hard' && draftMode && legendaryMode && draftTypeMode !== 'role' && GYM_LEADERS[monotype]
                     ? `vs ${GYM_LEADERS[monotype].name}`
                     : null,
                 ].filter(Boolean).join(' · ')}
@@ -355,7 +355,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
                 </TouchableOpacity>
                 {MONOTYPE_TYPES.map(t => {
                   const leader = GYM_LEADERS[t];
-                  const showLeader = difficulty === 'hard' && legendaryMode && leader;
+                  const showLeader = difficulty === 'hard' && legendaryMode && draftTypeMode !== 'role' && leader;
                   return (
                     <TouchableOpacity
                       key={t}
@@ -391,7 +391,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
             activeOpacity={0.7}
           >
             <Text style={styles.startBtnText}>
-              {draftMode && monotype && difficulty === 'hard' && legendaryMode ? 'CHALLENGE GYM' : 'START BATTLE'}
+              {draftMode && monotype && difficulty === 'hard' && legendaryMode && draftTypeMode !== 'role' ? 'CHALLENGE GYM' : 'START BATTLE'}
             </Text>
           </TouchableOpacity>
         </View>

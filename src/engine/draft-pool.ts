@@ -435,8 +435,8 @@ export function generateDraftPool(
 
 /**
  * Generate a gym leader challenge pool.
- * ~60% of the pool has the gym's type, ~40% are counter-types
- * that give the human player strategic options.
+ * All Pokemon in the pool have the gym's type.
+ * Fills from higher tiers first, dipping into lower tiers as needed.
  */
 export function generateGymLeaderPool(
   rng: SeededRNG,
@@ -444,75 +444,45 @@ export function generateGymLeaderPool(
   options: DraftPoolOptions = {}
 ): DraftPoolEntry[] {
   const maxGen = options.maxGen ?? null;
+  const legendary = options.legendaryMode ?? false;
   const targetPoolSize = options.poolSize ?? 21;
   const tiers = getFilteredTiers(maxGen);
+  const allowedTiers = legendary ? [1, 2] as Tier[] : [1, 2, 3, 4] as Tier[];
 
-  const gymCount = Math.round(targetPoolSize * 0.6); // ~60% gym type
-  const counterCount = targetPoolSize - gymCount;      // ~40% counters
-
-  // Build gym-type Pokemon pool
-  const gymPool: PokemonSpecies[] = [];
-  for (const tier of [1, 2, 3, 4] as Tier[]) {
-    for (const s of tiers[tier]) {
-      if ((s.types as string[]).includes(gymType)) {
-        gymPool.push(s);
-      }
-    }
+  // Collect all Pokemon of this type, grouped by tier (higher tiers first)
+  const byTier: Record<number, PokemonSpecies[]> = {};
+  for (const tier of allowedTiers) {
+    byTier[tier] = tiers[tier].filter(s => (s.types as string[]).includes(gymType));
+    rng.shuffle(byTier[tier]);
   }
-  rng.shuffle(gymPool);
 
-  // Build counter-type pool: Pokemon that don't have the gym type,
-  // prioritizing types super-effective against the gym type
-  const counterPool: PokemonSpecies[] = [];
-  const otherPool: PokemonSpecies[] = [];
-  for (const tier of [1, 2, 3, 4] as Tier[]) {
-    for (const s of tiers[tier]) {
-      if ((s.types as string[]).includes(gymType)) continue;
-      const hasSE = s.types.some((t: string) =>
-        getTypeEffectiveness(t as PokemonType, [gymType as PokemonType]) > 1
-      );
-      if (hasSE) counterPool.push(s);
-      else otherPool.push(s);
-    }
-  }
-  rng.shuffle(counterPool);
-  rng.shuffle(otherPool);
-
-  // Assemble the pool
   const pool: PokemonSpecies[] = [];
   const poolIds = new Set<string>();
 
-  // Add gym-type Pokemon
-  for (const s of gymPool) {
-    if (pool.length >= gymCount) break;
-    if (poolIds.has(s.id)) continue;
-    pool.push(s);
-    poolIds.add(s.id);
-  }
-
-  // Add counter-type Pokemon first, then fill with others
-  for (const s of counterPool) {
-    if (pool.length >= targetPoolSize) break;
-    if (poolIds.has(s.id)) continue;
-    pool.push(s);
-    poolIds.add(s.id);
-  }
-  for (const s of otherPool) {
-    if (pool.length >= targetPoolSize) break;
-    if (poolIds.has(s.id)) continue;
-    pool.push(s);
-    poolIds.add(s.id);
-  }
-
-  // Fill remaining from any Pokemon if needed
-  if (pool.length < targetPoolSize) {
-    const all = Object.values(pokedex).filter(
-      s => !NO_SPRITE.has(s.id) && !poolIds.has(s.id) && (!maxGen || s.generation <= maxGen)
-    );
-    rng.shuffle(all);
-    for (const s of all) {
+  // Fill pool from highest tier down
+  for (const tier of allowedTiers) {
+    for (const s of byTier[tier]) {
       if (pool.length >= targetPoolSize) break;
+      if (poolIds.has(s.id)) continue;
       pool.push(s);
+      poolIds.add(s.id);
+    }
+    if (pool.length >= targetPoolSize) break;
+  }
+
+  // If legendary mode didn't have enough, dip into T3/T4
+  if (pool.length < targetPoolSize && legendary) {
+    for (const tier of [3, 4] as Tier[]) {
+      const extras = tiers[tier].filter(s =>
+        (s.types as string[]).includes(gymType) && !poolIds.has(s.id)
+      );
+      rng.shuffle(extras);
+      for (const s of extras) {
+        if (pool.length >= targetPoolSize) break;
+        pool.push(s);
+        poolIds.add(s.id);
+      }
+      if (pool.length >= targetPoolSize) break;
     }
   }
 

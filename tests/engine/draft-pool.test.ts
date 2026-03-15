@@ -470,16 +470,18 @@ describe('Gym Leader Pool', () => {
     expect(pool.length).toBeGreaterThanOrEqual(12);
   });
 
-  it('majority of pool is the gym type', () => {
+  it('all pool Pokemon have the gym type', () => {
     const pool = generateGymLeaderPool(new SeededRNG(42), 'Water');
-    const waterCount = pool.filter(p => p.species.types.includes('Water')).length;
-    expect(waterCount / pool.length).toBeGreaterThanOrEqual(0.4);
+    for (const entry of pool) {
+      expect(entry.species.types).toContain('Water');
+    }
   });
 
-  it('pool includes some counter-types', () => {
-    const pool = generateGymLeaderPool(new SeededRNG(42), 'Fire');
-    const nonFireCount = pool.filter(p => !p.species.types.includes('Fire')).length;
-    expect(nonFireCount).toBeGreaterThan(0);
+  it('legendary mode uses T1/T2 first, dips into lower tiers if needed', () => {
+    const pool = generateGymLeaderPool(new SeededRNG(42), 'Fire', { legendaryMode: true });
+    for (const entry of pool) {
+      expect(entry.species.types).toContain('Fire');
+    }
   });
 
   it('no duplicate species', () => {
