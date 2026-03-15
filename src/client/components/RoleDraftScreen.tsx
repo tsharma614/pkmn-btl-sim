@@ -13,24 +13,37 @@ import { TypeBadge } from './TypeBadge';
 import { DraftPreviewModal } from './DraftPreviewModal';
 import { colors, spacing } from '../theme';
 import type { DraftPoolEntry } from '../../engine/draft-pool';
+import type { DraftRole, RoleDraftPoolEntry } from '../../engine/draft-pool';
+import { ROLE_LABELS, DRAFT_ROLES } from '../../engine/draft-pool';
 
-const NUM_COLUMNS = 3;
+const NUM_COLUMNS = 4;
 const CARD_GAP = 8;
 
 const TIER_COLORS: Record<number, string> = {
-  1: '#FFD700', // gold
-  2: '#C0C0C0', // silver
-  3: '#CD7F32', // bronze
-  4: '#666',    // gray
+  1: '#FFD700',
+  2: '#C0C0C0',
+  3: '#CD7F32',
+  4: '#666',
 };
 
-interface DraftScreenProps {
+const ROLE_COLORS: Record<DraftRole, string> = {
+  physSweeper: '#e94560',
+  specSweeper: '#7b68ee',
+  physWall: '#cd853f',
+  specWall: '#4fc3f7',
+  support: '#66bb6a',
+  wildcard: '#FFD700',
+};
+
+interface RoleDraftScreenProps {
   pool: DraftPoolEntry[];
   yourPicks: DraftPoolEntry[];
   opponentPicks: DraftPoolEntry[];
   currentPlayer: 0 | 1;
   yourPlayerIndex: 0 | 1;
   pickNumber: number;
+  roleRound: number;
+  roleOrder: DraftRole[];
   onPick: (poolIndex: number) => void;
   onReroll?: () => void;
   draftRerolled?: boolean;
@@ -40,13 +53,15 @@ interface DraftScreenProps {
   gymLeaderTitle?: string | null;
 }
 
-export function DraftScreen({
+export function RoleDraftScreen({
   pool,
   yourPicks,
   opponentPicks,
   currentPlayer,
   yourPlayerIndex,
   pickNumber,
+  roleRound,
+  roleOrder,
   onPick,
   onReroll,
   draftRerolled,
@@ -54,7 +69,7 @@ export function DraftScreen({
   playerName,
   onBack,
   gymLeaderTitle,
-}: DraftScreenProps) {
+}: RoleDraftScreenProps) {
   const { width: screenW } = useWindowDimensions();
   const cardW = (screenW - spacing.lg * 2 - CARD_GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
 
@@ -73,36 +88,44 @@ export function DraftScreen({
     }
   }, [draftRerolled, pool]);
 
+  // Reset selection when role round changes
+  useEffect(() => {
+    setSelected(null);
+  }, [roleRound]);
+
   const isYourTurn = currentPlayer === yourPlayerIndex;
   const totalPicks = 12;
   const pickedIndices = new Set<number>();
   const yourPickIndices = new Set<number>();
   const oppPickIndices = new Set<number>();
 
-  // Build picked indices from the picks arrays
   for (const entry of yourPicks) {
     const idx = pool.findIndex(p => p.species.id === entry.species.id);
-    if (idx >= 0) {
-      pickedIndices.add(idx);
-      yourPickIndices.add(idx);
-    }
+    if (idx >= 0) { pickedIndices.add(idx); yourPickIndices.add(idx); }
   }
   for (const entry of opponentPicks) {
     const idx = pool.findIndex(p => p.species.id === entry.species.id);
-    if (idx >= 0) {
-      pickedIndices.add(idx);
-      oppPickIndices.add(idx);
-    }
+    if (idx >= 0) { pickedIndices.add(idx); oppPickIndices.add(idx); }
   }
+
+  const currentRole = roleRound < roleOrder.length ? roleOrder[roleRound] : null;
+  const isDraftComplete = pickNumber >= totalPicks;
+
+  // Group pool by role
+  const rolePool = pool as RoleDraftPoolEntry[];
 
   const handlePick = () => {
     if (selected === null || !isYourTurn || pickedIndices.has(selected)) return;
+    // Verify pick is in current role
+    if (currentRole && rolePool[selected]?.role !== currentRole) return;
     onPick(selected);
     setSelected(null);
   };
 
   const handlePickFromModal = (poolIndex: number) => {
-    onPick(poolIndex);
+    if (currentRole && rolePool[poolIndex]?.role === currentRole && !pickedIndices.has(poolIndex)) {
+      onPick(poolIndex);
+    }
     setPreviewIndex(null);
     setSelected(null);
   };
@@ -119,7 +142,7 @@ export function DraftScreen({
               <Text style={styles.backBtn}>✕</Text>
             </TouchableOpacity>
           )}
-          <Text style={styles.title}>{gymLeaderTitle || 'DRAFT MODE'}</Text>
+          <Text style={styles.title}>{gymLeaderTitle || 'ROLE DRAFT'}</Text>
           {onReroll && pickNumber === 0 && (
             <TouchableOpacity style={styles.rerollBtn} onPress={onReroll}>
               <Text style={styles.rerollText}>REROLL</Text>
@@ -129,13 +152,17 @@ export function DraftScreen({
         {showRerolled && (
           <Text style={styles.rerolledFlash}>Pool rerolled!</Text>
         )}
-        <Text style={styles.pickCount}>Pick {Math.min(pickNumber + 1, totalPicks)}/{totalPicks}</Text>
+        <Text style={styles.pickCount}>Round {Math.min(roleRound + 1, 6)}/6</Text>
+        {currentRole && !isDraftComplete && (
+          <View style={[styles.roleBadge, { backgroundColor: ROLE_COLORS[currentRole] }]}>
+            <Text style={styles.roleBadgeText}>{ROLE_LABELS[currentRole]}</Text>
+          </View>
+        )}
         <Text style={[styles.turnText, isYourTurn ? styles.yourTurn : styles.oppTurn]}>
-          {pickNumber >= totalPicks ? 'Draft Complete!' : isYourTurn ? 'Your Pick' : `${opponentName}'s Pick...`}
+          {isDraftComplete ? 'Draft Complete!' : isYourTurn ? 'Your Pick' : `${opponentName}'s Pick...`}
         </Text>
       </View>
 
-      {/* Pool grid with sticky teams header */}
       <ScrollView style={styles.poolScroll} stickyHeaderIndices={[0]}>
         {/* Sticky teams section */}
         <View style={styles.teamsSticky}>
@@ -167,60 +194,80 @@ export function DraftScreen({
           </View>
         </View>
 
-        {/* Pool grid */}
-        <View style={styles.poolGrid}>
-        {pool.map((entry, i) => {
-          const isPicked = pickedIndices.has(i);
-          const isYourPick = yourPickIndices.has(i);
-          const isOppPick = oppPickIndices.has(i);
-          const isSelected = selected === i;
+        {/* Role sections */}
+        {roleOrder.map((role, roundIdx) => {
+          const roleEntries = rolePool
+            .map((entry, i) => ({ entry, index: i }))
+            .filter(({ entry }) => entry.role === role);
+          const isCurrentRole = roundIdx === roleRound && !isDraftComplete;
+          const isPastRole = roundIdx < roleRound;
 
           return (
-            <TouchableOpacity
-              key={entry.species.id}
-              style={[
-                styles.poolCard,
-                { width: cardW },
-                isSelected && styles.poolCardSelected,
-                isPicked && styles.poolCardPicked,
-              ]}
-              onPress={() => !isPicked && isYourTurn && setSelected(i)}
-              onLongPress={() => setPreviewIndex(i)}
-              activeOpacity={isPicked ? 1 : 0.7}
-              disabled={isPicked && !isYourTurn}
-            >
-              {isPicked && (
-                <View style={[
-                  styles.pickedOverlay,
-                  isYourPick ? styles.yourPickOverlay : styles.oppPickOverlay,
-                ]} />
-              )}
-              <View style={styles.tierDot}>
-                <View style={[styles.tierDotInner, { backgroundColor: TIER_COLORS[entry.tier] || '#666' }]} />
-              </View>
-              <PokemonSprite speciesId={entry.species.id} facing="front" size={48} />
-              <Text style={[styles.cardName, isPicked && styles.cardNamePicked]} numberOfLines={1}>
-                {entry.species.name}
-              </Text>
-              <View style={styles.cardTypes}>
-                {entry.species.types.map(t => (
-                  <TypeBadge key={t} type={t} small />
-                ))}
-              </View>
-              {isPicked && (
-                <Text style={styles.pickedLabel}>
-                  {isYourPick ? playerName : opponentName}
+            <View key={role} style={[styles.roleSection, isCurrentRole && styles.roleSectionActive]}>
+              <View style={styles.roleLabelRow}>
+                <View style={[styles.roleDot, { backgroundColor: ROLE_COLORS[role] }]} />
+                <Text style={[styles.roleLabelText, isCurrentRole && styles.roleLabelTextActive]}>
+                  {ROLE_LABELS[role]}
                 </Text>
-              )}
-            </TouchableOpacity>
+                {isPastRole && <Text style={styles.roleComplete}>Done</Text>}
+              </View>
+              <View style={styles.roleGrid}>
+                {roleEntries.map(({ entry, index }) => {
+                  const isPicked = pickedIndices.has(index);
+                  const isYourPick = yourPickIndices.has(index);
+                  const isSelected = selected === index;
+                  const isDisabled = !isCurrentRole || isPicked;
+
+                  return (
+                    <TouchableOpacity
+                      key={entry.species.id}
+                      style={[
+                        styles.poolCard,
+                        { width: cardW },
+                        isSelected && styles.poolCardSelected,
+                        isPicked && styles.poolCardPicked,
+                        !isCurrentRole && !isPicked && styles.poolCardInactive,
+                      ]}
+                      onPress={() => !isDisabled && isYourTurn && setSelected(index)}
+                      onLongPress={() => setPreviewIndex(index)}
+                      activeOpacity={isDisabled ? 1 : 0.7}
+                      disabled={isDisabled && !isYourTurn}
+                    >
+                      {isPicked && (
+                        <View style={[
+                          styles.pickedOverlay,
+                          isYourPick ? styles.yourPickOverlay : styles.oppPickOverlay,
+                        ]} />
+                      )}
+                      <View style={styles.tierDot}>
+                        <View style={[styles.tierDotInner, { backgroundColor: TIER_COLORS[entry.tier] || '#666' }]} />
+                      </View>
+                      <PokemonSprite speciesId={entry.species.id} facing="front" size={48} />
+                      <Text style={[styles.cardName, isPicked && styles.cardNamePicked]} numberOfLines={1}>
+                        {entry.species.name}
+                      </Text>
+                      <View style={styles.cardTypes}>
+                        {entry.species.types.map(t => (
+                          <TypeBadge key={t} type={t} small />
+                        ))}
+                      </View>
+                      {isPicked && (
+                        <Text style={styles.pickedLabel}>
+                          {isYourPick ? playerName : opponentName}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
           );
         })}
-        </View>
       </ScrollView>
 
       {/* Confirm button */}
       <View style={styles.confirmBar}>
-        {!isYourTurn && pickNumber < totalPicks ? (
+        {!isYourTurn && !isDraftComplete ? (
           <View style={styles.waitingRow}>
             <ActivityIndicator size="small" color={colors.accent} />
             <Text style={styles.waitingText}>{opponentName} is picking...</Text>
@@ -248,7 +295,7 @@ export function DraftScreen({
           visible={true}
           onClose={() => setPreviewIndex(null)}
           onPick={handlePickFromModal}
-          canPick={isYourTurn && pickNumber < totalPicks}
+          canPick={isYourTurn && !isDraftComplete && currentRole === rolePool[previewIndex]?.role}
         />
       )}
 
@@ -287,7 +334,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   headerRow: {
     flexDirection: 'row',
@@ -325,6 +372,18 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '600',
     marginTop: 2,
+  },
+  roleBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  roleBadgeText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
   turnText: {
     fontSize: 14,
@@ -386,13 +445,46 @@ const styles = StyleSheet.create({
   poolScroll: {
     flex: 1,
   },
-  poolGrid: {
+  roleSection: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    opacity: 0.5,
+  },
+  roleSectionActive: {
+    opacity: 1,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  roleLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  roleDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  roleLabelText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.textDim,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  roleLabelTextActive: {
+    color: colors.text,
+  },
+  roleComplete: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.textDim,
+    marginLeft: 'auto',
+  },
+  roleGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: CARD_GAP,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.lg,
   },
   poolCard: {
     backgroundColor: colors.surface,
@@ -410,6 +502,9 @@ const styles = StyleSheet.create({
   },
   poolCardPicked: {
     opacity: 0.5,
+  },
+  poolCardInactive: {
+    opacity: 0.4,
   },
   pickedOverlay: {
     ...StyleSheet.absoluteFillObject,

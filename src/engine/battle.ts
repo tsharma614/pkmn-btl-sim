@@ -714,6 +714,8 @@ export class Battle {
       if (oppSwitches.length > 0) {
         const target = oppSwitches[this.rng.int(0, oppSwitches.length - 1)];
         this.executeSwitch(opponentIndex, target, events);
+      } else {
+        this.addEvent(events, 'move_fail', { pokemon: attacker.species.name, move: move.name, reason: 'no switches available' });
       }
     }
   }
@@ -727,6 +729,25 @@ export class Battle {
     isStruggle: boolean,
     events: BattleEvent[]
   ): void {
+    // Spectral Thief: steal target's positive boosts before dealing damage
+    if (move.name === 'Spectral Thief') {
+      const boostKeys: (keyof typeof defender.boosts)[] = ['atk', 'def', 'spa', 'spd', 'spe', 'accuracy', 'evasion'];
+      let stole = false;
+      for (const stat of boostKeys) {
+        if (defender.boosts[stat] > 0) {
+          attacker.boosts[stat] = Math.min(6, attacker.boosts[stat] + defender.boosts[stat]);
+          defender.boosts[stat] = 0;
+          stole = true;
+        }
+      }
+      if (stole) {
+        this.addEvent(events, 'boost_steal', {
+          attacker: attacker.species.name,
+          defender: defender.species.name,
+        });
+      }
+    }
+
     // Get ability/item modifiers
     const modifiers = this.getAbilityItemModifiers(attacker, defender, move);
 
@@ -1934,6 +1955,26 @@ export class Battle {
       case 'Sharpness':
         if (SLICING_MOVES.has(move.name)) mods.powerMod = (mods.powerMod || 1) * 1.5;
         break;
+      case 'Overgrow':
+        if (move.type === 'Grass' && attacker.currentHp <= Math.floor(attacker.maxHp / 3))
+          mods.powerMod = (mods.powerMod || 1) * 1.5;
+        break;
+      case 'Blaze':
+        if (move.type === 'Fire' && attacker.currentHp <= Math.floor(attacker.maxHp / 3))
+          mods.powerMod = (mods.powerMod || 1) * 1.5;
+        break;
+      case 'Torrent':
+        if (move.type === 'Water' && attacker.currentHp <= Math.floor(attacker.maxHp / 3))
+          mods.powerMod = (mods.powerMod || 1) * 1.5;
+        break;
+      case 'Swarm':
+        if (move.type === 'Bug' && attacker.currentHp <= Math.floor(attacker.maxHp / 3))
+          mods.powerMod = (mods.powerMod || 1) * 1.5;
+        break;
+      case 'Sand Force':
+        if (this.state.weather === 'sandstorm' && (move.type === 'Rock' || move.type === 'Ground' || move.type === 'Steel'))
+          mods.powerMod = (mods.powerMod || 1) * 1.3;
+        break;
     }
 
     // Slow Start: halve attack and speed for first 5 turns on field
@@ -1948,28 +1989,31 @@ export class Battle {
       mods.powerMod = (mods.powerMod || 1) * 1.5;
     }
 
-    // Defender ability modifiers
-    switch (defender.ability) {
-      case 'Thick Fat':
-        if (move.type === 'Fire' || move.type === 'Ice') mods.finalMod = (mods.finalMod || 1) * 0.5;
-        break;
-      case 'Marvel Scale':
-        if (defender.status && move.category === 'Physical') mods.defenseMod = 1.5;
-        break;
-      case 'Fur Coat':
-        if (move.category === 'Physical') mods.defenseMod = 2;
-        break;
-      case 'Multiscale':
-      case 'Shadow Shield':
-        if (defender.currentHp === defender.maxHp) mods.finalMod = (mods.finalMod || 1) * 0.5;
-        break;
-      case 'Solid Rock':
-      case 'Filter':
-      case 'Prism Armor':
-        if (getTypeEffectiveness(move.type as PokemonType, this.getEffectiveTypes(defender)) > 1) {
-          mods.finalMod = (mods.finalMod || 1) * 0.75;
-        }
-        break;
+    // Defender ability modifiers (bypassed by Mold Breaker / Turboblaze / Teravolt)
+    const breaksMold = attacker.ability === 'Mold Breaker' || attacker.ability === 'Turboblaze' || attacker.ability === 'Teravolt';
+    if (!breaksMold) {
+      switch (defender.ability) {
+        case 'Thick Fat':
+          if (move.type === 'Fire' || move.type === 'Ice') mods.finalMod = (mods.finalMod || 1) * 0.5;
+          break;
+        case 'Marvel Scale':
+          if (defender.status && move.category === 'Physical') mods.defenseMod = 1.5;
+          break;
+        case 'Fur Coat':
+          if (move.category === 'Physical') mods.defenseMod = 2;
+          break;
+        case 'Multiscale':
+        case 'Shadow Shield':
+          if (defender.currentHp === defender.maxHp) mods.finalMod = (mods.finalMod || 1) * 0.5;
+          break;
+        case 'Solid Rock':
+        case 'Filter':
+        case 'Prism Armor':
+          if (getTypeEffectiveness(move.type as PokemonType, this.getEffectiveTypes(defender)) > 1) {
+            mods.finalMod = (mods.finalMod || 1) * 0.75;
+          }
+          break;
+      }
     }
 
     // Attacker item modifiers
@@ -2396,6 +2440,13 @@ export class Battle {
     if (this.state.weather === 'rain' && pokemon.ability === 'Rain Dish') {
       const heal = Math.max(1, Math.floor(pokemon.maxHp / 16));
       pokemon.currentHp = clampHp(pokemon.currentHp + heal, pokemon.maxHp);
+      events.push({
+        type: 'ability_heal',
+        player: playerIndex,
+        pokemon: pokemon.species.name,
+        ability: 'Rain Dish',
+        amount: heal,
+      });
     }
 
     // Dry Skin — heals in rain, extra damage in sun

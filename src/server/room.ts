@@ -35,6 +35,7 @@ export class Room {
   forceSwitchEvents: import('../types').BattleEvent[];
   /** Draft mode state */
   draftMode: boolean;
+  monotype: string | null;
   draftPool: DraftPoolEntry[];
   draftPicks: [number[], number[]];
   draftCurrentPick: number;
@@ -58,6 +59,7 @@ export class Room {
     this.isProcessingTurn = false;
     this.forceSwitchEvents = [];
     this.draftMode = false;
+    this.monotype = null;
     this.draftPool = [];
     this.draftPicks = [[], []];
     this.draftCurrentPick = 0;
@@ -101,7 +103,7 @@ export class Room {
     if (this.players[0] !== null && this.players[1] !== null) {
       if (this.draftMode) {
         this.status = 'drafting';
-        this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode });
+        this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode, monotype: this.monotype });
         this.draftPicks = [[], []];
         this.draftCurrentPick = 0;
         // Randomize who picks first
@@ -118,6 +120,18 @@ export class Room {
   private generateTeams(): void {
     this.teams[0] = generateTeam(this.rng, { itemMode: this.players[0]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode });
     this.teams[1] = generateTeam(this.rng, { itemMode: this.players[1]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode });
+  }
+
+  rerollDraftPool(): { valid: boolean; error?: string } {
+    if (this.status !== 'drafting') {
+      return { valid: false, error: 'Not in drafting phase' };
+    }
+    if (this.draftCurrentPick > 0) {
+      return { valid: false, error: 'Cannot reroll after picks have been made' };
+    }
+    this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode, monotype: this.monotype });
+    this.draftPicks = [[], []];
+    return { valid: true };
   }
 
   submitDraftPick(playerIndex: 0 | 1, poolIndex: number): { valid: boolean; draftComplete: boolean; error?: string } {
@@ -387,7 +401,7 @@ export class Room {
 
       if (this.draftMode) {
         this.status = 'drafting';
-        this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode });
+        this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode, monotype: this.monotype });
         this.draftPicks = [[], []];
         this.draftCurrentPick = 0;
         this.draftSlotMap = this.rng.next() < 0.5 ? [0, 1] : [1, 0];

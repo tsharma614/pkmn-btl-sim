@@ -10,17 +10,24 @@ import {
   Dimensions,
   ScrollView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getWinLoss } from '../utils/battle-history';
 import { PokemonSprite } from './PokemonSprite';
-import { colors, spacing } from '../theme';
+import { colors, spacing, typeColors } from '../theme';
+import { MONOTYPE_TYPES, POOL_SIZES } from '../../engine/draft-pool';
+import type { PoolSize, DraftType } from '../../engine/draft-pool';
+import { GYM_LEADERS } from '../../data/gym-leaders';
+import { StatsScreen } from './StatsScreen';
+
+const NAME_KEY = '@pbs_trainer_name';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
 interface Props {
-  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean) => void;
-  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean) => void;
+  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, poolSize?: number) => void;
+  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null) => void;
 }
 
 /** Background sprite positions — 7 rows of 3, filling the whole screen */
@@ -73,7 +80,7 @@ function PokeballLogo() {
   );
 }
 
-type Screen = 'main' | 'cpu_setup' | 'online_setup';
+type Screen = 'main' | 'cpu_setup' | 'online_setup' | 'stats';
 
 export function SetupScreen({ onStart, onPlayOnline }: Props) {
   const [screen, setScreen] = useState<Screen>('main');
@@ -83,13 +90,29 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
   const [classicMode, setClassicMode] = useState(false);
   const [legendaryMode, setLegendaryMode] = useState(false);
   const [draftMode, setDraftMode] = useState(false);
+  const [monotype, setMonotype] = useState<string | null>(null);
+  const [draftTypeMode, setDraftTypeMode] = useState<DraftType>('snake');
+  const [poolSize, setPoolSize] = useState<PoolSize>(21);
   const [record, setRecord] = useState<{ wins: number; losses: number } | null>(null);
 
   useEffect(() => {
     getWinLoss().then(setRecord);
+    AsyncStorage.getItem(NAME_KEY).then(saved => {
+      if (saved) setName(saved);
+    });
   }, []);
 
+  const handleNameChange = (text: string) => {
+    setName(text);
+    AsyncStorage.setItem(NAME_KEY, text);
+  };
+
   const displayName = name.trim() || 'Player';
+
+  // ---------- Stats Screen ----------
+  if (screen === 'stats') {
+    return <StatsScreen onBack={() => setScreen('main')} />;
+  }
 
   // ---------- Main Menu ----------
   if (screen === 'main') {
@@ -121,7 +144,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
             <TextInput
               style={styles.input}
               value={name}
-              onChangeText={setName}
+              onChangeText={handleNameChange}
               placeholder="Player"
               placeholderTextColor={colors.textDim}
               maxLength={16}
@@ -147,6 +170,14 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
             <Text style={styles.playOnlineText}>PLAY ONLINE</Text>
             <Text style={styles.btnSubtext}>vs Player</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.statsBtn}
+            onPress={() => setScreen('stats')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.statsText}>STATS & BADGES</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -169,46 +200,15 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
           </View>
         ))}
 
-        <ScrollView contentContainerStyle={styles.setupInner} bounces={false}>
+        <View style={styles.setupInner}>
           <TouchableOpacity onPress={() => setScreen('main')} style={styles.backBtn} activeOpacity={0.7}>
             <Text style={styles.backText}>{'< Back'}</Text>
           </TouchableOpacity>
 
           <Text style={styles.setupTitle}>VS CPU</Text>
-          <Text style={styles.setupSubtitle}>Battle against the computer</Text>
 
-          {/* Item mode toggle */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Item Set</Text>
-            <View style={styles.toggleRow}>
-              <TouchableOpacity
-                style={[styles.toggleBtn, itemMode === 'competitive' && styles.toggleBtnActive]}
-                onPress={() => setItemMode('competitive')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.toggleText, itemMode === 'competitive' && styles.toggleTextActive]}>
-                  Competitive
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.toggleBtn, itemMode === 'casual' && styles.toggleBtnActive]}
-                onPress={() => setItemMode('casual')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.toggleText, itemMode === 'casual' && styles.toggleTextActive]}>
-                  Casual
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.modeDesc}>
-              {itemMode === 'competitive'
-                ? 'Choice items lock you into one move. Full competitive rules.'
-                : 'Choice Band/Specs become Life Orb, Choice Scarf becomes Leftovers. More forgiving.'}
-            </Text>
-          </View>
-
-          {/* Difficulty toggle */}
-          <View style={styles.section}>
+          {/* Difficulty */}
+          <View style={styles.sectionCompact}>
             <Text style={styles.label}>Difficulty</Text>
             <View style={styles.toggleRow}>
               {(['easy', 'normal', 'hard'] as Difficulty[]).map(d => (
@@ -224,70 +224,177 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
                 </TouchableOpacity>
               ))}
             </View>
-            <Text style={styles.modeDesc}>
-              {difficulty === 'easy'
-                ? 'Bot picks moves randomly.'
-                : difficulty === 'normal'
-                ? 'Smart with some randomness.'
-                : 'Plays optimally.'}
-            </Text>
           </View>
 
-          {/* Team options */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Team Options</Text>
-
-            <TouchableOpacity
-              style={styles.checkboxRow}
-              onPress={() => setClassicMode(!classicMode)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, classicMode && styles.checkboxChecked]}>
-                {classicMode && <Text style={styles.checkmark}>{'✓'}</Text>}
-              </View>
-              <View style={styles.checkboxTextWrap}>
-                <Text style={styles.checkboxLabel}>Classic Mode</Text>
-                <Text style={styles.checkboxDesc}>Gen 1-4 only (Kanto through Sinnoh). Classic matchups.</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.checkboxRow}
-              onPress={() => setLegendaryMode(!legendaryMode)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, legendaryMode && styles.checkboxChecked]}>
-                {legendaryMode && <Text style={styles.checkmark}>{'✓'}</Text>}
-              </View>
-              <View style={styles.checkboxTextWrap}>
-                <Text style={styles.checkboxLabel}>Legendary Team</Text>
-                <Text style={styles.checkboxDesc}>Stacked teams of mostly Tier 1 Pokemon. Legendaries, pseudo-legendaries, and top threats. CPU gets one too.</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.checkboxRow}
-              onPress={() => setDraftMode(!draftMode)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, draftMode && styles.checkboxChecked]}>
-                {draftMode && <Text style={styles.checkmark}>{'✓'}</Text>}
-              </View>
-              <View style={styles.checkboxTextWrap}>
-                <Text style={styles.checkboxLabel}>Draft Mode</Text>
-                <Text style={styles.checkboxDesc}>Snake draft: pick Pokemon from a shared pool of 21. Alternate picks with your opponent.</Text>
-              </View>
-            </TouchableOpacity>
+          {/* Items */}
+          <View style={styles.sectionCompact}>
+            <Text style={styles.label}>Items</Text>
+            <View style={styles.toggleRow}>
+              <TouchableOpacity
+                style={[styles.toggleBtn, itemMode === 'competitive' && styles.toggleBtnActive]}
+                onPress={() => setItemMode('competitive')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.toggleText, itemMode === 'competitive' && styles.toggleTextActive]}>Competitive</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleBtn, itemMode === 'casual' && styles.toggleBtnActive]}
+                onPress={() => setItemMode('casual')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.toggleText, itemMode === 'casual' && styles.toggleTextActive]}>Casual</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
+          {/* Modifiers — compact pill toggles */}
+          <View style={styles.sectionCompact}>
+            <Text style={styles.label}>Modifiers</Text>
+            <View style={styles.pillRow}>
+              <TouchableOpacity
+                style={[styles.pill, classicMode && styles.pillActive]}
+                onPress={() => setClassicMode(!classicMode)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.pillText, classicMode && styles.pillTextActive]}>Classic</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.pill, legendaryMode && styles.pillActive]}
+                onPress={() => setLegendaryMode(!legendaryMode)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.pillText, legendaryMode && styles.pillTextActive]}>Legendary</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.pill, draftMode && styles.pillActive]}
+                onPress={() => { setDraftMode(!draftMode); if (draftMode) { setMonotype(null); setDraftTypeMode('snake'); setPoolSize(21); } }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.pillText, draftMode && styles.pillTextActive]}>Draft</Text>
+              </TouchableOpacity>
+              {draftMode && (
+                <TouchableOpacity
+                  style={[styles.pill, !!monotype && styles.pillActive]}
+                  onPress={() => setMonotype(monotype ? null : 'random')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.pillText, !!monotype && styles.pillTextActive]}>Monotype</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {/* Active modifier descriptions — one-liners */}
+            {(classicMode || legendaryMode || draftMode) && (
+              <Text style={styles.modifierDesc}>
+                {[
+                  classicMode && 'Gen 1–4 only',
+                  legendaryMode && 'T1 & T2 Pokemon',
+                  draftMode && (draftTypeMode === 'role' ? 'Role draft from shared pool' : 'Snake draft from shared pool'),
+                  draftMode && poolSize !== 21 && `${poolSize} Pokemon pool`,
+                  monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
+                  monotype && monotype !== 'random' && difficulty === 'hard' && draftMode && legendaryMode && GYM_LEADERS[monotype]
+                    ? `vs ${GYM_LEADERS[monotype].name}`
+                    : null,
+                ].filter(Boolean).join(' · ')}
+              </Text>
+            )}
+          </View>
+
+          {/* Draft type + pool size (only when draft mode is on) */}
+          {draftMode && (
+            <View style={styles.sectionCompact}>
+              <Text style={styles.label}>Draft Options</Text>
+              <View style={styles.toggleRow}>
+                <TouchableOpacity
+                  style={[styles.toggleBtn, draftTypeMode === 'snake' && styles.toggleBtnActive]}
+                  onPress={() => setDraftTypeMode('snake')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.toggleText, draftTypeMode === 'snake' && styles.toggleTextActive]}>Snake</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.toggleBtn, draftTypeMode === 'role' && styles.toggleBtnActive]}
+                  onPress={() => setDraftTypeMode('role')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.toggleText, draftTypeMode === 'role' && styles.toggleTextActive]}>Role</Text>
+                </TouchableOpacity>
+              </View>
+              {draftTypeMode === 'snake' && (
+                <>
+                  <View style={[styles.toggleRow, { marginTop: spacing.sm }]}>
+                    {POOL_SIZES.map(size => (
+                      <TouchableOpacity
+                        key={size}
+                        style={[styles.toggleBtn, poolSize === size && styles.toggleBtnActive]}
+                        onPress={() => setPoolSize(size)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.toggleText, poolSize === size && styles.toggleTextActive]}>{size}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <Text style={styles.modifierDesc}>Pool size: {poolSize} Pokemon</Text>
+                </>
+              )}
+              {draftTypeMode === 'role' && (
+                <Text style={styles.modifierDesc}>Pick one from each role: Sweepers, Walls, Support, Wildcard</Text>
+              )}
+            </View>
+          )}
+
+          {/* Monotype type picker */}
+          {draftMode && monotype && (
+            <View style={styles.sectionCompact}>
+              <View style={styles.typeGrid}>
+                <TouchableOpacity
+                  style={[styles.typeChip, { backgroundColor: colors.surfaceLight }, monotype === 'random' && styles.typeChipSelected]}
+                  onPress={() => setMonotype('random')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.typeChipText, monotype === 'random' && styles.typeChipTextSelected]}>Random</Text>
+                </TouchableOpacity>
+                {MONOTYPE_TYPES.map(t => {
+                  const leader = GYM_LEADERS[t];
+                  const showLeader = difficulty === 'hard' && legendaryMode && leader;
+                  return (
+                    <TouchableOpacity
+                      key={t}
+                      style={[
+                        styles.typeChip,
+                        { backgroundColor: typeColors[t] || '#666' },
+                        monotype === t && styles.typeChipSelected,
+                      ]}
+                      onPress={() => setMonotype(t)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.typeChipText, monotype === t && styles.typeChipTextSelected]}>
+                        {showLeader ? `${leader.name}` : t}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          <View style={{ flex: 1 }} />
 
           <TouchableOpacity
             style={styles.startBtn}
-            onPress={() => onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode, draftMode)}
+            onPress={() => {
+              let mono = monotype;
+              if (mono === 'random') {
+                mono = MONOTYPE_TYPES[Math.floor(Math.random() * MONOTYPE_TYPES.length)];
+              }
+              onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode, draftMode, mono || null, draftTypeMode, poolSize);
+            }}
             activeOpacity={0.7}
           >
-            <Text style={styles.startBtnText}>START BATTLE</Text>
+            <Text style={styles.startBtnText}>
+              {draftMode && monotype && difficulty === 'hard' && legendaryMode ? 'CHALLENGE GYM' : 'START BATTLE'}
+            </Text>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     );
   }
@@ -314,92 +421,119 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
         </TouchableOpacity>
 
         <Text style={styles.setupTitle}>PLAY ONLINE</Text>
-        <Text style={styles.setupSubtitle}>Battle against another player</Text>
 
-        {/* Item mode toggle */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Item Set</Text>
+        {/* Items */}
+        <View style={styles.sectionCompact}>
+          <Text style={styles.label}>Items</Text>
           <View style={styles.toggleRow}>
             <TouchableOpacity
               style={[styles.toggleBtn, itemMode === 'competitive' && styles.toggleBtnActive]}
               onPress={() => setItemMode('competitive')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.toggleText, itemMode === 'competitive' && styles.toggleTextActive]}>
-                Competitive
-              </Text>
+              <Text style={[styles.toggleText, itemMode === 'competitive' && styles.toggleTextActive]}>Competitive</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.toggleBtn, itemMode === 'casual' && styles.toggleBtnActive]}
               onPress={() => setItemMode('casual')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.toggleText, itemMode === 'casual' && styles.toggleTextActive]}>
-                Casual
-              </Text>
+              <Text style={[styles.toggleText, itemMode === 'casual' && styles.toggleTextActive]}>Casual</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.modeDesc}>
-            {itemMode === 'competitive'
-              ? 'Choice items lock you into one move. Full competitive rules.'
-              : 'Choice Band/Specs become Life Orb, Choice Scarf becomes Leftovers. More forgiving.'}
-          </Text>
         </View>
 
-        {/* Team options (host decides, both players get same settings) */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Team Options (Host Decides)</Text>
-
-          <TouchableOpacity
-            style={styles.checkboxRow}
-            onPress={() => setClassicMode(!classicMode)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.checkbox, classicMode && styles.checkboxChecked]}>
-              {classicMode && <Text style={styles.checkmark}>{'✓'}</Text>}
-            </View>
-            <View style={styles.checkboxTextWrap}>
-              <Text style={styles.checkboxLabel}>Classic Mode</Text>
-              <Text style={styles.checkboxDesc}>Gen 1-4 only. Classic matchups.</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.checkboxRow}
-            onPress={() => setLegendaryMode(!legendaryMode)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.checkbox, legendaryMode && styles.checkboxChecked]}>
-              {legendaryMode && <Text style={styles.checkmark}>{'✓'}</Text>}
-            </View>
-            <View style={styles.checkboxTextWrap}>
-              <Text style={styles.checkboxLabel}>Legendary Team</Text>
-              <Text style={styles.checkboxDesc}>Stacked teams of mostly Tier 1 Pokemon for both players.</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.checkboxRow}
-            onPress={() => setDraftMode(!draftMode)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.checkbox, draftMode && styles.checkboxChecked]}>
-              {draftMode && <Text style={styles.checkmark}>{'✓'}</Text>}
-            </View>
-            <View style={styles.checkboxTextWrap}>
-              <Text style={styles.checkboxLabel}>Draft Mode</Text>
-              <Text style={styles.checkboxDesc}>Snake draft: pick Pokemon from a shared pool of 21.</Text>
-            </View>
-          </TouchableOpacity>
+        {/* Modifiers */}
+        <View style={styles.sectionCompact}>
+          <Text style={styles.label}>Modifiers (Host Decides)</Text>
+          <View style={styles.pillRow}>
+            <TouchableOpacity
+              style={[styles.pill, classicMode && styles.pillActive]}
+              onPress={() => setClassicMode(!classicMode)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.pillText, classicMode && styles.pillTextActive]}>Classic</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.pill, legendaryMode && styles.pillActive]}
+              onPress={() => setLegendaryMode(!legendaryMode)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.pillText, legendaryMode && styles.pillTextActive]}>Legendary</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.pill, draftMode && styles.pillActive]}
+              onPress={() => { setDraftMode(!draftMode); if (draftMode) setMonotype(null); }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.pillText, draftMode && styles.pillTextActive]}>Draft</Text>
+            </TouchableOpacity>
+            {draftMode && (
+              <TouchableOpacity
+                style={[styles.pill, !!monotype && styles.pillActive]}
+                onPress={() => setMonotype(monotype ? null : 'random')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.pillText, !!monotype && styles.pillTextActive]}>Monotype</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {(classicMode || legendaryMode || draftMode) && (
+            <Text style={styles.modifierDesc}>
+              {[
+                classicMode && 'Gen 1–4 only',
+                legendaryMode && 'T1 & T2 Pokemon',
+                draftMode && 'Snake draft from shared pool',
+                monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
+              ].filter(Boolean).join(' · ')}
+            </Text>
+          )}
         </View>
+
+        {/* Monotype type picker for online */}
+        {draftMode && monotype && (
+          <View style={styles.sectionCompact}>
+            <View style={styles.typeGrid}>
+              <TouchableOpacity
+                style={[styles.typeChip, { backgroundColor: colors.surfaceLight }, monotype === 'random' && styles.typeChipSelected]}
+                onPress={() => setMonotype('random')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.typeChipText, monotype === 'random' && styles.typeChipTextSelected]}>Random</Text>
+              </TouchableOpacity>
+              {MONOTYPE_TYPES.map(t => (
+                <TouchableOpacity
+                  key={t}
+                  style={[
+                    styles.typeChip,
+                    { backgroundColor: typeColors[t] || '#666' },
+                    monotype === t && styles.typeChipSelected,
+                  ]}
+                  onPress={() => setMonotype(t)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.typeChipText, monotype === t && styles.typeChipTextSelected]}>{t}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        <View style={{ flex: 1 }} />
 
         <Text style={styles.onlineNote}>
-          When creating a room, your team settings apply to both players. When joining, the host's settings are used.
+          Host's settings apply to both players.
         </Text>
 
         <TouchableOpacity
           style={styles.startBtn}
-          onPress={() => onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode, draftMode)}
+          onPress={() => {
+            let mono = monotype;
+            if (mono === 'random') {
+              mono = MONOTYPE_TYPES[Math.floor(Math.random() * MONOTYPE_TYPES.length)];
+            }
+            onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode, draftMode, mono || null);
+          }}
           activeOpacity={0.7}
         >
           <Text style={styles.startBtnText}>FIND MATCH</Text>
@@ -474,9 +608,9 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   setupInner: {
-    flexGrow: 1,
+    flex: 1,
     padding: spacing.xl,
-    paddingTop: spacing.xl * 2,
+    paddingTop: spacing.xl * 1.5,
     zIndex: 1,
   },
   logoSection: {
@@ -506,6 +640,9 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: spacing.xl,
+  },
+  sectionCompact: {
+    marginBottom: spacing.md,
   },
   label: {
     color: colors.textSecondary,
@@ -556,6 +693,36 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     lineHeight: 16,
   },
+  pillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  pill: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  pillActive: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  pillText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  pillTextActive: {
+    color: '#fff',
+  },
+  modifierDesc: {
+    color: colors.textDim,
+    fontSize: 11,
+    marginTop: spacing.sm,
+  },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -596,6 +763,36 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 1,
   },
+  monotypeSection: {
+    marginLeft: spacing.md,
+    marginTop: spacing.xs,
+  },
+  typeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  typeChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    opacity: 0.7,
+  },
+  typeChipSelected: {
+    opacity: 1,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  typeChipText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  typeChipTextSelected: {
+    fontWeight: '900',
+  },
   playNowBtn: {
     backgroundColor: colors.accent,
     paddingVertical: 16,
@@ -628,6 +825,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 2,
+  },
+  statsBtn: {
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  statsText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   btnSubtext: {
     color: 'rgba(255,255,255,0.6)',

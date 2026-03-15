@@ -15,8 +15,9 @@ import type {
   OwnPokemon,
 } from '../../server/types';
 import type { BattleEvent, Weather, SideEffects } from '../../types';
-import type { DraftPoolEntry } from '../../engine/draft-pool';
-import { SNAKE_ORDER } from '../../engine/draft-pool';
+import type { DraftPoolEntry, DraftRole } from '../../engine/draft-pool';
+import type { DraftType } from '../../engine/draft-pool';
+import { SNAKE_ORDER, DRAFT_ROLES } from '../../engine/draft-pool';
 
 export type BattlePhase =
   | 'setup'
@@ -98,10 +99,20 @@ export interface BattleState {
   roomOptions: { maxGen: number | null; legendaryMode: boolean } | null;
   /** Draft mode state */
   draftMode: boolean;
+  draftType: DraftType;
   draftPool: DraftPoolEntry[];
   draftPicks: [number[], number[]];
   draftCurrentPick: number;
   draftCurrentPlayer: 0 | 1;
+  draftRerolled: boolean;
+  /** Role draft: which role round (0-5) we're on */
+  roleRound: number;
+  /** Role draft: the role order for this game */
+  roleOrder: DraftRole[];
+  /** CPU difficulty (for badge tracking) */
+  difficulty: 'easy' | 'normal' | 'hard';
+  /** Monotype filter used in this game (null if not monotype) */
+  monotype: string | null;
 }
 
 function emptyStats(): BattleStats {
@@ -161,14 +172,20 @@ export const initialState: BattleState = {
   legendaryMode: false,
   roomOptions: null,
   draftMode: false,
+  draftType: 'snake' as DraftType,
   draftPool: [],
   draftPicks: [[], []],
   draftCurrentPick: 0,
   draftCurrentPlayer: 0,
+  draftRerolled: false,
+  roleRound: 0,
+  roleOrder: [...DRAFT_ROLES],
+  difficulty: 'normal',
+  monotype: null,
 };
 
 export type BattleAction =
-  | { type: 'START_GAME'; playerName: string; itemMode: 'competitive' | 'casual' }
+  | { type: 'START_GAME'; playerName: string; itemMode: 'competitive' | 'casual'; difficulty?: 'easy' | 'normal' | 'hard'; monotype?: string | null; legendaryMode?: boolean }
   | { type: 'START_ONLINE'; playerName: string; itemMode: 'competitive' | 'casual'; maxGen?: number | null; legendaryMode?: boolean }
   | { type: 'CONNECTED' }
   | { type: 'ROOM_CREATED'; code: string; botName: string }
@@ -187,7 +204,7 @@ export type BattleAction =
   | { type: 'RECONNECTING' }
   | { type: 'RECONNECTED' }
   | { type: 'OPPONENT_DISCONNECTED' }
-  | { type: 'DRAFT_START'; pool: DraftPoolEntry[]; yourPlayerIndex: 0 | 1 }
+  | { type: 'DRAFT_START'; pool: DraftPoolEntry[]; yourPlayerIndex: 0 | 1; draftType?: DraftType; roleOrder?: DraftRole[] }
   | { type: 'DRAFT_PICK'; playerIndex: 0 | 1; poolIndex: number }
   | { type: 'DRAFT_COMPLETE'; yourTeam: OwnPokemon[] }
   | { type: 'RESET' };
@@ -423,6 +440,9 @@ function eventsToLogLines(events: BattleEvent[]): string[] {
       case 'move_fail':
         lines.push(`  ${d.pokemon}'s ${d.move} failed! (${d.reason})`);
         break;
+      case 'boost_steal':
+        lines.push(`  ${d.attacker} stole ${d.defender}'s stat boosts!`);
+        break;
       case 'hazard_set':
         lines.push(`  ${d.hazard} was set on ${d.side === 0 ? 'the near' : 'the far'} side!`);
         break;
@@ -456,6 +476,9 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         gameMode: 'cpu',
         playerName: action.playerName,
         itemMode: action.itemMode,
+        difficulty: action.difficulty ?? 'normal',
+        monotype: action.monotype ?? null,
+        legendaryMode: action.legendaryMode ?? false,
       };
 
     case 'START_ONLINE':
@@ -741,16 +764,21 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       }
       return state;
 
-    case 'DRAFT_START':
+    case 'DRAFT_START': {
+      const dt = action.draftType ?? 'snake';
       return {
         ...state,
         phase: 'drafting',
         draftMode: true,
+        draftType: dt,
         draftPool: action.pool,
         draftPicks: [[], []],
         draftCurrentPick: 0,
         draftCurrentPlayer: SNAKE_ORDER[0],
         yourPlayerIndex: action.yourPlayerIndex,
+        draftRerolled: state.phase === 'drafting',
+        roleRound: 0,
+        roleOrder: action.roleOrder ?? [...DRAFT_ROLES],
         // Clear previous battle state so useEventQueue resets sprite overrides on rematch
         yourState: null,
         opponentVisible: null,
@@ -765,6 +793,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         turn: 0,
         // battleStats intentionally preserved across rematches
       };
+    }
 
     case 'DRAFT_PICK': {
       const newPicks: [number[], number[]] = [
@@ -773,11 +802,14 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       ];
       newPicks[action.playerIndex].push(action.poolIndex);
       const nextPick = state.draftCurrentPick + 1;
+      // Role round advances every 2 picks (both players picked from the role)
+      const nextRoleRound = Math.floor(nextPick / 2);
       return {
         ...state,
         draftPicks: newPicks,
         draftCurrentPick: nextPick,
         draftCurrentPlayer: nextPick < SNAKE_ORDER.length ? SNAKE_ORDER[nextPick] : 0,
+        roleRound: nextRoleRound,
       };
     }
 

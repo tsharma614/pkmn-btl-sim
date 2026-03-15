@@ -8,8 +8,10 @@
 
 import { Battle } from '../engine/battle';
 import { generateTeam } from '../engine/team-generator';
-import { generateDraftPool, pickBotDraftPick, buildTeamFromDraftPicks, SNAKE_ORDER } from '../engine/draft-pool';
-import type { DraftPoolEntry } from '../engine/draft-pool';
+import { generateDraftPool, generateGymLeaderPool, pickBotDraftPick, pickGymLeaderDraftPick, buildTeamFromDraftPicks, SNAKE_ORDER } from '../engine/draft-pool';
+import type { DraftPoolEntry, DraftType, RoleDraftPoolEntry, DraftRole } from '../engine/draft-pool';
+import { generateRoleDraftPool, DRAFT_ROLES } from '../engine/draft-pool';
+import { getGymLeader } from '../data/gym-leaders';
 import { SeededRNG } from '../utils/rng';
 import { Player, BattlePokemon, BattleEvent, BattleAction } from '../types';
 import { serializeOwnPokemon, serializeVisiblePokemon } from '../server/state-sanitizer';
@@ -40,6 +42,9 @@ interface LocalBattleOptions {
   difficulty: BotDifficulty;
   legendaryMode: boolean;
   draftMode: boolean;
+  draftType: DraftType;
+  monotype: string | null;
+  poolSize: number;
   dispatch: (action: ReducerAction) => void;
 }
 
@@ -48,20 +53,28 @@ interface LocalBattleOptions {
  * Returns a handle with start/action/switch methods.
  */
 export function createLocalBattle(options: LocalBattleOptions) {
-  const { playerName, itemMode, maxGen, difficulty, legendaryMode, draftMode, dispatch } = options;
+  const { playerName, itemMode, maxGen, difficulty, legendaryMode, draftMode, draftType, monotype, poolSize, dispatch } = options;
+
+  // Gym leader challenge: legendary + draft + hard + monotype = gym leader mode
+  const isGymLeaderChallenge = draftMode && monotype && difficulty === 'hard' && legendaryMode;
+  const gymLeader = isGymLeaderChallenge ? getGymLeader(monotype) : null;
 
   const rng = new SeededRNG();
   const botCandidates = BOT_NAMES.filter(n => n.toLowerCase() !== playerName.toLowerCase());
-  const botName = botCandidates[Math.floor(Math.random() * botCandidates.length)];
+  const botName = gymLeader ? gymLeader.name : botCandidates[Math.floor(Math.random() * botCandidates.length)];
 
   // Draft state
   let draftPool: DraftPoolEntry[] = [];
   let draftHumanPicks: number[] = [];
   let draftBotPicks: number[] = [];
   let draftCurrentPick = 0;
+  let draftBotTimer: ReturnType<typeof setTimeout> | null = null;
   // Randomize who picks first: 0 = human first, 1 = bot first
   const draftHumanSlot: 0 | 1 = rng.next() < 0.5 ? 0 : 1;
   const draftBotSlot: 0 | 1 = (1 - draftHumanSlot) as 0 | 1;
+
+  // Role draft state
+  let roleOrder: DraftRole[] = [...DRAFT_ROLES];
 
   // Teams — generated immediately in normal mode, after draft in draft mode
   let humanTeam: BattlePokemon[] = [];
@@ -212,14 +225,25 @@ export function createLocalBattle(options: LocalBattleOptions) {
         if (isHard && m.priority > 0 && oppHpPct < 0.25 && score > 0) score *= 2.0;
         if (isHard && oppHpPct < 0.3 && score > 0) score *= 1.5;
         if (isHard && oppHpPct > 0.7 && score > 0) score *= 1 + (m.power / 400);
-        // Hard: factor in stat matchup — use the right attacking stat vs defensive stat
+        // Hard: stat-based damage estimation
         if (isHard && m.power && score > 0) {
           const atkStat = m.category === 'Physical' ? (active.species.baseStats?.atk ?? 100) : (active.species.baseStats?.spa ?? 100);
-          score *= (atkStat / 100);
+          const defStat = botOpponent?.species.baseStats
+            ? (m.category === 'Physical' ? botOpponent.species.baseStats.def : botOpponent.species.baseStats.spd)
+            : 100;
+          score *= (atkStat / Math.max(defStat, 50));
         }
         // Hard: prefer multi-hit moves for breaking sashes/substitutes
         if (isHard && m.name && ['Bullet Seed', 'Rock Blast', 'Icicle Spear', 'Pin Missile', 'Scale Shot', 'Tail Slap', 'Population Bomb', 'Bone Rush', 'Water Shuriken'].includes(m.name)) {
           score *= 1.15;
+        }
+        // Hard: endgame — avoid setup when opponent has 1 Pokemon left
+        if (isHard && botOpponent) {
+          const botAlive = botState!.team.filter(p => p.isAlive).length;
+          if (botAlive <= 2) {
+            // Pure offense mode — slightly boost all attacking moves
+            score *= 1.1;
+          }
         }
       } else {
         score = 35;
@@ -246,7 +270,10 @@ export function createLocalBattle(options: LocalBattleOptions) {
         if (setupInfo) {
           const currentBoost = active.boosts[setupInfo.stat as keyof typeof active.boosts] || 0;
           if (isHard) {
-            if (oppThreat >= 2 && hpPct < 0.8) score = 5;
+            // Endgame: no setup with few Pokemon left
+            const botAlive = botState!.team.filter(p => p.isAlive).length;
+            if (botAlive <= 2 && oppHpPct < 0.4) score = 5;
+            else if (oppThreat >= 2 && hpPct < 0.8) score = 5;
             else if (currentBoost >= 4) score = 5;
             else if (hpPct > 0.8 && oppHpPct > 0.5) score = 130 - currentBoost * 20;
             else if (hpPct > 0.6 && oppThreat <= 1) score = 80 - currentBoost * 15;
@@ -261,8 +288,25 @@ export function createLocalBattle(options: LocalBattleOptions) {
         if (['Toxic', 'Will-O-Wisp', 'Thunder Wave', 'Sleep Powder', 'Spore', 'Hypnosis', 'Stun Spore', 'Nuzzle'].includes(m.name)) {
           if (botOpponent?.status) score = 5;
           else if (isHard) {
-            const isSleep = ['Sleep Powder', 'Spore', 'Hypnosis'].includes(m.name);
-            score = oppHpPct < 0.2 ? 15 : isSleep ? 100 : 75;
+            // Type immunity awareness for status moves
+            if (m.name === 'Toxic' && oppTypes.some(t => t === 'Poison' || t === 'Steel')) { score = 0; }
+            else if (m.name === 'Will-O-Wisp' && oppTypes.includes('Fire' as PokemonType)) { score = 0; }
+            else if (m.name === 'Thunder Wave' && oppTypes.some(t => t === 'Ground' || t === 'Electric')) { score = 0; }
+            else if (['Stun Spore', 'Sleep Powder', 'Spore'].includes(m.name) && oppTypes.includes('Grass' as PokemonType)) { score = 0; }
+            else {
+              const isSleep = ['Sleep Powder', 'Spore', 'Hypnosis'].includes(m.name);
+              score = oppHpPct < 0.2 ? 15 : isSleep ? 100 : 75;
+              // Prefer Will-O-Wisp vs physical attackers, Thunder Wave vs fast special
+              if (m.name === 'Will-O-Wisp' && botOpponent) {
+                const oppAtk = botOpponent.species.baseStats?.atk ?? 0;
+                const oppSpa = botOpponent.species.baseStats?.spa ?? 0;
+                if (oppAtk > oppSpa) score += 15;
+              }
+              if (m.name === 'Thunder Wave' && botOpponent) {
+                const oppSpe = botOpponent.species.baseStats?.spe ?? 0;
+                if (oppSpe >= 100) score += 15;
+              }
+            }
           } else score = 60;
         }
         // Hard: Trick/Switcheroo with choice items is powerful
@@ -301,6 +345,14 @@ export function createLocalBattle(options: LocalBattleOptions) {
     // Hard: if our best move is really weak, consider switching
     if (isHard && switches.length > 0 && bestScore < 50 && Math.random() < 0.5) {
       return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
+    }
+    // Hard: predictive switching — opponent is faster + SE STAB threatens us
+    if (isHard && switches.length > 0 && oppTypes.length > 0 && botOpponent) {
+      const oppSpeed = botOpponent.species.baseStats?.spe ?? 0;
+      const mySpeed = active.species.baseStats?.spe ?? 0;
+      if (oppThreat >= 2 && oppSpeed > mySpeed && hpPct < 0.6 && bestScore < 150) {
+        return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
+      }
     }
 
     return { type: 'move', playerId: 'p2', moveIndex: scoredMoves[0].idx };
@@ -437,20 +489,47 @@ export function createLocalBattle(options: LocalBattleOptions) {
 
   // --- Draft helpers ---
 
+  /** Get the current role for role draft based on pick number. */
+  function getCurrentRole(): DraftRole | null {
+    if (draftType !== 'role') return null;
+    const round = Math.floor(draftCurrentPick / 2);
+    return round < roleOrder.length ? roleOrder[round] : null;
+  }
+
+  /** Get valid pool indices for the current role round. */
+  function getRoleIndices(role: DraftRole): number[] {
+    const picked = new Set([...draftHumanPicks, ...draftBotPicks]);
+    return draftPool
+      .map((entry, i) => ({ entry: entry as RoleDraftPoolEntry, index: i }))
+      .filter(({ entry, index }) => !picked.has(index) && entry.role === role)
+      .map(({ index }) => index);
+  }
+
   function scheduleBotDraftPicks() {
     if (draftCurrentPick >= SNAKE_ORDER.length) return;
     if (SNAKE_ORDER[draftCurrentPick] !== draftBotSlot) return; // not bot's turn
 
-    setTimeout(() => {
+    draftBotTimer = setTimeout(() => {
+      draftBotTimer = null;
       if (draftCurrentPick >= SNAKE_ORDER.length) return;
 
-      const pickIdx = pickBotDraftPick(
-        draftPool,
-        draftBotPicks,
-        draftHumanPicks,
-        difficulty,
-        rng,
-      );
+      let pickIdx: number;
+      if (draftType === 'role') {
+        // Role draft: bot must pick from the current role's pool
+        const role = getCurrentRole();
+        const validIndices = role ? getRoleIndices(role) : [];
+        if (validIndices.length > 0) {
+          // Use normal draft AI but filtered to valid indices
+          const fullPick = pickBotDraftPick(draftPool, draftBotPicks, draftHumanPicks, difficulty, rng);
+          pickIdx = validIndices.includes(fullPick) ? fullPick : rng.pick(validIndices);
+        } else {
+          pickIdx = pickBotDraftPick(draftPool, draftBotPicks, draftHumanPicks, difficulty, rng);
+        }
+      } else if (gymLeader && monotype) {
+        pickIdx = pickGymLeaderDraftPick(draftPool, draftBotPicks, draftHumanPicks, monotype, rng);
+      } else {
+        pickIdx = pickBotDraftPick(draftPool, draftBotPicks, draftHumanPicks, difficulty, rng);
+      }
 
       draftBotPicks.push(pickIdx);
       dispatch({ type: 'DRAFT_PICK', playerIndex: draftBotSlot, poolIndex: pickIdx });
@@ -495,8 +574,15 @@ export function createLocalBattle(options: LocalBattleOptions) {
 
       if (draftMode) {
         // Generate draft pool instead of teams
-        console.log(`[local-battle] Draft mode start — generating pool (maxGen: ${maxGen}, legendary: ${legendaryMode}), humanSlot: ${draftHumanSlot}`);
-        draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode });
+        console.log(`[local-battle] Draft mode start — generating pool (maxGen: ${maxGen}, legendary: ${legendaryMode}, gym: ${gymLeader?.name ?? 'none'}), humanSlot: ${draftHumanSlot}`);
+        if (draftType === 'role') {
+          draftPool = generateRoleDraftPool(rng, { maxGen, legendaryMode, itemMode });
+          rng.shuffle(roleOrder);
+        } else if (gymLeader && monotype) {
+          draftPool = generateGymLeaderPool(rng, monotype, { maxGen, itemMode, poolSize });
+        } else {
+          draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode, monotype, poolSize });
+        }
         draftHumanPicks = [];
         draftBotPicks = [];
         draftCurrentPick = 0;
@@ -505,6 +591,8 @@ export function createLocalBattle(options: LocalBattleOptions) {
           type: 'DRAFT_START',
           pool: draftPool,
           yourPlayerIndex: draftHumanSlot,
+          draftType,
+          roleOrder: draftType === 'role' ? roleOrder : undefined,
         });
 
         // If bot picks first (SNAKE_ORDER[0] matches bot's slot)
@@ -529,6 +617,15 @@ export function createLocalBattle(options: LocalBattleOptions) {
       const picked = new Set([...draftHumanPicks, ...draftBotPicks]);
       if (picked.has(poolIndex)) return; // already picked
 
+      // Role check: must pick from current role's pool
+      if (draftType === 'role') {
+        const role = getCurrentRole();
+        if (role) {
+          const validIndices = getRoleIndices(role);
+          if (!validIndices.includes(poolIndex)) return;
+        }
+      }
+
       // Record human pick
       draftHumanPicks.push(poolIndex);
       dispatch({ type: 'DRAFT_PICK', playerIndex: draftHumanSlot, poolIndex });
@@ -542,6 +639,40 @@ export function createLocalBattle(options: LocalBattleOptions) {
 
       // Schedule bot picks if it's bot's turn
       if (SNAKE_ORDER[draftCurrentPick] === draftBotSlot) {
+        scheduleBotDraftPicks();
+      }
+    },
+
+    rerollDraftPool() {
+      if (!draftMode) return;
+      // Cancel any pending bot pick timer
+      if (draftBotTimer) {
+        clearTimeout(draftBotTimer);
+        draftBotTimer = null;
+      }
+      console.log(`[local-battle] Rerolling draft pool`);
+      if (draftType === 'role') {
+        draftPool = generateRoleDraftPool(rng, { maxGen, legendaryMode, itemMode });
+        rng.shuffle(roleOrder);
+      } else if (gymLeader && monotype) {
+        draftPool = generateGymLeaderPool(rng, monotype, { maxGen, itemMode, poolSize });
+      } else {
+        draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode, monotype, poolSize });
+      }
+      draftHumanPicks = [];
+      draftBotPicks = [];
+      draftCurrentPick = 0;
+
+      dispatch({
+        type: 'DRAFT_START',
+        pool: draftPool,
+        yourPlayerIndex: draftHumanSlot,
+        draftType,
+        roleOrder: draftType === 'role' ? roleOrder : undefined,
+      });
+
+      // If bot picks first
+      if (SNAKE_ORDER[0] === draftBotSlot) {
         scheduleBotDraftPicks();
       }
     },
@@ -560,6 +691,28 @@ export function createLocalBattle(options: LocalBattleOptions) {
         humanPlayer.team[0] = temp;
       }
       humanPlayer.activePokemonIndex = 0;
+
+      // Hard mode: intelligent bot lead selection
+      if (difficulty === 'hard' && botPlayer.team.length > 1) {
+        const leadScores = botPlayer.team.map((p, i) => {
+          let score = p.species.baseStats.spe / 2; // Speed matters for leads
+          for (const m of p.moves) {
+            if (['Stealth Rock', 'Spikes', 'Sticky Web'].includes(m.data.name)) score += 20;
+            if (['Swords Dance', 'Nasty Plot', 'Dragon Dance', 'Shell Smash', 'Quiver Dance'].includes(m.data.name)) score += 10;
+          }
+          // BST matters
+          const bst = Object.values(p.species.baseStats).reduce((a: number, b: number) => a + b, 0);
+          score += bst / 60;
+          return { i, score };
+        });
+        leadScores.sort((a, b) => b.score - a.score);
+        const bestLeadIdx = leadScores[0].i;
+        if (bestLeadIdx !== 0) {
+          const temp = botPlayer.team[bestLeadIdx];
+          botPlayer.team[bestLeadIdx] = botPlayer.team[0];
+          botPlayer.team[0] = temp;
+        }
+      }
 
       // Create the battle
       battle = new Battle(humanPlayer, botPlayer);
@@ -738,6 +891,10 @@ export function createLocalBattle(options: LocalBattleOptions) {
     },
 
     disconnect() {
+      if (draftBotTimer) {
+        clearTimeout(draftBotTimer);
+        draftBotTimer = null;
+      }
       battle = null;
       botState = null;
       botOpponent = null;

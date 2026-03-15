@@ -7,6 +7,7 @@ import {
   submitAction as submitOnlineAction,
   submitLead as submitOnlineLead,
   submitForceSwitch as submitOnlineForceSwitch,
+  submitDraftReroll,
   requestRematch,
 } from '../socket';
 import type { BattleConnection } from '../socket';
@@ -19,15 +20,16 @@ const SERVER_URL = getServerUrl();
 interface BattleContextValue {
   state: BattleState;
   dispatch: React.Dispatch<BattleAction>;
-  startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean) => void;
-  startOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean) => void;
-  createRoom: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => void;
+  startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number) => void;
+  startOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null) => void;
+  createRoom: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, monotype?: string | null) => void;
   joinRoom: (playerName: string, itemMode: 'competitive' | 'casual', code: string) => void;
   selectLead: (index: number) => void;
   selectMove: (moveIndex: number) => void;
   selectSwitch: (pokemonIndex: number) => void;
   selectForceSwitch: (pokemonIndex: number) => void;
   submitDraftPick: (poolIndex: number) => void;
+  rerollDraftPool: () => void;
   playAgain: () => void;
   requestRematchOnline: () => void;
   returnToMenu: () => void;
@@ -65,11 +67,11 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
 
   // --- CPU mode: local battle (no server) ---
 
-  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean) => {
-    console.log(`[battle-context] startGame — draft: ${draftMode}, legendary: ${legendaryMode}, maxGen: ${maxGen}, difficulty: ${difficulty}`);
+  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number) => {
+    console.log(`[battle-context] startGame — draft: ${draftMode}, type: ${draftType}, legendary: ${legendaryMode}, maxGen: ${maxGen}, difficulty: ${difficulty}, monotype: ${monotype}, poolSize: ${poolSize}`);
     cleanupAll();
     dispatch({ type: 'RESET' });
-    dispatch({ type: 'START_GAME', playerName, itemMode });
+    dispatch({ type: 'START_GAME', playerName, itemMode, difficulty, monotype, legendaryMode });
 
     // Skip 'connecting' phase — go directly to team preview
     dispatch({ type: 'CONNECTED' });
@@ -81,6 +83,9 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       difficulty: difficulty ?? 'normal',
       legendaryMode: legendaryMode ?? false,
       draftMode: draftMode ?? false,
+      draftType: draftType ?? 'snake',
+      monotype: monotype ?? null,
+      poolSize: poolSize ?? 21,
       dispatch,
     });
 
@@ -92,10 +97,12 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   // --- Online mode: socket connection ---
 
   const draftModeRef = useRef(false);
+  const monotypeRef = useRef<string | null>(null);
 
-  const startOnlineCreate = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, dm?: boolean) => {
+  const startOnlineCreate = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, dm?: boolean, mono?: string | null) => {
     cleanupAll();
     draftModeRef.current = dm ?? false;
+    monotypeRef.current = mono ?? null;
     dispatch({ type: 'RESET' });
     dispatch({ type: 'START_ONLINE', playerName, itemMode, maxGen, legendaryMode });
     const conn = createOnlineConnection(SERVER_URL, playerName, itemMode, dispatch, maxGen, legendaryMode);
@@ -104,10 +111,10 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     conn.start();
   }, [cleanupAll]);
 
-  const createRoom = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean) => {
+  const createRoom = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, monotype?: string | null) => {
     const conn = connectionRef.current;
     if (conn) {
-      conn.startCreateRoom?.(itemMode, maxGen, legendaryMode, draftModeRef.current);
+      conn.startCreateRoom?.(itemMode, maxGen, legendaryMode, draftModeRef.current, monotypeRef.current ?? monotype);
     }
   }, []);
 
@@ -154,6 +161,13 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     if (activeLocalBattle) localBattleRef.current = activeLocalBattle;
   }, []);
 
+  // Clear online action guard when turn results arrive from server
+  useEffect(() => {
+    if (actionPendingRef.current && connectionRef.current && (state.pendingEvents.length > 0 || state.phase !== 'battling')) {
+      actionPendingRef.current = false;
+    }
+  }, [state.pendingEvents, state.phase]);
+
   // --- Actions: route to local battle or online socket ---
 
   const selectLead = useCallback((index: number) => {
@@ -187,7 +201,6 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       actionPendingRef.current = true;
       submitOnlineAction(conn, { type: 'move', index: moveIndex });
       dispatch({ type: 'ACTION_SUBMITTED' });
-      actionPendingRef.current = false;
     }
   }, []);
 
@@ -209,7 +222,6 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       actionPendingRef.current = true;
       submitOnlineAction(conn, { type: 'switch', index: pokemonIndex });
       dispatch({ type: 'ACTION_SUBMITTED' });
-      actionPendingRef.current = false;
     }
   }, []);
 
@@ -230,7 +242,6 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       actionPendingRef.current = true;
       submitOnlineForceSwitch(conn, pokemonIndex);
       dispatch({ type: 'ACTION_SUBMITTED' });
-      actionPendingRef.current = false;
     }
   }, []);
 
@@ -244,6 +255,18 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     const conn = connectionRef.current;
     if (conn) {
       conn.humanSocket.emit('draft_pick' as any, { poolIndex });
+    }
+  }, []);
+
+  const rerollDraftPool = useCallback(() => {
+    const local = localBattleRef.current;
+    if (local) {
+      local.rerollDraftPool();
+      return;
+    }
+    const conn = connectionRef.current;
+    if (conn) {
+      submitDraftReroll(conn);
     }
   }, []);
 
@@ -280,6 +303,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         selectSwitch,
         selectForceSwitch,
         submitDraftPick,
+        rerollDraftPool,
         playAgain,
         requestRematchOnline,
         returnToMenu,

@@ -285,6 +285,127 @@ describe('Battle Engine', () => {
       const srEvent = events.find(e => e.type === 'hazard_damage' && e.data.hazard === 'Stealth Rock');
       expect(srEvent).toBeDefined();
     });
+
+    it('Stealth Rock actually reduces switched-in Pokemon HP', () => {
+      battle.state.fieldEffects.player2Side.stealthRock = true;
+      const bench = battle.state.players[1].team[1];
+      const hpBefore = bench.currentHp;
+
+      const events = battle.processTurn(
+        { type: 'move', playerId: 'p1', moveIndex: 0 },
+        { type: 'switch', playerId: 'p2', pokemonIndex: 1 }
+      );
+
+      // After switching, the new active Pokemon should have taken SR damage
+      const newActive = battle.getActivePokemon(1);
+      expect(newActive.currentHp).toBeLessThan(hpBefore);
+      const srEvent = events.find(e => e.type === 'hazard_damage' && e.data.hazard === 'Stealth Rock');
+      expect(srEvent).toBeDefined();
+      expect(srEvent!.data.damage).toBeGreaterThan(0);
+    });
+
+    it('using Stealth Rock move sets hazard on opponent side', () => {
+      // Give p1 Stealth Rock as a move
+      const attacker = battle.getActivePokemon(0);
+      attacker.moves[0] = {
+        data: {
+          name: 'Stealth Rock', type: 'Rock', category: 'Status',
+          power: null, accuracy: null, pp: 20, priority: 0,
+          target: 'foeSide', flags: { contact: false, sound: false, bullet: false, punch: false, bite: false, pulse: false, protect: false, mirror: false, defrost: false, charge: false },
+          effects: [{ type: 'hazard', hazard: 'stealthrock', chance: 100 }],
+          critRatio: 1, willCrit: false, forceSwitch: false,
+        } as any,
+        currentPp: 20,
+        maxPp: 20,
+      };
+
+      expect(battle.getSideEffects(1).stealthRock).toBe(false);
+
+      battle.processTurn(
+        { type: 'move', playerId: 'p1', moveIndex: 0 },
+        { type: 'move', playerId: 'p2', moveIndex: 0 }
+      );
+
+      expect(battle.getSideEffects(1).stealthRock).toBe(true);
+    });
+
+    it('Stealth Rock set by move → switch next turn → damage applied', () => {
+      // Give p1 Stealth Rock
+      const attacker = battle.getActivePokemon(0);
+      attacker.moves[0] = {
+        data: {
+          name: 'Stealth Rock', type: 'Rock', category: 'Status',
+          power: null, accuracy: null, pp: 20, priority: 0,
+          target: 'foeSide', flags: { contact: false, sound: false, bullet: false, punch: false, bite: false, pulse: false, protect: false, mirror: false, defrost: false, charge: false },
+          effects: [{ type: 'hazard', hazard: 'stealthrock', chance: 100 }],
+          critRatio: 1, willCrit: false, forceSwitch: false,
+        } as any,
+        currentPp: 20,
+        maxPp: 20,
+      };
+
+      // Turn 1: Set Stealth Rock
+      battle.processTurn(
+        { type: 'move', playerId: 'p1', moveIndex: 0 },
+        { type: 'move', playerId: 'p2', moveIndex: 0 }
+      );
+      expect(battle.getSideEffects(1).stealthRock).toBe(true);
+
+      // Turn 2: P2 switches — should take SR damage
+      const bench = battle.state.players[1].team[1];
+      const hpBefore = bench.currentHp;
+
+      const events = battle.processTurn(
+        { type: 'move', playerId: 'p1', moveIndex: 0 },
+        { type: 'switch', playerId: 'p2', pokemonIndex: 1 }
+      );
+
+      expect(battle.getActivePokemon(1).currentHp).toBeLessThan(hpBefore);
+      const srEvent = events.find(e => e.type === 'hazard_damage' && e.data.hazard === 'Stealth Rock');
+      expect(srEvent).toBeDefined();
+    });
+  });
+
+  describe('switch-in damage from attacks', () => {
+    it('opponent attack hits newly switched-in Pokemon', () => {
+      // P1 switches, P2 attacks — attack should hit the NEW Pokemon
+      const oldActive = battle.getActivePokemon(0);
+      const bench = battle.state.players[0].team[1];
+      const benchHpBefore = bench.currentHp;
+
+      const events = battle.processTurn(
+        { type: 'switch', playerId: 'p1', pokemonIndex: 1 },
+        { type: 'move', playerId: 'p2', moveIndex: 0 }
+      );
+
+      // Old Pokemon should be at full HP (wasn't hit)
+      expect(oldActive.currentHp).toBe(oldActive.maxHp);
+      // New Pokemon should have taken damage
+      const newActive = battle.getActivePokemon(0);
+      expect(newActive).toBe(bench);
+      // The damage event should reference the new Pokemon
+      const dmgEvent = events.find(e => e.type === 'damage' && e.data.defender === bench.species.name);
+      expect(dmgEvent).toBeDefined();
+    });
+
+    it('switch-in Pokemon takes both hazard and attack damage', () => {
+      battle.state.fieldEffects.player1Side.stealthRock = true;
+      const bench = battle.state.players[0].team[1];
+      const hpBefore = bench.currentHp;
+
+      const events = battle.processTurn(
+        { type: 'switch', playerId: 'p1', pokemonIndex: 1 },
+        { type: 'move', playerId: 'p2', moveIndex: 0 }
+      );
+
+      const newActive = battle.getActivePokemon(0);
+      const srEvent = events.find(e => e.type === 'hazard_damage' && e.data.hazard === 'Stealth Rock');
+      const dmgEvent = events.find(e => e.type === 'damage' && e.data.defender === bench.species.name);
+      expect(srEvent).toBeDefined();
+      expect(dmgEvent).toBeDefined();
+      // Should have taken BOTH hazard AND attack damage
+      expect(newActive.currentHp).toBeLessThan(hpBefore - (srEvent!.data.damage as number));
+    });
   });
 
   describe('fainting', () => {

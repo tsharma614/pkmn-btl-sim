@@ -531,9 +531,28 @@ export function formatEventMessage(event: BattleEvent): { text: string; segments
     case 'leech_seed':
       text = `${d.pokemon}'s health was sapped by Leech Seed!`;
       break;
-    case 'recoil':
-      text = `${d.pokemon} took recoil damage!`;
+    case 'recoil': {
+      const recoilQuips = [
+        'Worth it.',
+        'Pain is temporary, KOs are forever.',
+        'Built different.',
+        'No pain no gain, bitch.',
+        'That\'s gonna leave a mark... on both of us.',
+        'Didn\'t even flinch. (Okay, maybe a little.)',
+        'Self-destruction is an art form.',
+        'Talk shit, get hit. ...By yourself.',
+        'Violence was always the answer.',
+        'Hurts so good.',
+        'My body, my choice to wreck it.',
+        'Calculated. (The damage to myself was not.)',
+        'Blood for blood.',
+        'If I\'m going down, I\'m taking you with me.',
+        'Just a flesh wound.',
+      ];
+      const quip = recoilQuips[Math.floor(Math.random() * recoilQuips.length)];
+      text = `${d.pokemon} took recoil damage! "${quip}"`;
       break;
+    }
     case 'heal':
       text = d.source === 'Wish'
         ? `${d.pokemon}'s wish came true!`
@@ -590,6 +609,9 @@ export function formatEventMessage(event: BattleEvent): { text: string; segments
       break;
     case 'item_removed':
       text = `${d.pokemon}'s ${d.item} was knocked off!`;
+      break;
+    case 'boost_steal':
+      text = `${d.attacker} stole ${d.defender}'s stat boosts!`;
       break;
     case 'move_fail':
       text = 'But it failed!';
@@ -697,6 +719,29 @@ export function useEventQueue(
   const lastPlayerHpRef = useRef<DisplayedHp | null>(null);
   const lastOpponentHpRef = useRef<DisplayedHp | null>(null);
 
+  // Safety net: when event processing finishes and real state has been applied
+  // (via EVENTS_PROCESSED in the reducer), sync HP overrides to the real values
+  // then clear them. This ensures any drift between running HP and real HP
+  // is corrected, preventing the HP bar from showing stale values.
+  const wasProcessingRef = useRef(false);
+  useEffect(() => {
+    if (isProcessing) {
+      wasProcessingRef.current = true;
+      return;
+    }
+    // Only clear when transitioning from processing → not processing
+    if (!wasProcessingRef.current) return;
+    wasProcessingRef.current = false;
+    // Wait briefly for EVENTS_PROCESSED to flush deferred state into real props
+    const timer = setTimeout(() => {
+      lastPlayerHpRef.current = null;
+      lastOpponentHpRef.current = null;
+      setPlayerHpOverride(null);
+      setOpponentHpOverride(null);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [isProcessing]);
+
   // Clear all stale state when both pokemon names become null (game reset).
   // Without this, messages and overrides from the previous game leak into the next.
   useEffect(() => {
@@ -777,18 +822,21 @@ export function useEventQueue(
       if (cancelled) return;
       if (i >= events.length) {
         setIsProcessing(false);
-        // Save running HP so the next batch doesn't snap to the engine's post-turn value
+        // Save running HP temporarily — if there are queued event batches,
+        // these refs let the next batch continue from where we left off.
+        // They'll be cleared by the isProcessing useEffect once ALL batches
+        // are done, so the real state takes over.
         lastPlayerHpRef.current = runningPlayerHp ? { ...runningPlayerHp } : null;
         lastOpponentHpRef.current = runningOpponentHp ? { ...runningOpponentHp } : null;
-        // Clear HP overrides — real state will be applied by EVENTS_PROCESSED
-        setPlayerHpOverride(null);
-        setOpponentHpOverride(null);
         // Keep sprite/name overrides — prevents brief flash of fainted Pokemon
         // between event batches. They'll be naturally overridden by subsequent
         // batches or become irrelevant when real state catches up.
         setTimeout(() => {
           if (!cancelled) setDamageReaction(null);
         }, 2000);
+        // Fire onComplete which triggers EVENTS_PROCESSED in the reducer.
+        // The isProcessing useEffect will clear HP overrides after a short
+        // delay, letting the real state (applied by EVENTS_PROCESSED) take over.
         onCompleteRef.current();
         return;
       }

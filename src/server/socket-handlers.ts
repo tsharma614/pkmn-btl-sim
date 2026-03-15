@@ -33,7 +33,7 @@ export function registerSocketHandlers(
     console.log(`[connect] ${socket.id}`);
 
     socket.on('create_room', (payload) => {
-      const { playerName, itemMode, maxGen, legendaryMode, draftMode } = payload;
+      const { playerName, itemMode, maxGen, legendaryMode, draftMode, monotype } = payload;
       if (!playerName || typeof playerName !== 'string') {
         socket.emit('error', { message: 'Player name is required' });
         return;
@@ -41,6 +41,7 @@ export function registerSocketHandlers(
 
       const { room, code } = roomManager.createRoom(socket.id, playerName, itemMode || 'competitive', maxGen ?? null, legendaryMode ?? false);
       room.draftMode = draftMode ?? false;
+      room.monotype = monotype ?? null;
       socket.join(code);
       socket.emit('room_created', { code });
       console.log(`[room] ${playerName} created room ${code}${draftMode ? ' (draft)' : ''}`);
@@ -196,6 +197,34 @@ export function registerSocketHandlers(
         }
         console.log(`[draft] Draft complete in room ${room.code}`);
       }
+    });
+
+    socket.on('draft_reroll', () => {
+      const room = roomManager.getRoomBySocketId(socket.id);
+      if (!room) {
+        socket.emit('error', { message: 'Not in a room' });
+        return;
+      }
+
+      const result = room.rerollDraftPool();
+      if (!result.valid) {
+        socket.emit('error', { message: result.error || 'Cannot reroll' });
+        return;
+      }
+
+      // Broadcast new draft_start to both players
+      for (let i = 0; i < 2; i++) {
+        const p = room.players[i as 0 | 1]!;
+        const targetSocket = io.sockets.sockets.get(p.socketId);
+        if (targetSocket) {
+          const snakeSlot = room.draftSlotMap[0] === i ? 0 : 1;
+          targetSocket.emit('draft_start', {
+            pool: room.draftPool,
+            yourPlayerIndex: snakeSlot as 0 | 1,
+          });
+        }
+      }
+      console.log(`[draft] Pool rerolled in room ${room.code}`);
     });
 
     socket.on('select_lead', (payload) => {
@@ -376,6 +405,36 @@ export function registerSocketHandlers(
       }
     });
 
+    socket.on('leave_room', () => {
+      const room = roomManager.getRoomBySocketId(socket.id);
+      if (!room) return;
+
+      const playerData = room.getPlayerBySocketId(socket.id);
+      if (!playerData) return;
+
+      console.log(`[leave_room] ${playerData.player.name} voluntarily left room ${room.code} (status: ${room.status})`);
+
+      if (room.status === 'waiting') {
+        // No opponent yet — just remove the room
+        roomManager.removeRoom(room.code);
+        return;
+      }
+
+      // Room is active — notify opponent, forfeit if battling, then destroy
+      if (room.status === 'battling' && room.battle) {
+        room.forfeit(playerData.index);
+        broadcastBattleEnd(io, room, 'forfeit');
+      }
+
+      // Notify the opponent that this player left
+      socket.to(room.code).emit('opponent_disconnected');
+
+      // Clean up everything
+      socket.leave(room.code);
+      disconnectTracker.clearRoom(room.code);
+      roomManager.removeRoom(room.code);
+    });
+
     socket.on('disconnect', (reason) => {
       const room = roomManager.getRoomBySocketId(socket.id);
       if (!room) {
@@ -398,6 +457,17 @@ export function registerSocketHandlers(
         return;
       }
 
+      // If room is in drafting or team_preview, the other player can't continue alone
+      // Destroy the room immediately instead of waiting for forfeit timer
+      if (room.status === 'drafting' || room.status === 'team_preview') {
+        console.log(`[disconnect] Destroying room ${room.code} — opponent left during ${room.status}`);
+        io.to(room.code).emit('opponent_disconnected');
+        room.status = 'finished';
+        disconnectTracker.clearRoom(room.code);
+        roomManager.removeRoom(room.code);
+        return;
+      }
+
       // Delay opponent_disconnected notification so brief reconnects don't trigger it
       const disconnectKey = `${room.code}:${playerData.index}:notify`;
       pendingDisconnectNotify.set(disconnectKey, setTimeout(() => {
@@ -408,7 +478,7 @@ export function registerSocketHandlers(
         }
       }, 5000));
 
-      if (room.status === 'battling' || room.status === 'team_preview' || room.status === 'drafting') {
+      if (room.status === 'battling') {
         // Start auto-forfeit timer
         disconnectTracker.startTimer(
           room.code,
@@ -421,6 +491,15 @@ export function registerSocketHandlers(
               room.forfeit(playerData.index);
               broadcastBattleEnd(io, room, 'disconnect');
             }
+            // Clean up the room so neither player is stuck
+            const otherIdx = playerData.index === 0 ? 1 : 0;
+            const otherPlayer = room.players[otherIdx as 0 | 1];
+            if (otherPlayer) {
+              roomManager.removeSocket(otherPlayer.socketId);
+            }
+            roomManager.removeRoom(room.code);
+            disconnectTracker.clearRoom(room.code);
+            console.log(`[cleanup] Removed room ${room.code} after auto-forfeit`);
           }
         );
       }

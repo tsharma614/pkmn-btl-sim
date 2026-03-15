@@ -313,7 +313,9 @@ describe('Multiplayer Draft Mode', () => {
     const [hds] = await Promise.all([hostDraftStart, joinerDraftStart]);
 
     const t1Count = hds.pool.filter((e: any) => e.tier === 1).length;
-    expect(t1Count).toBe(5);
+    expect(t1Count).toBe(9);
+    const t3Count = hds.pool.filter((e: any) => e.tier === 3).length;
+    expect(t3Count).toBe(0);
     const t4Count = hds.pool.filter((e: any) => e.tier === 4).length;
     expect(t4Count).toBe(0);
 

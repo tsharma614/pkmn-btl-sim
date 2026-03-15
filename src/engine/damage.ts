@@ -18,7 +18,7 @@ export function calculateDamage(
   defenderTypes?: PokemonType[]
 ): DamageCalcResult {
   const level = attacker.level;
-  let basePower = move.power ?? getVariablePower(move, attacker, defender);
+  let basePower = move.power ?? getVariablePower(move, attacker, defender, weather);
 
   if (basePower === 0) {
     return zeroDamageResult();
@@ -246,7 +246,7 @@ function getWeatherModifier(moveType: PokemonType, weather: Weather): number {
 /**
  * Calculate base power for variable-power moves (Heavy Slam, Low Kick, Gyro Ball, etc.)
  */
-function getVariablePower(move: MoveData, attacker: BattlePokemon, defender: BattlePokemon): number {
+function getVariablePower(move: MoveData, attacker: BattlePokemon, defender: BattlePokemon, weather?: Weather): number {
   const moveId = move.name.toLowerCase().replace(/[^a-z0-9]/g, '');
 
   switch (moveId) {
@@ -381,7 +381,7 @@ function getVariablePower(move: MoveData, attacker: BattlePokemon, defender: Bat
 
     // Weather Ball: 50 normally, 100 in weather
     case 'weatherball': {
-      return 50; // Type change and power doubling handled in battle.ts modifier
+      return weather ? 100 : 50;
     }
 
     default:

@@ -363,7 +363,7 @@ export interface BattleConnection {
   /** Call after creation to wait for sockets and start room flow */
   start: () => void;
   /** Online mode: create a new room */
-  startCreateRoom?: (itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean) => void;
+  startCreateRoom?: (itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null) => void;
   /** Online mode: join existing room by code */
   startJoinRoom?: (code: string, itemMode: 'competitive' | 'casual') => void;
   /** Attempt to reconnect after app returns from background */
@@ -691,14 +691,15 @@ export function createOnlineConnection(
     });
   };
 
-  conn.startCreateRoom = (im: 'competitive' | 'casual', mg?: number | null, lm?: boolean, dm?: boolean) => {
+  conn.startCreateRoom = (im: 'competitive' | 'casual', mg?: number | null, lm?: boolean, dm?: boolean, mono?: string | null) => {
     humanSocket.emit('create_room', {
       playerName,
       itemMode: im,
       maxGen: mg ?? onlineMaxGen,
       legendaryMode: lm ?? onlineLegendaryMode,
       draftMode: dm ?? false,
-    });
+      monotype: mono ?? null,
+    } as any);
   };
 
   conn.startJoinRoom = (code: string, im: 'competitive' | 'casual') => {
@@ -755,6 +756,10 @@ export function submitForceSwitch(
   pokemonIndex: number,
 ): void {
   connection.humanSocket.emit('submit_force_switch', { pokemonIndex });
+}
+
+export function submitDraftReroll(connection: BattleConnection): void {
+  connection.humanSocket.emit('draft_reroll');
 }
 
 export function requestRematch(connection: BattleConnection): void {

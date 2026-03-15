@@ -26,6 +26,7 @@ export interface CreateRoomPayload {
   maxGen?: number | null;
   legendaryMode?: boolean;
   draftMode?: boolean;
+  monotype?: string | null;
 }
 
 export interface DraftPickPayload {
@@ -181,8 +182,10 @@ export interface ClientToServerEvents {
   submit_action: (payload: SubmitActionPayload) => void;
   submit_force_switch: (payload: SubmitForceSwitchPayload) => void;
   draft_pick: (payload: DraftPickPayload) => void;
+  draft_reroll: () => void;
   forfeit: () => void;
   rematch_request: () => void;
+  leave_room: () => void;
 }
 
 export interface DraftStartPayload {

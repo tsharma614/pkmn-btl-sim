@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share } from 'react-native';
 import { saveBattleResult } from '../utils/battle-history';
+import { earnBadge } from '../utils/badge-tracker';
 import { colors, spacing } from '../theme';
 import { HpBar } from './HpBar';
 import { PokemonSprite } from './PokemonSprite';
@@ -17,6 +18,11 @@ interface Props {
   gameMode: GameMode;
   onPlayAgain: () => void;
   onExitToMenu: () => void;
+  /** Badge info — only set for qualifying CPU hard monotype draft wins */
+  badgeType?: string | null;
+  /** Gym leader info for gym badge display */
+  gymLeaderName?: string | null;
+  badgeName?: string | null;
 }
 
 function formatReason(reason: string): string {
@@ -233,9 +239,10 @@ function buildBattleLogText(
   return sections.join('\n\n');
 }
 
-export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu }: Props) {
+export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp }: Props) {
   const isWinner = data.winner === playerName;
   const savedRef = useRef(false);
+  const [newBadge, setNewBadge] = React.useState<string | null>(null);
 
   useEffect(() => {
     if (savedRef.current) return;
@@ -247,6 +254,12 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
       result: isWinner ? 'win' : 'loss',
       pokemonLeft,
     });
+    // Award badge for beating Hard CPU in monotype draft (gym leader challenge)
+    if (isWinner && badgeType) {
+      earnBadge(badgeType, gymLeaderName ?? undefined, badgeNameProp ?? undefined).then(earned => {
+        if (earned) setNewBadge(badgeType);
+      });
+    }
   }, []);
   const hasTeamData = data.finalState.yourTeam.length > 0;
   const mvp = getMVP(stats, data.finalState.yourTeam);
@@ -365,6 +378,18 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
                 {awards.map((award, i) => (
                   <Text key={i} style={styles.awardText}>{award}</Text>
                 ))}
+              </View>
+            )}
+
+            {/* New badge earned */}
+            {newBadge && (
+              <View style={styles.newBadgeSection}>
+                <Text style={styles.newBadgeTitle}>{gymLeaderName ? 'GYM BADGE EARNED!' : 'BADGE EARNED!'}</Text>
+                <Text style={styles.newBadgeType}>
+                  {gymLeaderName
+                    ? `You defeated ${gymLeaderName} and earned the ${badgeNameProp || newBadge + ' Badge'}!`
+                    : `${newBadge} Type Master`}
+                </Text>
               </View>
             )}
           </View>
@@ -599,6 +624,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     marginBottom: 2,
+  },
+
+  // New badge
+  newBadgeSection: {
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.3)',
+    alignItems: 'center',
+  },
+  newBadgeTitle: {
+    color: '#ffd700',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+  newBadgeType: {
+    color: '#ffd700',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2,
   },
 
   // Teams

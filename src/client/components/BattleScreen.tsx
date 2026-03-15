@@ -20,8 +20,11 @@ import { TeamPreview } from './TeamPreview';
 import { SetupScreen } from './SetupScreen';
 import { OnlineLobby } from './OnlineLobby';
 import { PokemonInfoModal } from './PokemonInfoModal';
+import { BattleLog } from './BattleLog';
 import { DraftScreen } from './DraftScreen';
+import { RoleDraftScreen } from './RoleDraftScreen';
 import { colors, spacing } from '../theme';
+import { getGymLeader } from '../../data/gym-leaders';
 import type { SideEffects } from '../../types';
 
 const WEATHER_TINTS: Record<string, string> = {
@@ -56,7 +59,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, playAgain, requestRematchOnline, returnToMenu } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -84,6 +87,7 @@ export function BattleScreen() {
   // Pokemon info modal state (must be before early returns)
   const [infoModal, setInfoModal] = useState<'player' | 'opponent' | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [showBattleLog, setShowBattleLog] = useState(false);
 
   // Weather tint animation
   const weatherTintOpacity = useRef(new Animated.Value(0)).current;
@@ -192,6 +196,35 @@ export function BattleScreen() {
   if (state.phase === 'drafting') {
     const yourPicks = state.draftPicks[state.yourPlayerIndex].map(i => state.draftPool[i]);
     const oppPicks = state.draftPicks[1 - state.yourPlayerIndex as 0 | 1].map(i => state.draftPool[i]);
+    const gymTitle = state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.monotype
+      ? (() => { const gl = getGymLeader(state.monotype); return gl ? `GYM LEADER ${gl.name.toUpperCase()}` : null; })()
+      : null;
+    const oppName = state.opponentName ?? state.botName ?? 'Opponent';
+
+    if (state.draftType === 'role') {
+      return (
+        <SafeAreaView style={styles.full}>
+          <RoleDraftScreen
+            pool={state.draftPool}
+            yourPicks={yourPicks}
+            opponentPicks={oppPicks}
+            currentPlayer={state.draftCurrentPlayer}
+            yourPlayerIndex={state.yourPlayerIndex}
+            pickNumber={state.draftCurrentPick}
+            roleRound={state.roleRound}
+            roleOrder={state.roleOrder}
+            onPick={submitDraftPick}
+            onReroll={rerollDraftPool}
+            draftRerolled={state.draftRerolled}
+            opponentName={oppName}
+            playerName={state.playerName}
+            onBack={returnToMenu}
+            gymLeaderTitle={gymTitle}
+          />
+        </SafeAreaView>
+      );
+    }
+
     return (
       <SafeAreaView style={styles.full}>
         <DraftScreen
@@ -202,8 +235,12 @@ export function BattleScreen() {
           yourPlayerIndex={state.yourPlayerIndex}
           pickNumber={state.draftCurrentPick}
           onPick={submitDraftPick}
-          opponentName={state.opponentName ?? state.botName ?? 'Opponent'}
+          onReroll={rerollDraftPool}
+          draftRerolled={state.draftRerolled}
+          opponentName={oppName}
           playerName={state.playerName}
+          onBack={returnToMenu}
+          gymLeaderTitle={gymTitle}
         />
       </SafeAreaView>
     );
@@ -295,6 +332,9 @@ export function BattleScreen() {
               )}
             </>
           )}
+          <TouchableOpacity onPress={() => setShowBattleLog(true)} hitSlop={8}>
+            <Text style={styles.logBtn}>LOG</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Opponent hazards */}
@@ -381,6 +421,9 @@ export function BattleScreen() {
           gameMode={state.gameMode}
           onPlayAgain={state.gameMode === 'online' ? requestRematchOnline : playAgain}
           onExitToMenu={returnToMenu}
+          badgeType={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.monotype ? state.monotype : null}
+          gymLeaderName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.monotype ? getGymLeader(state.monotype)?.name ?? null : null}
+          badgeName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.monotype ? getGymLeader(state.monotype)?.badgeName ?? null : null}
         />
       )}
 
@@ -390,6 +433,13 @@ export function BattleScreen() {
         ownPokemon={infoModal === 'player' ? active : null}
         opponentPokemon={infoModal === 'opponent' ? oppActive : null}
         onClose={() => setInfoModal(null)}
+      />
+
+      {/* Battle log overlay */}
+      <BattleLog
+        visible={showBattleLog}
+        lines={state.battleLog}
+        onClose={() => setShowBattleLog(false)}
       />
 
       {/* Exit confirmation overlay */}
@@ -562,6 +612,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     paddingHorizontal: 4,
+  },
+  logBtn: {
+    color: colors.textDim,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 4,
   },
   exitOverlay: {
     ...StyleSheet.absoluteFillObject,
