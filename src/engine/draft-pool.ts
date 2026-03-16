@@ -9,8 +9,10 @@ import { pickSet } from './team-generator';
 import { SeededRNG } from '../utils/rng';
 import { getTypeEffectiveness } from '../data/type-chart';
 import pokedexData from '../data/pokedex.json';
+import megaPokedexData from '../data/mega-pokemon.json';
 
 const pokedex = pokedexData as Record<string, PokemonSpecies>;
+const megaPokedex = megaPokedexData as Record<string, PokemonSpecies>;
 
 // Pokemon without animated sprites on Showdown CDN
 const NO_SPRITE: Set<string> = new Set([
@@ -28,6 +30,11 @@ for (const species of Object.values(pokedex)) {
   }
 }
 
+/** Mega Pokemon pool — loaded from mega-pokemon.json */
+export const MEGA_POOL: PokemonSpecies[] = Object.values(megaPokedex).filter(
+  s => !NO_SPRITE.has(s.id)
+);
+
 export const SNAKE_ORDER: (0 | 1)[] = [0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0];
 
 export interface DraftPoolEntry {
@@ -43,6 +50,7 @@ export interface DraftPoolOptions {
   itemMode?: 'competitive' | 'casual';
   monotype?: string | null; // e.g. 'Fire' — only Pokemon with this type
   poolSize?: number; // 21 (default), 24, 27, or 30
+  megaMode?: boolean; // reserve 2 mega slots in snake draft pool
 }
 
 /** Valid pool sizes. */
@@ -58,9 +66,9 @@ export const MONOTYPE_TYPES = [
 
 // --- Role Draft ---
 
-export type DraftRole = 'physSweeper' | 'specSweeper' | 'physWall' | 'specWall' | 'support' | 'wildcard';
+export type DraftRole = 'physSweeper' | 'specSweeper' | 'physWall' | 'specWall' | 'support' | 'mega';
 
-export const DRAFT_ROLES: DraftRole[] = ['physSweeper', 'specSweeper', 'physWall', 'specWall', 'support', 'wildcard'];
+export const DRAFT_ROLES: DraftRole[] = ['physSweeper', 'specSweeper', 'physWall', 'specWall', 'support', 'mega'];
 
 export const ROLE_LABELS: Record<DraftRole, string> = {
   physSweeper: 'Physical Sweeper',
@@ -68,7 +76,7 @@ export const ROLE_LABELS: Record<DraftRole, string> = {
   physWall: 'Physical Wall',
   specWall: 'Special Wall',
   support: 'Support',
-  wildcard: 'Wildcard',
+  mega: 'Mega Evolution',
 };
 
 /** How many Pokemon to generate per role in the pool. */
@@ -138,7 +146,7 @@ export function generateRoleDraftPool(
 
   // Classify all species by role
   const byRole: Record<DraftRole, { species: PokemonSpecies; tier: number }[]> = {
-    physSweeper: [], specSweeper: [], physWall: [], specWall: [], support: [], wildcard: [],
+    physSweeper: [], specSweeper: [], physWall: [], specWall: [], support: [], mega: [],
   };
 
   for (const entry of allSpecies) {
@@ -146,8 +154,18 @@ export function generateRoleDraftPool(
     byRole[role].push(entry);
   }
 
-  // Wildcard gets everything
-  byRole.wildcard = [...allSpecies];
+  // Mega role: draw from MEGA_POOL, filtered by maxGen (using base form's generation)
+  const eligibleMegas = MEGA_POOL
+    .filter(s => !maxGen || s.generation <= maxGen)
+    .map(s => ({ species: s, tier: s.tier as number }));
+  byRole.mega = eligibleMegas;
+
+  // Fallback: if not enough megas, fill remaining slots from all species
+  if (eligibleMegas.length < ROLE_POOL_SIZE) {
+    const megaIds = new Set(eligibleMegas.map(e => e.species.id));
+    const fillers = allSpecies.filter(e => !megaIds.has(e.species.id));
+    byRole.mega = [...eligibleMegas, ...fillers];
+  }
 
   const pool: RoleDraftPoolEntry[] = [];
   const usedIds = new Set<string>();
@@ -273,7 +291,21 @@ export function generateDraftPool(
   const maxGen = options.maxGen ?? null;
   const legendary = options.legendaryMode ?? false;
   const monotype = options.monotype ?? null;
+  const megaMode = options.megaMode ?? false;
   const targetPoolSize = options.poolSize ?? 21;
+
+  // Mega mode: reserve slots for mega Pokemon
+  // Legendary mode scales: 4 at pool 21, up to 12 at pool 30
+  // Normal mode: 2 mega slots regardless of pool size
+  let megaSlots = 0;
+  if (megaMode) {
+    if (legendary) {
+      megaSlots = 4 + Math.round((targetPoolSize - 21) * (8 / 9));
+    } else {
+      megaSlots = 2;
+    }
+  }
+  const regularPoolSize = targetPoolSize - megaSlots;
 
   // Monotype: filter all tiers to only include Pokemon with the chosen type
   let tiers = getFilteredTiers(maxGen);
@@ -287,8 +319,8 @@ export function generateDraftPool(
     tiers = filtered;
   }
 
-  // Calculate tier distribution based on pool size
-  const extra = targetPoolSize - 21;
+  // Calculate tier distribution based on pool size (minus mega slots)
+  const extra = regularPoolSize - 21;
   const ideal: { tier: Tier; count: number }[] = legendary
     ? [
         { tier: 1, count: 9 + Math.floor(extra * 0.4) },
@@ -393,7 +425,7 @@ export function generateDraftPool(
         && (!monotype || (s.types as string[]).includes(monotype))
     );
     rng.shuffle(all);
-    pool = all.slice(0, Math.min(targetPoolSize, all.length));
+    pool = all.slice(0, Math.min(regularPoolSize, all.length));
   }
 
   // If still under 12, fill by relaxing restrictions
@@ -427,10 +459,24 @@ export function generateDraftPool(
     }
   }
 
-  return pool.map(species => ({
+  const entries: DraftPoolEntry[] = pool.map(species => ({
     species,
     tier: species.tier,
   }));
+
+  // Append mega slots if megaMode is on
+  if (megaSlots > 0) {
+    const poolIds = new Set(pool.map(s => s.id));
+    const eligibleMegas = MEGA_POOL.filter(
+      s => (!maxGen || s.generation <= maxGen) && !poolIds.has(s.id)
+    );
+    rng.shuffle(eligibleMegas);
+    for (let i = 0; i < megaSlots && i < eligibleMegas.length; i++) {
+      entries.push({ species: eligibleMegas[i], tier: 0 as any }); // tier 0 = mega tier
+    }
+  }
+
+  return entries;
 }
 
 /**
@@ -445,7 +491,17 @@ export function generateGymLeaderPool(
 ): DraftPoolEntry[] {
   const maxGen = options.maxGen ?? null;
   const legendary = options.legendaryMode ?? false;
-  const targetPoolSize = options.poolSize ?? 21;
+  const megaMode = options.megaMode ?? false;
+  const fullPoolSize = options.poolSize ?? 21;
+  let megaSlots = 0;
+  if (megaMode) {
+    if (legendary) {
+      megaSlots = 4 + Math.round((fullPoolSize - 21) * (8 / 9));
+    } else {
+      megaSlots = 2;
+    }
+  }
+  const targetPoolSize = fullPoolSize - megaSlots;
   const tiers = getFilteredTiers(maxGen);
   const allowedTiers = legendary ? [1, 2] as Tier[] : [1, 2, 3, 4] as Tier[];
 
@@ -486,10 +542,28 @@ export function generateGymLeaderPool(
     }
   }
 
-  return pool.map(species => ({
+  const entries: DraftPoolEntry[] = pool.map(species => ({
     species,
     tier: species.tier,
   }));
+
+  // Append mega slots if megaMode is on (prefer megas matching gym type)
+  if (megaSlots > 0) {
+    const eligibleMegas = MEGA_POOL.filter(
+      s => (!maxGen || s.generation <= maxGen) && !poolIds.has(s.id)
+    );
+    // Sort: megas matching gym type first
+    const typed = eligibleMegas.filter(s => (s.types as string[]).includes(gymType));
+    const other = eligibleMegas.filter(s => !(s.types as string[]).includes(gymType));
+    rng.shuffle(typed);
+    rng.shuffle(other);
+    const megaCandidates = [...typed, ...other];
+    for (let i = 0; i < megaSlots && i < megaCandidates.length; i++) {
+      entries.push({ species: megaCandidates[i], tier: 0 as any });
+    }
+  }
+
+  return entries;
 }
 
 // --- Bot Draft AI ---
@@ -512,6 +586,21 @@ export function pickBotDraftPick(
     .filter(({ index }) => !picked.has(index));
 
   if (remaining.length === 0) return 0;
+
+  // All difficulties: pick mega first if available and no mega picked yet
+  const hasMega = myPicks.some(i => pool[i].tier === 0);
+  if (!hasMega) {
+    const megaRemaining = remaining.filter(({ entry }) => entry.tier === 0);
+    if (megaRemaining.length > 0) {
+      if (difficulty === 'hard') {
+        // Hard: always pick the best mega (highest BST)
+        megaRemaining.sort((a, b) => getBST(b.entry.species) - getBST(a.entry.species));
+        return megaRemaining[0].index;
+      }
+      // Easy/Normal: pick first available mega
+      return rng.pick(megaRemaining).index;
+    }
+  }
 
   if (difficulty === 'easy') {
     return rng.pick(remaining).index;
@@ -539,8 +628,8 @@ export function pickBotDraftPick(
     let score = 0;
     const speciesTypes = entry.species.types as PokemonType[];
 
-    // Tier value: higher tier = more valuable
-    const tierValue = { 1: 40, 2: 30, 3: 20, 4: 10 }[entry.tier] ?? 15;
+    // Tier value: higher tier = more valuable (tier 0 = mega)
+    const tierValue = entry.tier === 0 ? 35 : ({ 1: 40, 2: 30, 3: 20, 4: 10 }[entry.tier] ?? 15);
     score += tierValue;
 
     // Type coverage bonus: new types are worth more

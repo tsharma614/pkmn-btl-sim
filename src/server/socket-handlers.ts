@@ -33,7 +33,7 @@ export function registerSocketHandlers(
     console.log(`[connect] ${socket.id}`);
 
     socket.on('create_room', (payload) => {
-      const { playerName, itemMode, maxGen, legendaryMode, draftMode, monotype } = payload;
+      const { playerName, itemMode, maxGen, legendaryMode, draftMode, monotype, draftType, megaMode } = payload;
       if (!playerName || typeof playerName !== 'string') {
         socket.emit('error', { message: 'Player name is required' });
         return;
@@ -41,6 +41,8 @@ export function registerSocketHandlers(
 
       const { room, code } = roomManager.createRoom(socket.id, playerName, itemMode || 'competitive', maxGen ?? null, legendaryMode ?? false);
       room.draftMode = draftMode ?? false;
+      room.draftType = draftType ?? 'snake';
+      room.megaMode = megaMode ?? false;
       room.monotype = monotype ?? null;
       socket.join(code);
       socket.emit('room_created', { code });
@@ -126,12 +128,12 @@ export function registerSocketHandlers(
           const p = room.players[i as 0 | 1]!;
           const targetSocket = i === 1 ? socket : io.sockets.sockets.get(p.socketId);
           if (targetSocket) {
-            // draftSlotMap maps SNAKE_ORDER slot → playerIndex
-            // Find which snake slot this player maps to
             const snakeSlot = room.draftSlotMap[0] === i ? 0 : 1;
             targetSocket.emit('draft_start', {
               pool: room.draftPool,
               yourPlayerIndex: snakeSlot as 0 | 1,
+              draftType: room.draftType,
+              ...(room.draftType === 'role' ? { roleOrder: room.roleOrder } : {}),
             });
           }
         }
@@ -221,6 +223,8 @@ export function registerSocketHandlers(
           targetSocket.emit('draft_start', {
             pool: room.draftPool,
             yourPlayerIndex: snakeSlot as 0 | 1,
+            draftType: room.draftType,
+            ...(room.draftType === 'role' ? { roleOrder: room.roleOrder } : {}),
           });
         }
       }
@@ -386,6 +390,8 @@ export function registerSocketHandlers(
               targetSocket.emit('draft_start', {
                 pool: room.draftPool,
                 yourPlayerIndex: snakeSlot as 0 | 1,
+                draftType: room.draftType,
+                ...(room.draftType === 'role' ? { roleOrder: room.roleOrder } : {}),
               });
             }
           }

@@ -27,6 +27,8 @@ export interface CreateRoomPayload {
   legendaryMode?: boolean;
   draftMode?: boolean;
   monotype?: string | null;
+  draftType?: 'snake' | 'role';
+  megaMode?: boolean;
 }
 
 export interface DraftPickPayload {
@@ -191,6 +193,8 @@ export interface ClientToServerEvents {
 export interface DraftStartPayload {
   pool: DraftPoolEntry[];
   yourPlayerIndex: 0 | 1;
+  draftType?: 'snake' | 'role';
+  roleOrder?: string[];
 }
 
 export interface DraftPickBroadcast {

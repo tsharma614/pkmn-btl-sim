@@ -21,6 +21,16 @@ interface Props {
  * Regional forms: 'raichualola' → 'raichu-alola'
  */
 function toSpriteId(id: string): string {
+  // Mega forms: 'charizardmegax' → 'charizard-megax', 'venusaurmega' → 'venusaur-mega'
+  // Exclude false positives: 'yanmega' is a base Pokemon, not a mega form
+  const NOT_MEGA = new Set(['yanmega']);
+  if (!NOT_MEGA.has(id)) {
+    const megaMatch = id.match(/^(.+?)(mega[xy]?)$/);
+    if (megaMatch) {
+      return megaMatch[1] + '-' + megaMatch[2];
+    }
+  }
+  // Regional forms: 'raichualola' → 'raichu-alola'
   const suffixes = ['alola', 'galar', 'hisui', 'paldea'];
   for (const suffix of suffixes) {
     if (id.endsWith(suffix) && id.length > suffix.length) {

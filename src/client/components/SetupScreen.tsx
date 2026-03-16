@@ -26,8 +26,8 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
 interface Props {
-  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, poolSize?: number) => void;
-  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null) => void;
+  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, poolSize?: number, megaMode?: boolean) => void;
+  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, megaMode?: boolean) => void;
 }
 
 /** Background sprite positions — 7 rows of 3, filling the whole screen */
@@ -93,6 +93,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
   const [monotype, setMonotype] = useState<string | null>(null);
   const [draftTypeMode, setDraftTypeMode] = useState<DraftType>('snake');
   const [poolSize, setPoolSize] = useState<PoolSize>(21);
+  const [megaMode, setMegaMode] = useState(false);
   const [record, setRecord] = useState<{ wins: number; losses: number } | null>(null);
 
   useEffect(() => {
@@ -275,15 +276,22 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
               {draftMode && (
                 <TouchableOpacity
                   style={[styles.pill, !!monotype && styles.pillActive]}
-                  onPress={() => setMonotype(monotype ? null : 'random')}
+                  onPress={() => { setMonotype(monotype ? null : 'random'); if (!monotype) setDraftTypeMode('snake'); }}
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.pillText, !!monotype && styles.pillTextActive]}>Monotype</Text>
                 </TouchableOpacity>
               )}
+              <TouchableOpacity
+                style={[styles.pill, megaMode && styles.pillActive]}
+                onPress={() => setMegaMode(!megaMode)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.pillText, megaMode && styles.pillTextActive]}>Mega</Text>
+              </TouchableOpacity>
             </View>
             {/* Active modifier descriptions — one-liners */}
-            {(classicMode || legendaryMode || draftMode) && (
+            {(classicMode || legendaryMode || draftMode || megaMode) && (
               <Text style={styles.modifierDesc}>
                 {[
                   classicMode && 'Gen 1–4 only',
@@ -291,6 +299,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
                   draftMode && (draftTypeMode === 'role' ? 'Role draft from shared pool' : 'Snake draft from shared pool'),
                   draftMode && poolSize !== 21 && `${poolSize} Pokemon pool`,
                   monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
+                  megaMode && (draftMode ? 'Mega evolutions in draft pool' : '~25% chance of a mega on each team'),
                   monotype && monotype !== 'random' && difficulty === 'hard' && draftMode && legendaryMode && draftTypeMode !== 'role' && GYM_LEADERS[monotype]
                     ? `vs ${GYM_LEADERS[monotype].name}`
                     : null,
@@ -312,9 +321,10 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
                   <Text style={[styles.toggleText, draftTypeMode === 'snake' && styles.toggleTextActive]}>Snake</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.toggleBtn, draftTypeMode === 'role' && styles.toggleBtnActive]}
-                  onPress={() => setDraftTypeMode('role')}
+                  style={[styles.toggleBtn, draftTypeMode === 'role' && styles.toggleBtnActive, !!monotype && { opacity: 0.4 }]}
+                  onPress={() => !monotype && setDraftTypeMode('role')}
                   activeOpacity={0.7}
+                  disabled={!!monotype}
                 >
                   <Text style={[styles.toggleText, draftTypeMode === 'role' && styles.toggleTextActive]}>Role</Text>
                 </TouchableOpacity>
@@ -337,7 +347,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
                 </>
               )}
               {draftTypeMode === 'role' && (
-                <Text style={styles.modifierDesc}>Pick one from each role: Sweepers, Walls, Support, Wildcard</Text>
+                <Text style={styles.modifierDesc}>Pick one from each role: Sweepers, Walls, Support, Mega</Text>
               )}
             </View>
           )}
@@ -386,7 +396,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
               if (mono === 'random') {
                 mono = MONOTYPE_TYPES[Math.floor(Math.random() * MONOTYPE_TYPES.length)];
               }
-              onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode, draftMode, mono || null, draftTypeMode, poolSize);
+              onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode, draftMode, mono || null, draftTypeMode, poolSize, megaMode);
             }}
             activeOpacity={0.7}
           >
@@ -471,24 +481,59 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
             {draftMode && (
               <TouchableOpacity
                 style={[styles.pill, !!monotype && styles.pillActive]}
-                onPress={() => setMonotype(monotype ? null : 'random')}
+                onPress={() => { setMonotype(monotype ? null : 'random'); if (!monotype) setDraftTypeMode('snake'); }}
                 activeOpacity={0.7}
               >
                 <Text style={[styles.pillText, !!monotype && styles.pillTextActive]}>Monotype</Text>
               </TouchableOpacity>
             )}
+            <TouchableOpacity
+              style={[styles.pill, megaMode && styles.pillActive]}
+              onPress={() => setMegaMode(!megaMode)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.pillText, megaMode && styles.pillTextActive]}>Mega</Text>
+            </TouchableOpacity>
           </View>
-          {(classicMode || legendaryMode || draftMode) && (
+          {(classicMode || legendaryMode || draftMode || megaMode) && (
             <Text style={styles.modifierDesc}>
               {[
                 classicMode && 'Gen 1–4 only',
                 legendaryMode && 'T1 & T2 Pokemon',
-                draftMode && 'Snake draft from shared pool',
+                draftMode && (draftTypeMode === 'role' ? 'Role draft from shared pool' : 'Snake draft from shared pool'),
                 monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
+                megaMode && (draftMode ? 'Mega evolutions in draft pool' : '~25% chance of a mega on each team'),
               ].filter(Boolean).join(' · ')}
             </Text>
           )}
         </View>
+
+        {/* Draft type toggle for online */}
+        {draftMode && (
+          <View style={styles.sectionCompact}>
+            <Text style={styles.label}>Draft Options</Text>
+            <View style={styles.toggleRow}>
+              <TouchableOpacity
+                style={[styles.toggleBtn, draftTypeMode === 'snake' && styles.toggleBtnActive]}
+                onPress={() => setDraftTypeMode('snake')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.toggleText, draftTypeMode === 'snake' && styles.toggleTextActive]}>Snake</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleBtn, draftTypeMode === 'role' && styles.toggleBtnActive, !!monotype && { opacity: 0.4 }]}
+                onPress={() => !monotype && setDraftTypeMode('role')}
+                activeOpacity={0.7}
+                disabled={!!monotype}
+              >
+                <Text style={[styles.toggleText, draftTypeMode === 'role' && styles.toggleTextActive]}>Role</Text>
+              </TouchableOpacity>
+            </View>
+            {draftTypeMode === 'role' && (
+              <Text style={styles.modifierDesc}>Pick one from each role: Sweepers, Walls, Support, Mega</Text>
+            )}
+          </View>
+        )}
 
         {/* Monotype type picker for online */}
         {draftMode && monotype && (
@@ -532,7 +577,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
             if (mono === 'random') {
               mono = MONOTYPE_TYPES[Math.floor(Math.random() * MONOTYPE_TYPES.length)];
             }
-            onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode, draftMode, mono || null);
+            onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode, draftMode, mono || null, draftTypeMode, megaMode);
           }}
           activeOpacity={0.7}
         >

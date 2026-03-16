@@ -5,8 +5,8 @@
 
 import { Battle } from '../engine/battle';
 import { generateTeam } from '../engine/team-generator';
-import { generateDraftPool, buildTeamFromDraftPicks, SNAKE_ORDER } from '../engine/draft-pool';
-import type { DraftPoolEntry } from '../engine/draft-pool';
+import { generateDraftPool, generateRoleDraftPool, buildTeamFromDraftPicks, SNAKE_ORDER, DRAFT_ROLES } from '../engine/draft-pool';
+import type { DraftPoolEntry, RoleDraftPoolEntry, DraftRole } from '../engine/draft-pool';
 import { SeededRNG } from '../utils/rng';
 import { Player, BattlePokemon, BattleAction, BattleEvent } from '../types';
 import { RoomStatus, RoomPlayer } from './types';
@@ -35,6 +35,9 @@ export class Room {
   forceSwitchEvents: import('../types').BattleEvent[];
   /** Draft mode state */
   draftMode: boolean;
+  draftType: 'snake' | 'role';
+  roleOrder: DraftRole[];
+  megaMode: boolean;
   monotype: string | null;
   draftPool: DraftPoolEntry[];
   draftPicks: [number[], number[]];
@@ -59,6 +62,9 @@ export class Room {
     this.isProcessingTurn = false;
     this.forceSwitchEvents = [];
     this.draftMode = false;
+    this.draftType = 'snake';
+    this.roleOrder = [...DRAFT_ROLES];
+    this.megaMode = false;
     this.monotype = null;
     this.draftPool = [];
     this.draftPicks = [[], []];
@@ -103,7 +109,14 @@ export class Room {
     if (this.players[0] !== null && this.players[1] !== null) {
       if (this.draftMode) {
         this.status = 'drafting';
-        this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode, monotype: this.monotype });
+        if (this.draftType === 'role') {
+          this.draftPool = generateRoleDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode });
+          // Shuffle role order for variety
+          this.roleOrder = [...DRAFT_ROLES];
+          this.rng.shuffle(this.roleOrder);
+        } else {
+          this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode, monotype: this.monotype, megaMode: this.megaMode });
+        }
         this.draftPicks = [[], []];
         this.draftCurrentPick = 0;
         // Randomize who picks first
@@ -118,8 +131,8 @@ export class Room {
   }
 
   private generateTeams(): void {
-    this.teams[0] = generateTeam(this.rng, { itemMode: this.players[0]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode });
-    this.teams[1] = generateTeam(this.rng, { itemMode: this.players[1]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode });
+    this.teams[0] = generateTeam(this.rng, { itemMode: this.players[0]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode, megaMode: this.megaMode });
+    this.teams[1] = generateTeam(this.rng, { itemMode: this.players[1]!.itemMode, maxGen: this.maxGen, legendaryMode: this.legendaryMode, megaMode: this.megaMode });
   }
 
   rerollDraftPool(): { valid: boolean; error?: string } {
@@ -129,7 +142,13 @@ export class Room {
     if (this.draftCurrentPick > 0) {
       return { valid: false, error: 'Cannot reroll after picks have been made' };
     }
-    this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode, monotype: this.monotype });
+    if (this.draftType === 'role') {
+      this.draftPool = generateRoleDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode });
+      this.roleOrder = [...DRAFT_ROLES];
+      this.rng.shuffle(this.roleOrder);
+    } else {
+      this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode, monotype: this.monotype, megaMode: this.megaMode });
+    }
     this.draftPicks = [[], []];
     return { valid: true };
   }
@@ -152,6 +171,16 @@ export class Room {
     const allPicked = [...this.draftPicks[0], ...this.draftPicks[1]];
     if (allPicked.includes(poolIndex)) {
       return { valid: false, draftComplete: false, error: 'Pokemon already picked' };
+    }
+
+    // Role draft validation: pick must belong to the current role
+    if (this.draftType === 'role') {
+      const currentRound = Math.floor(this.draftCurrentPick / 2);
+      const currentRole = this.roleOrder[currentRound];
+      const entry = this.draftPool[poolIndex] as RoleDraftPoolEntry;
+      if (currentRole && entry.role !== currentRole) {
+        return { valid: false, draftComplete: false, error: `Pick must be from role: ${currentRole}` };
+      }
     }
 
     this.draftPicks[playerIndex].push(poolIndex);
@@ -401,7 +430,13 @@ export class Room {
 
       if (this.draftMode) {
         this.status = 'drafting';
-        this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode, monotype: this.monotype });
+        if (this.draftType === 'role') {
+          this.draftPool = generateRoleDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode });
+          this.roleOrder = [...DRAFT_ROLES];
+          this.rng.shuffle(this.roleOrder);
+        } else {
+          this.draftPool = generateDraftPool(this.rng, { maxGen: this.maxGen, legendaryMode: this.legendaryMode, itemMode: this.players[0]!.itemMode, monotype: this.monotype, megaMode: this.megaMode });
+        }
         this.draftPicks = [[], []];
         this.draftCurrentPick = 0;
         this.draftSlotMap = this.rng.next() < 0.5 ? [0, 1] : [1, 0];

@@ -20,8 +20,8 @@ const SERVER_URL = getServerUrl();
 interface BattleContextValue {
   state: BattleState;
   dispatch: React.Dispatch<BattleAction>;
-  startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number) => void;
-  startOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null) => void;
+  startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number, megaMode?: boolean) => void;
+  startOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', megaMode?: boolean) => void;
   createRoom: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, monotype?: string | null) => void;
   joinRoom: (playerName: string, itemMode: 'competitive' | 'casual', code: string) => void;
   selectLead: (index: number) => void;
@@ -67,8 +67,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
 
   // --- CPU mode: local battle (no server) ---
 
-  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number) => {
-    console.log(`[battle-context] startGame — draft: ${draftMode}, type: ${draftType}, legendary: ${legendaryMode}, maxGen: ${maxGen}, difficulty: ${difficulty}, monotype: ${monotype}, poolSize: ${poolSize}`);
+  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number, megaMode?: boolean) => {
+    console.log(`[battle-context] startGame — draft: ${draftMode}, type: ${draftType}, legendary: ${legendaryMode}, maxGen: ${maxGen}, difficulty: ${difficulty}, monotype: ${monotype}, poolSize: ${poolSize}, mega: ${megaMode}`);
     cleanupAll();
     dispatch({ type: 'RESET' });
     dispatch({ type: 'START_GAME', playerName, itemMode, difficulty, monotype, legendaryMode });
@@ -86,6 +86,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       draftType: draftType ?? 'snake',
       monotype: monotype ?? null,
       poolSize: poolSize ?? 21,
+      megaMode: megaMode ?? false,
       dispatch,
     });
 
@@ -98,11 +99,15 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
 
   const draftModeRef = useRef(false);
   const monotypeRef = useRef<string | null>(null);
+  const draftTypeRef = useRef<'snake' | 'role'>('snake');
+  const megaModeRef = useRef(false);
 
-  const startOnlineCreate = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, dm?: boolean, mono?: string | null) => {
+  const startOnlineCreate = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, dm?: boolean, mono?: string | null, dt?: 'snake' | 'role', mega?: boolean) => {
     cleanupAll();
     draftModeRef.current = dm ?? false;
     monotypeRef.current = mono ?? null;
+    draftTypeRef.current = dt ?? 'snake';
+    megaModeRef.current = mega ?? false;
     dispatch({ type: 'RESET' });
     dispatch({ type: 'START_ONLINE', playerName, itemMode, maxGen, legendaryMode });
     const conn = createOnlineConnection(SERVER_URL, playerName, itemMode, dispatch, maxGen, legendaryMode);
@@ -114,7 +119,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   const createRoom = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, monotype?: string | null) => {
     const conn = connectionRef.current;
     if (conn) {
-      conn.startCreateRoom?.(itemMode, maxGen, legendaryMode, draftModeRef.current, monotypeRef.current ?? monotype);
+      conn.startCreateRoom?.(itemMode, maxGen, legendaryMode, draftModeRef.current, monotypeRef.current ?? monotype, draftTypeRef.current, megaModeRef.current);
     }
   }, []);
 

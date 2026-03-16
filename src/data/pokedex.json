@@ -233,33 +233,27 @@
     "bestAbility": "Compound Eyes",
     "tier": 4,
     "generation": 1,
-    "movePool": [
-      "Bug Buzz",
-      "Energy Ball",
-      "Hurricane",
-      "Quiver Dance",
-      "Sleep Powder"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Quiver Dance",
-          "Bug Buzz",
-          "Sleep Powder",
-          "Hurricane"
+          "Psychic",
+          "Shadow Ball",
+          "Acrobatics",
+          "Aerial Ace",
+          "Air Cutter",
+          "Air Slash",
+          "Attract",
+          "Baton Pass"
         ],
         "ability": "Compound Eyes",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Quiver Dance",
-          "Bug Buzz",
-          "Energy Ball",
-          "Sleep Powder"
-        ],
-        "ability": "Tinted Lens",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 395,
@@ -288,34 +282,27 @@
     "bestAbility": "Swarm",
     "tier": 4,
     "generation": 1,
-    "movePool": [
-      "Drill Run",
-      "Knock Off",
-      "Poison Jab",
-      "Swords Dance",
-      "U-turn",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "U-turn",
-          "Poison Jab",
           "X-Scissor",
-          "Drill Run"
+          "Poison Jab",
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Assurance",
+          "Attract"
         ],
         "ability": "Swarm",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Swords Dance",
-          "Poison Jab",
-          "X-Scissor",
-          "Knock Off"
-        ],
-        "ability": "Sniper",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 395,
@@ -345,35 +332,27 @@
     "bestAbility": "Keen Eye",
     "tier": 4,
     "generation": 1,
-    "movePool": [
-      "Brave Bird",
-      "Defog",
-      "Heat Wave",
-      "Hurricane",
-      "Return",
-      "Roost",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Hurricane",
-          "Heat Wave",
           "U-turn",
-          "Roost"
-        ],
-        "ability": "Big Pecks",
-        "item": "Heavy-Duty Boots"
-      },
-      {
-        "moves": [
-          "Brave Bird",
-          "Return",
-          "U-turn",
-          "Defog"
+          "Toxic",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Air Slash",
+          "Attract",
+          "Bide"
         ],
         "ability": "Keen Eye",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 479,
@@ -402,35 +381,27 @@
     "bestAbility": "Run Away",
     "tier": 4,
     "generation": 1,
-    "movePool": [
-      "Crunch",
-      "Facade",
-      "Flame Wheel",
-      "Return",
-      "Sucker Punch",
-      "Swords Dance",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Facade",
-          "Sucker Punch",
-          "U-turn",
-          "Swords Dance"
+          "Ice Beam",
+          "Thunderbolt",
+          "Assurance",
+          "Attract",
+          "Bide",
+          "Bite",
+          "Blizzard",
+          "Body Slam"
         ],
-        "ability": "Guts",
-        "item": "Flame Orb"
-      },
-      {
-        "moves": [
-          "Return",
-          "Crunch",
-          "Flame Wheel",
-          "U-turn"
-        ],
-        "ability": "Hustle",
-        "item": "Choice Band"
+        "ability": "Run Away",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 413,
@@ -460,35 +431,27 @@
     "bestAbility": "Gluttony",
     "tier": 4,
     "generation": 7,
-    "movePool": [
-      "Crunch",
-      "Double-Edge",
-      "Knock Off",
-      "Stomping Tantrum",
-      "Sucker Punch",
-      "Swords Dance",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Knock Off",
-          "Sucker Punch",
-          "U-turn",
-          "Swords Dance"
+          "Ice Beam",
+          "Shadow Ball",
+          "Assurance",
+          "Attract",
+          "Bite",
+          "Blizzard",
+          "Bulk Up",
+          "Confide"
         ],
-        "ability": "Hustle",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Crunch",
-          "Double-Edge",
-          "Stomping Tantrum",
-          "U-turn"
-        ],
-        "ability": "Thick Fat",
-        "item": "Choice Band"
+        "ability": "Gluttony",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 413,
@@ -517,35 +480,27 @@
     "bestAbility": "Keen Eye",
     "tier": 4,
     "generation": 1,
-    "movePool": [
-      "Brave Bird",
-      "Drill Peck",
-      "Drill Run",
-      "Pursuit",
-      "Quick Attack",
-      "Return",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Drill Peck",
-          "Return",
           "U-turn",
-          "Pursuit"
+          "Toxic",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Assurance",
+          "Attract",
+          "Bide"
         ],
-        "ability": "Sniper",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Drill Run",
-          "Brave Bird",
-          "U-turn",
-          "Quick Attack"
-        ],
-        "ability": "Sniper",
-        "item": "Choice Scarf"
+        "ability": "Keen Eye",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 442,
@@ -661,36 +616,27 @@
     "bestAbility": "Static",
     "tier": 4,
     "generation": 7,
-    "movePool": [
-      "Fake Out",
-      "Grass Knot",
-      "Iron Tail",
-      "Knock Off",
-      "Surf",
-      "Thunderbolt",
-      "Volt Switch",
-      "Volt Tackle"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Thunderbolt",
           "Surf",
-          "Grass Knot",
-          "Volt Switch"
+          "Agility",
+          "Alluring Voice",
+          "Attract",
+          "Body Slam",
+          "Brick Break",
+          "Charge"
         ],
-        "ability": "Lightning Rod",
-        "item": "Light Ball"
-      },
-      {
-        "moves": [
-          "Volt Tackle",
-          "Iron Tail",
-          "Knock Off",
-          "Fake Out"
-        ],
-        "ability": "Lightning Rod",
-        "item": "Light Ball"
+        "ability": "Static",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 320,
@@ -996,36 +942,27 @@
     "bestAbility": "Poison Point",
     "tier": 2,
     "generation": 1,
-    "movePool": [
-      "Earth Power",
-      "Earthquake",
-      "Ice Beam",
-      "Ice Punch",
-      "Poison Jab",
-      "Sludge Wave",
-      "Stealth Rock",
-      "Superpower"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Earth Power",
-          "Sludge Wave",
-          "Ice Beam",
-          "Stealth Rock"
-        ],
-        "ability": "Sheer Force",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
           "Earthquake",
-          "Poison Jab",
-          "Ice Punch",
-          "Superpower"
+          "Ice Beam",
+          "Aerial Ace",
+          "Aqua Tail",
+          "Attract",
+          "Avalanche",
+          "Beat Up",
+          "Bide"
         ],
-        "ability": "Sheer Force",
-        "item": "Life Orb"
+        "ability": "Poison Point",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 505,
@@ -1055,34 +992,27 @@
     "bestAbility": "Poison Point",
     "tier": 2,
     "generation": 1,
-    "movePool": [
-      "Earth Power",
-      "Flamethrower",
-      "Ice Beam",
-      "Sludge Wave",
-      "Superpower",
-      "Thunderbolt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Earth Power",
-          "Sludge Wave",
+          "Earthquake",
           "Ice Beam",
-          "Thunderbolt"
+          "Amnesia",
+          "Aqua Tail",
+          "Attract",
+          "Avalanche",
+          "Beat Up",
+          "Bide"
         ],
-        "ability": "Sheer Force",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Earth Power",
-          "Sludge Wave",
-          "Flamethrower",
-          "Superpower"
-        ],
-        "ability": "Sheer Force",
-        "item": "Life Orb"
+        "ability": "Poison Point",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 505,
@@ -1400,34 +1330,27 @@
     "bestAbility": "Effect Spore",
     "tier": 4,
     "generation": 1,
-    "movePool": [
-      "Knock Off",
-      "Leech Life",
-      "Leech Seed",
-      "Seed Bomb",
-      "Spore",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Spore",
-          "Leech Seed",
           "X-Scissor",
-          "Seed Bomb"
-        ],
-        "ability": "Dry Skin",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Spore",
-          "Knock Off",
-          "Seed Bomb",
-          "Leech Life"
+          "Toxic",
+          "Absorb",
+          "Aerial Ace",
+          "After You",
+          "Aromatherapy",
+          "Attract",
+          "Bide"
         ],
         "ability": "Effect Spore",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 405,
@@ -2061,36 +1984,27 @@
     "bestAbility": "Magic Guard",
     "tier": 2,
     "generation": 1,
-    "movePool": [
-      "Calm Mind",
-      "Dazzling Gleam",
-      "Energy Ball",
-      "Focus Blast",
-      "Nasty Plot",
-      "Psychic",
-      "Psyshock",
-      "Shadow Ball"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Psychic",
           "Shadow Ball",
-          "Focus Blast",
-          "Nasty Plot"
-        ],
-        "ability": "Magic Guard",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Psyshock",
-          "Dazzling Gleam",
-          "Energy Ball",
+          "Ally Switch",
+          "Attract",
+          "Barrier",
+          "Bide",
+          "Body Slam",
           "Calm Mind"
         ],
         "ability": "Magic Guard",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -2119,35 +2033,27 @@
     "bestAbility": "Guts",
     "tier": 2,
     "generation": 1,
-    "movePool": [
-      "Bulk Up",
-      "Bullet Punch",
-      "Close Combat",
-      "Dynamic Punch",
-      "Ice Punch",
-      "Knock Off",
-      "Stone Edge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Close Combat",
-          "Knock Off",
-          "Bullet Punch",
-          "Ice Punch"
-        ],
-        "ability": "No Guard",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Dynamic Punch",
-          "Knock Off",
-          "Stone Edge",
+          "Earthquake",
+          "Flamethrower",
+          "Assurance",
+          "Attract",
+          "Bide",
+          "Body Slam",
+          "Brick Break",
           "Bulk Up"
         ],
-        "ability": "No Guard",
-        "item": "Leftovers"
+        "ability": "Guts",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 505,
@@ -2446,34 +2352,27 @@
     "bestAbility": "Run Away",
     "tier": 2,
     "generation": 1,
-    "movePool": [
-      "Drill Run",
-      "Flare Blitz",
-      "High Jump Kick",
-      "Morning Sun",
-      "Swords Dance",
-      "Wild Charge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Flare Blitz",
-          "Wild Charge",
-          "High Jump Kick",
-          "Morning Sun"
+          "Flamethrower",
+          "Poison Jab",
+          "Agility",
+          "Ally Switch",
+          "Attract",
+          "Baton Pass",
+          "Bide",
+          "Body Slam"
         ],
-        "ability": "Flash Fire",
-        "item": "Heavy-Duty Boots"
-      },
-      {
-        "moves": [
-          "Flare Blitz",
-          "Swords Dance",
-          "Wild Charge",
-          "Drill Run"
-        ],
-        "ability": "Flash Fire",
-        "item": "Life Orb"
+        "ability": "Run Away",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -2503,34 +2402,27 @@
     "bestAbility": "Run Away",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Dazzling Gleam",
-      "Megahorn",
-      "Play Rough",
-      "Psychic",
-      "Swords Dance",
-      "Zen Headbutt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Psychic",
           "Dazzling Gleam",
-          "Swords Dance",
-          "Play Rough"
+          "Agility",
+          "Ally Switch",
+          "Attract",
+          "Baton Pass",
+          "Body Slam",
+          "Bounce"
         ],
-        "ability": "Pastel Veil",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Zen Headbutt",
-          "Play Rough",
-          "Megahorn",
-          "Swords Dance"
-        ],
-        "ability": "Pastel Veil",
-        "item": "Life Orb"
+        "ability": "Run Away",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -2718,7 +2610,7 @@
   },
   "farfetchd": {
     "id": "farfetchd",
-    "name": "Farfetch\u2019d",
+    "name": "Farfetch’d",
     "dexNum": 83,
     "types": [
       "Normal",
@@ -2740,35 +2632,27 @@
     "bestAbility": "Keen Eye",
     "tier": 4,
     "generation": 1,
-    "movePool": [
-      "Brave Bird",
-      "Close Combat",
-      "Knock Off",
-      "Leaf Blade",
-      "Quick Attack",
-      "Slash",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Brave Bird",
-          "Swords Dance",
-          "Knock Off",
-          "Close Combat"
+          "Close Combat",
+          "Poison Jab",
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Air Slash",
+          "Attract"
         ],
-        "ability": "Defiant",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Leaf Blade",
-          "Brave Bird",
-          "Slash",
-          "Quick Attack"
-        ],
-        "ability": "Defiant",
-        "item": "Choice Band"
+        "ability": "Keen Eye",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 377,
@@ -3276,36 +3160,27 @@
     "bestAbility": "Hyper Cutter",
     "tier": 3,
     "generation": 1,
-    "movePool": [
-      "Agility",
-      "Crabhammer",
-      "Knock Off",
-      "Liquidation",
-      "Rock Slide",
-      "Superpower",
-      "Swords Dance",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Liquidation",
-          "Knock Off",
-          "Superpower",
-          "Agility"
+          "Ice Beam",
+          "Surf",
+          "Agility",
+          "Ally Switch",
+          "Amnesia",
+          "Ancient Power",
+          "Attract",
+          "Bide"
         ],
-        "ability": "Sheer Force",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Crabhammer",
-          "Rock Slide",
-          "X-Scissor",
-          "Swords Dance"
-        ],
-        "ability": "Sheer Force",
-        "item": "Life Orb"
+        "ability": "Hyper Cutter",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 475,
@@ -3650,36 +3525,27 @@
     "bestAbility": "Rock Head",
     "tier": 3,
     "generation": 1,
-    "movePool": [
-      "Bonemerang",
-      "Double-Edge",
-      "Earthquake",
-      "Fire Punch",
-      "Knock Off",
-      "Stealth Rock",
-      "Stone Edge",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Earthquake",
-          "Knock Off",
-          "Stone Edge",
-          "Stealth Rock"
-        ],
-        "ability": "Lightning Rod",
-        "item": "Thick Club"
-      },
-      {
-        "moves": [
-          "Bonemerang",
-          "Double-Edge",
-          "Fire Punch",
-          "Swords Dance"
+          "Ice Beam",
+          "Aerial Ace",
+          "Attract",
+          "Bide",
+          "Blizzard",
+          "Body Slam",
+          "Bone Club"
         ],
         "ability": "Rock Head",
-        "item": "Thick Club"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 425,
@@ -3709,34 +3575,27 @@
     "bestAbility": "Cursed Body",
     "tier": 3,
     "generation": 7,
-    "movePool": [
-      "Bonemerang",
-      "Earthquake",
-      "Flare Blitz",
-      "Shadow Bone",
-      "Stealth Rock",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Flare Blitz",
-          "Shadow Bone",
-          "Bonemerang",
-          "Swords Dance"
-        ],
-        "ability": "Lightning Rod",
-        "item": "Thick Club"
-      },
-      {
-        "moves": [
-          "Flare Blitz",
-          "Shadow Bone",
           "Earthquake",
-          "Stealth Rock"
+          "Ice Beam",
+          "Aerial Ace",
+          "Ally Switch",
+          "Attract",
+          "Blizzard",
+          "Body Slam",
+          "Bone Club"
         ],
-        "ability": "Rock Head",
-        "item": "Thick Club"
+        "ability": "Cursed Body",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 425,
@@ -4036,35 +3895,27 @@
     "bestAbility": "Early Bird",
     "tier": 3,
     "generation": 1,
-    "movePool": [
-      "Body Slam",
-      "Crunch",
-      "Drain Punch",
-      "Earthquake",
-      "Fake Out",
-      "Return",
-      "Sucker Punch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Return",
           "Earthquake",
-          "Sucker Punch",
-          "Fake Out"
+          "Ice Beam",
+          "Aerial Ace",
+          "Aqua Tail",
+          "Assurance",
+          "Attract",
+          "Avalanche",
+          "Beat Up"
         ],
-        "ability": "Scrappy",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Body Slam",
-          "Crunch",
-          "Drain Punch",
-          "Fake Out"
-        ],
-        "ability": "Scrappy",
-        "item": "Leftovers"
+        "ability": "Early Bird",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 490,
@@ -4093,34 +3944,27 @@
     "bestAbility": "Swift Swim",
     "tier": 4,
     "generation": 1,
-    "movePool": [
-      "Drill Run",
-      "Ice Beam",
-      "Knock Off",
-      "Megahorn",
-      "Poison Jab",
-      "Waterfall"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Waterfall",
-          "Megahorn",
-          "Knock Off",
-          "Drill Run"
-        ],
-        "ability": "Lightning Rod",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Waterfall",
-          "Poison Jab",
-          "Knock Off",
-          "Ice Beam"
+          "Ice Beam",
+          "Surf",
+          "Agility",
+          "Aqua Ring",
+          "Aqua Tail",
+          "Attract",
+          "Bide",
+          "Blizzard"
         ],
         "ability": "Swift Swim",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 450,
@@ -4150,36 +3994,27 @@
     "bestAbility": "Natural Cure",
     "tier": 2,
     "generation": 1,
-    "movePool": [
-      "Hydro Pump",
-      "Ice Beam",
-      "Psychic",
-      "Psyshock",
-      "Rapid Spin",
-      "Recover",
-      "Surf",
-      "Thunderbolt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Surf",
-          "Psychic",
           "Ice Beam",
-          "Rapid Spin"
+          "Thunderbolt",
+          "Agility",
+          "Ally Switch",
+          "Attract",
+          "Avalanche",
+          "Bide",
+          "Blizzard"
         ],
         "ability": "Natural Cure",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Hydro Pump",
-          "Thunderbolt",
-          "Psyshock",
-          "Recover"
-        ],
-        "ability": "Analytic",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 520,
@@ -4209,36 +4044,27 @@
     "bestAbility": "Soundproof",
     "tier": 3,
     "generation": 1,
-    "movePool": [
-      "Dazzling Gleam",
-      "Energy Ball",
-      "Focus Blast",
-      "Healing Wish",
-      "Nasty Plot",
-      "Psychic",
-      "Psyshock",
-      "Shadow Ball"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Thunderbolt",
           "Psychic",
-          "Dazzling Gleam",
-          "Nasty Plot",
-          "Focus Blast"
-        ],
-        "ability": "Filter",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Psyshock",
-          "Shadow Ball",
-          "Energy Ball",
-          "Healing Wish"
+          "Aerial Ace",
+          "Ally Switch",
+          "Attract",
+          "Barrier",
+          "Baton Pass",
+          "Bide"
         ],
         "ability": "Soundproof",
-        "item": "Choice Scarf"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 460,
@@ -4268,35 +4094,27 @@
     "bestAbility": "Oblivious",
     "tier": 3,
     "generation": 1,
-    "movePool": [
-      "Blizzard",
-      "Focus Blast",
-      "Ice Beam",
-      "Lovely Kiss",
-      "Nasty Plot",
-      "Psychic",
-      "Psyshock"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Ice Beam",
           "Psychic",
-          "Lovely Kiss",
-          "Nasty Plot"
+          "Ally Switch",
+          "Attract",
+          "Aurora Veil",
+          "Avalanche",
+          "Bide",
+          "Blizzard"
         ],
-        "ability": "Dry Skin",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Blizzard",
-          "Psyshock",
-          "Focus Blast",
-          "Lovely Kiss"
-        ],
-        "ability": "Dry Skin",
-        "item": "Choice Scarf"
+        "ability": "Oblivious",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 455,
@@ -4325,36 +4143,27 @@
     "bestAbility": "Hyper Cutter",
     "tier": 2,
     "generation": 1,
-    "movePool": [
-      "Close Combat",
-      "Earthquake",
-      "Knock Off",
-      "Megahorn",
-      "Quick Attack",
-      "Stone Edge",
-      "Swords Dance",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "X-Scissor",
-          "Close Combat",
           "Earthquake",
-          "Swords Dance"
-        ],
-        "ability": "Moxie",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Megahorn",
-          "Knock Off",
           "Stone Edge",
-          "Quick Attack"
+          "Attract",
+          "Bide",
+          "Bind",
+          "Body Slam",
+          "Brick Break",
+          "Brutal Swing"
         ],
-        "ability": "Mold Breaker",
-        "item": "Choice Band"
+        "ability": "Hyper Cutter",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -4846,35 +4655,27 @@
     "bestAbility": "Swift Swim",
     "tier": 3,
     "generation": 1,
-    "movePool": [
-      "Earth Power",
-      "Hydro Pump",
-      "Ice Beam",
-      "Shell Smash",
-      "Stealth Rock",
-      "Surf",
-      "Toxic Spikes"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shell Smash",
+          "Ice Beam",
           "Surf",
-          "Ice Beam",
-          "Earth Power"
+          "Ancient Power",
+          "Attract",
+          "Bide",
+          "Bind",
+          "Bite",
+          "Blizzard"
         ],
-        "ability": "Weak Armor",
-        "item": "White Herb"
-      },
-      {
-        "moves": [
-          "Hydro Pump",
-          "Ice Beam",
-          "Stealth Rock",
-          "Toxic Spikes"
-        ],
-        "ability": "Shell Armor",
-        "item": "Leftovers"
+        "ability": "Swift Swim",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 495,
@@ -4904,36 +4705,27 @@
     "bestAbility": "Swift Swim",
     "tier": 3,
     "generation": 1,
-    "movePool": [
-      "Aqua Jet",
-      "Knock Off",
-      "Liquidation",
-      "Rapid Spin",
-      "Rock Slide",
-      "Stone Edge",
-      "Swords Dance",
-      "Waterfall"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Liquidation",
-          "Stone Edge",
+          "Ice Beam",
+          "Surf",
+          "Absorb",
+          "Aerial Ace",
+          "Ancient Power",
           "Aqua Jet",
-          "Swords Dance"
+          "Aqua Tail",
+          "Attract"
         ],
         "ability": "Swift Swim",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Waterfall",
-          "Rock Slide",
-          "Knock Off",
-          "Rapid Spin"
-        ],
-        "ability": "Battle Armor",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 495,
@@ -4963,35 +4755,27 @@
     "bestAbility": "Rock Head",
     "tier": 2,
     "generation": 1,
-    "movePool": [
-      "Brave Bird",
-      "Earthquake",
-      "Rock Slide",
-      "Roost",
-      "Stealth Rock",
-      "Stone Edge",
-      "Taunt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Stone Edge",
           "Earthquake",
-          "Brave Bird",
-          "Stealth Rock"
+          "Flamethrower",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Ancient Power",
+          "Aqua Tail",
+          "Assurance"
         ],
-        "ability": "Unnerve",
-        "item": "Focus Sash"
-      },
-      {
-        "moves": [
-          "Rock Slide",
-          "Earthquake",
-          "Roost",
-          "Taunt"
-        ],
-        "ability": "Pressure",
-        "item": "Leftovers"
+        "ability": "Rock Head",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 515,
@@ -6012,36 +5796,27 @@
     "bestAbility": "Swarm",
     "tier": 4,
     "generation": 2,
-    "movePool": [
-      "Bug Buzz",
-      "Encore",
-      "Knock Off",
-      "Light Screen",
-      "Reflect",
-      "Roost",
-      "Thunder Punch",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Bug Buzz",
-          "Encore",
-          "Reflect",
-          "Light Screen"
-        ],
-        "ability": "Iron Fist",
-        "item": "Light Clay"
-      },
-      {
-        "moves": [
-          "Knock Off",
           "U-turn",
-          "Roost",
-          "Thunder Punch"
+          "Toxic",
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Air Slash",
+          "Attract"
         ],
-        "ability": "Iron Fist",
-        "item": "Leftovers"
+        "ability": "Swarm",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 390,
@@ -6125,34 +5900,27 @@
     "bestAbility": "Inner Focus",
     "tier": 2,
     "generation": 2,
-    "movePool": [
-      "Brave Bird",
-      "Cross Poison",
-      "Defog",
-      "Roost",
-      "Taunt",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Brave Bird",
-          "U-turn",
-          "Roost",
-          "Defog"
-        ],
-        "ability": "Infiltrator",
-        "item": "Heavy-Duty Boots"
-      },
-      {
-        "moves": [
-          "Cross Poison",
-          "Brave Bird",
-          "U-turn",
-          "Taunt"
+          "Shadow Ball",
+          "Dark Pulse",
+          "Absorb",
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Air Slash"
         ],
         "ability": "Inner Focus",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 535,
@@ -6246,35 +6014,27 @@
     "bestAbility": "Synchronize",
     "tier": 3,
     "generation": 2,
-    "movePool": [
-      "Heat Wave",
-      "Night Shade",
-      "Psychic",
-      "Reflect",
-      "Roost",
-      "Thunder Wave",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Psychic",
-          "Heat Wave",
-          "U-turn",
-          "Roost"
+          "Shadow Ball",
+          "Aerial Ace",
+          "Air Cutter",
+          "Air Slash",
+          "Ally Switch",
+          "Attract",
+          "Baton Pass"
         ],
-        "ability": "Magic Bounce",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Thunder Wave",
-          "Night Shade",
-          "Roost",
-          "Reflect"
-        ],
-        "ability": "Magic Bounce",
-        "item": "Leftovers"
+        "ability": "Synchronize",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 470,
@@ -7040,22 +6800,20 @@
     "bestAbility": "Levitate",
     "tier": 4,
     "generation": 2,
-    "movePool": [
-      "Energy Ball",
-      "Hidden Power Water",
-      "Psychic",
-      "Shadow Ball"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Psychic",
-          "Shadow Ball",
-          "Energy Ball",
-          "Hidden Power Water"
+          "Hidden Power"
         ],
         "ability": "Levitate",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 336,
@@ -7083,33 +6841,27 @@
     "bestAbility": "Shadow Tag",
     "tier": 4,
     "generation": 2,
-    "movePool": [
-      "Counter",
-      "Destiny Bond",
-      "Encore",
-      "Mirror Coat",
-      "Safeguard"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Amnesia",
+          "Charm",
           "Counter",
-          "Mirror Coat",
-          "Encore",
-          "Safeguard"
-        ],
-        "ability": "Shadow Tag",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Counter",
-          "Mirror Coat",
           "Destiny Bond",
-          "Encore"
+          "Encore",
+          "Mirror Coat",
+          "Safeguard",
+          "Splash"
         ],
         "ability": "Shadow Tag",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 405,
@@ -7213,35 +6965,27 @@
     "bestAbility": "Rock Head",
     "tier": 2,
     "generation": 2,
-    "movePool": [
-      "Dragon Dance",
-      "Earthquake",
-      "Heavy Slam",
-      "Iron Tail",
-      "Stealth Rock",
-      "Stone Edge",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Earthquake",
-          "Heavy Slam",
-          "Stealth Rock",
-          "Toxic"
+          "Dark Pulse",
+          "Ancient Power",
+          "Aqua Tail",
+          "Attract",
+          "Autotomize",
+          "Bind",
+          "Block"
         ],
-        "ability": "Sturdy",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Earthquake",
-          "Iron Tail",
-          "Stone Edge",
-          "Dragon Dance"
-        ],
-        "ability": "Sheer Force",
-        "item": "Life Orb"
+        "ability": "Rock Head",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 510,
@@ -7504,34 +7248,27 @@
     "bestAbility": "Sturdy",
     "tier": 2,
     "generation": 2,
-    "movePool": [
-      "Encore",
-      "Knock Off",
-      "Rest",
-      "Stealth Rock",
-      "Sticky Web",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Stealth Rock",
-          "Sticky Web",
-          "Toxic",
-          "Encore"
+          "Earthquake",
+          "Stone Edge",
+          "Acid",
+          "Acupressure",
+          "After You",
+          "Ancient Power",
+          "Attract",
+          "Bide"
         ],
         "ability": "Sturdy",
-        "item": "Mental Herb"
-      },
-      {
-        "moves": [
-          "Knock Off",
-          "Rest",
-          "Toxic",
-          "Stealth Rock"
-        ],
-        "ability": "Contrary",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 505,
@@ -7700,35 +7437,27 @@
     "bestAbility": "Hustle",
     "tier": 4,
     "generation": 2,
-    "movePool": [
-      "Ice Beam",
-      "Power Gem",
-      "Recover",
-      "Scald",
-      "Stealth Rock",
-      "Surf",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Scald",
-          "Recover",
-          "Stealth Rock",
-          "Toxic"
-        ],
-        "ability": "Regenerator",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Power Gem",
-          "Surf",
+          "Earthquake",
           "Ice Beam",
-          "Recover"
+          "Amnesia",
+          "Ancient Power",
+          "Aqua Ring",
+          "Attract",
+          "Barrier",
+          "Bide"
         ],
-        "ability": "Natural Cure",
-        "item": "Leftovers"
+        "ability": "Hustle",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 410,
@@ -7757,35 +7486,27 @@
     "bestAbility": "Suction Cups",
     "tier": 3,
     "generation": 2,
-    "movePool": [
-      "Energy Ball",
-      "Fire Blast",
-      "Flamethrower",
-      "Hydro Pump",
-      "Ice Beam",
-      "Surf",
-      "Thunder Wave"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Hydro Pump",
           "Ice Beam",
-          "Energy Ball",
-          "Fire Blast"
-        ],
-        "ability": "Sniper",
-        "item": "Choice Specs"
-      },
-      {
-        "moves": [
-          "Surf",
           "Flamethrower",
-          "Ice Beam",
-          "Thunder Wave"
+          "Assurance",
+          "Attract",
+          "Aurora Beam",
+          "Bind",
+          "Blizzard",
+          "Bounce"
         ],
-        "ability": "Moody",
-        "item": "Leftovers"
+        "ability": "Suction Cups",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 480,
@@ -7886,36 +7607,27 @@
     "bestAbility": "Swift Swim",
     "tier": 3,
     "generation": 2,
-    "movePool": [
-      "Air Slash",
-      "Defog",
-      "Haze",
-      "Ice Beam",
-      "Rain Dance",
-      "Roost",
-      "Scald",
-      "Surf"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Scald",
-          "Roost",
-          "Haze",
-          "Defog"
-        ],
-        "ability": "Water Absorb",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Surf",
+          "Earthquake",
           "Ice Beam",
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
           "Air Slash",
-          "Rain Dance"
+          "Amnesia"
         ],
         "ability": "Swift Swim",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -8366,36 +8078,27 @@
     "bestAbility": "Thick Fat",
     "tier": 3,
     "generation": 2,
-    "movePool": [
-      "Body Slam",
-      "Earthquake",
-      "Heal Bell",
-      "Milk Drink",
-      "Return",
-      "Stealth Rock",
-      "Thunder Wave",
-      "Zen Headbutt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Body Slam",
           "Earthquake",
-          "Milk Drink",
-          "Stealth Rock"
+          "Ice Beam",
+          "After You",
+          "Attract",
+          "Belch",
+          "Bide",
+          "Blizzard",
+          "Block"
         ],
         "ability": "Thick Fat",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Return",
-          "Zen Headbutt",
-          "Thunder Wave",
-          "Heal Bell"
-        ],
-        "ability": "Sap Sipper",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 490,
@@ -8869,36 +8572,27 @@
     "bestAbility": "Natural Cure",
     "tier": 2,
     "generation": 2,
-    "movePool": [
-      "Earth Power",
-      "Giga Drain",
-      "Leaf Storm",
-      "Nasty Plot",
-      "Psychic",
-      "Recover",
-      "Stealth Rock",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Giga Drain",
           "Psychic",
-          "Earth Power",
-          "Nasty Plot"
+          "Shadow Ball",
+          "Aerial Ace",
+          "Ally Switch",
+          "Ancient Power",
+          "Aura Sphere",
+          "Baton Pass",
+          "Calm Mind"
         ],
         "ability": "Natural Cure",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Leaf Storm",
-          "U-turn",
-          "Stealth Rock",
-          "Recover"
-        ],
-        "ability": "Natural Cure",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 600,
@@ -9197,35 +8891,27 @@
     "bestAbility": "Pickup",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Belly Drum",
-      "Extreme Speed",
-      "Knock Off",
-      "Return",
-      "Seed Bomb",
-      "Shadow Claw",
-      "Stomping Tantrum"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Ice Beam",
+          "Thunderbolt",
+          "Attract",
+          "Baby-Doll Eyes",
           "Belly Drum",
-          "Extreme Speed",
-          "Shadow Claw",
-          "Seed Bomb"
-        ],
-        "ability": "Gluttony",
-        "item": "Sitrus Berry"
-      },
-      {
-        "moves": [
-          "Extreme Speed",
-          "Return",
-          "Stomping Tantrum",
-          "Knock Off"
+          "Bestow",
+          "Blizzard",
+          "Body Slam"
         ],
         "ability": "Pickup",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 420,
@@ -9254,34 +8940,27 @@
     "bestAbility": "Swarm",
     "tier": 4,
     "generation": 3,
-    "movePool": [
-      "Air Slash",
-      "Bug Buzz",
-      "Energy Ball",
-      "Psychic",
-      "Quiver Dance",
-      "Shadow Ball"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Quiver Dance",
-          "Bug Buzz",
-          "Air Slash",
-          "Psychic"
+          "Psychic",
+          "Shadow Ball",
+          "Absorb",
+          "Acrobatics",
+          "Aerial Ace",
+          "Air Cutter",
+          "Attract",
+          "Bug Bite"
         ],
         "ability": "Swarm",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Bug Buzz",
-          "Energy Ball",
-          "Shadow Ball",
-          "Psychic"
-        ],
-        "ability": "Rivalry",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 395,
@@ -9310,34 +8989,27 @@
     "bestAbility": "Shield Dust",
     "tier": 4,
     "generation": 3,
-    "movePool": [
-      "Bug Buzz",
-      "Quiver Dance",
-      "Roost",
-      "Shadow Ball",
-      "Sludge Bomb",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Bug Buzz",
-          "Sludge Bomb",
-          "Toxic",
-          "Roost"
+          "Psychic",
+          "Shadow Ball",
+          "Acrobatics",
+          "Aerial Ace",
+          "Air Cutter",
+          "Attract",
+          "Bug Bite",
+          "Bug Buzz"
         ],
         "ability": "Shield Dust",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Quiver Dance",
-          "Bug Buzz",
-          "Sludge Bomb",
-          "Shadow Ball"
-        ],
-        "ability": "Compound Eyes",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 385,
@@ -9519,35 +9191,27 @@
     "bestAbility": "Guts",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Boomburst",
-      "Brave Bird",
-      "Facade",
-      "Heat Wave",
-      "Hurricane",
-      "Quick Attack",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Facade",
-          "Brave Bird",
           "U-turn",
-          "Quick Attack"
+          "Toxic",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Air Slash",
+          "Attract",
+          "Baton Pass"
         ],
         "ability": "Guts",
-        "item": "Flame Orb"
-      },
-      {
-        "moves": [
-          "Boomburst",
-          "Hurricane",
-          "Heat Wave",
-          "U-turn"
-        ],
-        "ability": "Scrappy",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 455,
@@ -9891,35 +9555,27 @@
     "bestAbility": "Speed Boost",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Aerial Ace",
-      "Baton Pass",
-      "Dig",
-      "Leech Life",
-      "Night Slash",
-      "Swords Dance",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Swords Dance",
+          "Shadow Ball",
           "X-Scissor",
-          "Leech Life",
-          "Baton Pass"
-        ],
-        "ability": "Speed Boost",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "X-Scissor",
+          "Absorb",
+          "Acrobatics",
           "Aerial Ace",
-          "Night Slash",
-          "Dig"
+          "Agility",
+          "Air Cutter",
+          "Air Slash"
         ],
         "ability": "Speed Boost",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 456,
@@ -9947,35 +9603,27 @@
     "bestAbility": "Wonder Guard",
     "tier": 4,
     "generation": 3,
-    "movePool": [
-      "Phantom Force",
-      "Protect",
-      "Shadow Claw",
-      "Shadow Sneak",
-      "Swords Dance",
-      "Will-O-Wisp",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shadow Sneak",
+          "Shadow Ball",
           "X-Scissor",
-          "Shadow Claw",
-          "Swords Dance"
+          "Absorb",
+          "Aerial Ace",
+          "Agility",
+          "Ally Switch",
+          "Baton Pass",
+          "Bug Bite"
         ],
         "ability": "Wonder Guard",
-        "item": "Focus Sash"
-      },
-      {
-        "moves": [
-          "Shadow Claw",
-          "Will-O-Wisp",
-          "Phantom Force",
-          "Protect"
-        ],
-        "ability": "Wonder Guard",
-        "item": "Heavy-Duty Boots"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 236,
@@ -10003,35 +9651,27 @@
     "bestAbility": "Soundproof",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Boomburst",
-      "Fire Blast",
-      "Flamethrower",
-      "Focus Blast",
-      "Ice Beam",
-      "Overheat",
-      "Surf"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Boomburst",
-          "Fire Blast",
-          "Surf",
-          "Focus Blast"
-        ],
-        "ability": "Scrappy",
-        "item": "Choice Specs"
-      },
-      {
-        "moves": [
-          "Boomburst",
-          "Flamethrower",
+          "Earthquake",
           "Ice Beam",
-          "Overheat"
+          "Astonish",
+          "Attract",
+          "Avalanche",
+          "Bite",
+          "Blizzard",
+          "Body Slam"
         ],
-        "ability": "Scrappy",
-        "item": "Choice Scarf"
+        "ability": "Soundproof",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 490,
@@ -10134,36 +9774,27 @@
     "bestAbility": "Cute Charm",
     "tier": 4,
     "generation": 3,
-    "movePool": [
-      "Body Slam",
-      "Fake Out",
-      "Heal Bell",
-      "Knock Off",
-      "Return",
-      "Sucker Punch",
-      "Thunder Wave",
-      "Wish"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Return",
-          "Sucker Punch",
-          "Thunder Wave",
-          "Heal Bell"
-        ],
-        "ability": "Wonder Skin",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Fake Out",
+          "Ice Beam",
+          "Thunderbolt",
+          "Attract",
+          "Blizzard",
           "Body Slam",
-          "Knock Off",
-          "Wish"
+          "Calm Mind",
+          "Captivate",
+          "Charge Beam"
         ],
-        "ability": "Normalize",
-        "item": "Leftovers"
+        "ability": "Cute Charm",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 400,
@@ -10246,34 +9877,27 @@
     "bestAbility": "Hyper Cutter",
     "tier": 4,
     "generation": 3,
-    "movePool": [
-      "Iron Head",
-      "Knock Off",
-      "Play Rough",
-      "Sucker Punch",
-      "Swords Dance",
-      "Thunder Punch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Play Rough",
-          "Iron Head",
-          "Sucker Punch",
-          "Swords Dance"
+          "Ice Beam",
+          "Flamethrower",
+          "Ancient Power",
+          "Assurance",
+          "Astonish",
+          "Attract",
+          "Baton Pass",
+          "Bite"
         ],
-        "ability": "Intimidate",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Play Rough",
-          "Iron Head",
-          "Knock Off",
-          "Thunder Punch"
-        ],
-        "ability": "Sheer Force",
-        "item": "Life Orb"
+        "ability": "Hyper Cutter",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 380,
@@ -10303,35 +9927,27 @@
     "bestAbility": "Sturdy",
     "tier": 2,
     "generation": 3,
-    "movePool": [
-      "Aqua Tail",
-      "Earthquake",
-      "Head Smash",
-      "Heavy Slam",
-      "Iron Head",
-      "Stealth Rock",
-      "Stone Edge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Heavy Slam",
           "Earthquake",
-          "Stone Edge",
-          "Stealth Rock"
+          "Ice Beam",
+          "Aerial Ace",
+          "Ancient Power",
+          "Aqua Tail",
+          "Attract",
+          "Autotomize",
+          "Avalanche"
         ],
-        "ability": "Rock Head",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Head Smash",
-          "Iron Head",
-          "Earthquake",
-          "Aqua Tail"
-        ],
-        "ability": "Rock Head",
-        "item": "Choice Band"
+        "ability": "Sturdy",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 530,
@@ -10412,35 +10028,27 @@
     "bestAbility": "Static",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Flamethrower",
-      "Hidden Power Water",
-      "Overheat",
-      "Switcheroo",
-      "Thunder",
-      "Thunderbolt",
-      "Volt Switch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Thunderbolt",
           "Flamethrower",
-          "Volt Switch",
-          "Hidden Power Water"
+          "Agility",
+          "Attract",
+          "Bite",
+          "Body Slam",
+          "Captivate",
+          "Charge"
         ],
-        "ability": "Lightning Rod",
-        "item": "Choice Specs"
-      },
-      {
-        "moves": [
-          "Thunder",
-          "Overheat",
-          "Volt Switch",
-          "Switcheroo"
-        ],
-        "ability": "Lightning Rod",
-        "item": "Choice Scarf"
+        "ability": "Static",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 475,
@@ -10777,35 +10385,27 @@
     "bestAbility": "Rough Skin",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Close Combat",
-      "Crunch",
-      "Ice Fang",
-      "Liquidation",
-      "Protect",
-      "Psychic Fangs",
-      "Waterfall"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Crunch",
-          "Waterfall",
-          "Close Combat",
-          "Protect"
+          "Earthquake",
+          "Ice Beam",
+          "Agility",
+          "Ancient Power",
+          "Aqua Jet",
+          "Assurance",
+          "Attract",
+          "Avalanche"
         ],
-        "ability": "Speed Boost",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Liquidation",
-          "Crunch",
-          "Ice Fang",
-          "Psychic Fangs"
-        ],
-        "ability": "Speed Boost",
-        "item": "Life Orb"
+        "ability": "Rough Skin",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 460,
@@ -10834,35 +10434,27 @@
     "bestAbility": "Water Veil",
     "tier": 2,
     "generation": 3,
-    "movePool": [
-      "Hydro Pump",
-      "Ice Beam",
-      "Rest",
-      "Scald",
-      "Sleep Talk",
-      "Surf",
-      "Water Spout"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Water Spout",
+          "Earthquake",
           "Ice Beam",
-          "Hydro Pump",
-          "Surf"
-        ],
-        "ability": "Pressure",
-        "item": "Choice Scarf"
-      },
-      {
-        "moves": [
-          "Scald",
-          "Ice Beam",
-          "Rest",
-          "Sleep Talk"
+          "Amnesia",
+          "Astonish",
+          "Attract",
+          "Avalanche",
+          "Blizzard",
+          "Block"
         ],
         "ability": "Water Veil",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -11088,36 +10680,27 @@
     "bestAbility": "Own Tempo",
     "tier": 4,
     "generation": 3,
-    "movePool": [
-      "Body Slam",
-      "Encore",
-      "Fake Out",
-      "Knock Off",
-      "Return",
-      "Sucker Punch",
-      "Superpower",
-      "Trick"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Return",
-          "Sucker Punch",
-          "Superpower",
-          "Trick"
-        ],
-        "ability": "Contrary",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
+          "Psychic",
+          "Shadow Ball",
+          "Assist",
+          "Attract",
+          "Baton Pass",
           "Body Slam",
-          "Fake Out",
-          "Knock Off",
-          "Encore"
+          "Brick Break",
+          "Calm Mind"
         ],
         "ability": "Own Tempo",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 360,
@@ -11465,36 +11048,27 @@
     "bestAbility": "Levitate",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Calm Mind",
-      "Earth Power",
-      "Ice Beam",
-      "Moonlight",
-      "Power Gem",
-      "Psychic",
-      "Psyshock",
-      "Rock Polish"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Psychic",
-          "Earth Power",
-          "Rock Polish",
-          "Ice Beam"
+          "Earthquake",
+          "Ice Beam",
+          "Acrobatics",
+          "Ally Switch",
+          "Ancient Power",
+          "Baton Pass",
+          "Blizzard",
+          "Body Slam"
         ],
         "ability": "Levitate",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Psyshock",
-          "Power Gem",
-          "Calm Mind",
-          "Moonlight"
-        ],
-        "ability": "Levitate",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 460,
@@ -11522,35 +11096,27 @@
     "bestAbility": "Levitate",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Earthquake",
-      "Explosion",
-      "Rock Slide",
-      "Stealth Rock",
-      "Stone Edge",
-      "Will-O-Wisp",
-      "Zen Headbutt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Stone Edge",
           "Earthquake",
-          "Zen Headbutt",
-          "Stealth Rock"
+          "Flamethrower",
+          "Acrobatics",
+          "Ally Switch",
+          "Ancient Power",
+          "Baton Pass",
+          "Body Slam",
+          "Bulldoze"
         ],
         "ability": "Levitate",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Rock Slide",
-          "Explosion",
-          "Stealth Rock",
-          "Will-O-Wisp"
-        ],
-        "ability": "Levitate",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 460,
@@ -11719,35 +11285,27 @@
     "bestAbility": "Levitate",
     "tier": 2,
     "generation": 3,
-    "movePool": [
-      "Earth Power",
-      "Earthquake",
-      "Ice Beam",
-      "Psychic",
-      "Rapid Spin",
-      "Stealth Rock",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Earthquake",
-          "Psychic",
-          "Stealth Rock",
-          "Rapid Spin"
-        ],
-        "ability": "Levitate",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Earth Power",
           "Ice Beam",
-          "Stealth Rock",
-          "Toxic"
+          "Ally Switch",
+          "Ancient Power",
+          "Body Press",
+          "Bulldoze",
+          "Calm Mind",
+          "Charge Beam"
         ],
         "ability": "Levitate",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -11776,36 +11334,27 @@
     "bestAbility": "Suction Cups",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Curse",
-      "Earthquake",
-      "Giga Drain",
-      "Recover",
-      "Rock Slide",
-      "Seed Bomb",
-      "Stealth Rock",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Giga Drain",
-          "Stealth Rock",
-          "Toxic",
-          "Recover"
-        ],
-        "ability": "Storm Drain",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Rock Slide",
-          "Seed Bomb",
           "Earthquake",
-          "Curse"
+          "Stone Edge",
+          "Acid",
+          "Amnesia",
+          "Ancient Power",
+          "Astonish",
+          "Attract",
+          "Bind"
         ],
         "ability": "Suction Cups",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 495,
@@ -11834,35 +11383,27 @@
     "bestAbility": "Battle Armor",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Aqua Tail",
-      "Earthquake",
-      "Rapid Spin",
-      "Rock Blast",
-      "Stone Edge",
-      "Swords Dance",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Stone Edge",
-          "X-Scissor",
           "Earthquake",
-          "Rapid Spin"
+          "Flash Cannon",
+          "Aerial Ace",
+          "Ancient Power",
+          "Aqua Tail",
+          "Attract",
+          "Block",
+          "Body Slam"
         ],
         "ability": "Battle Armor",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Rock Blast",
-          "X-Scissor",
-          "Aqua Tail",
-          "Swords Dance"
-        ],
-        "ability": "Swift Swim",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 495,
@@ -11941,35 +11482,27 @@
     "bestAbility": "Forecast",
     "tier": 4,
     "generation": 3,
-    "movePool": [
-      "Flamethrower",
-      "Hurricane",
-      "Ice Beam",
-      "Rain Dance",
-      "Thunder",
-      "Thunderbolt",
-      "Weather Ball"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Weather Ball",
-          "Thunderbolt",
           "Ice Beam",
-          "Flamethrower"
+          "Thunderbolt",
+          "Amnesia",
+          "Attract",
+          "Avalanche",
+          "Blizzard",
+          "Body Slam",
+          "Captivate"
         ],
         "ability": "Forecast",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Rain Dance",
-          "Weather Ball",
-          "Thunder",
-          "Hurricane"
-        ],
-        "ability": "Forecast",
-        "item": "Damp Rock"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 420,
@@ -11997,36 +11530,27 @@
     "bestAbility": "Color Change",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Drain Punch",
-      "Fake Out",
-      "Fire Punch",
-      "Knock Off",
-      "Return",
-      "Shadow Claw",
-      "Shadow Sneak",
-      "Sucker Punch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Sucker Punch",
-          "Knock Off",
-          "Drain Punch",
-          "Shadow Sneak"
+          "Ice Beam",
+          "Thunderbolt",
+          "Aerial Ace",
+          "After You",
+          "Ancient Power",
+          "Aqua Tail",
+          "Astonish",
+          "Attract"
         ],
-        "ability": "Protean",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Fake Out",
-          "Return",
-          "Shadow Claw",
-          "Fire Punch"
-        ],
-        "ability": "Protean",
-        "item": "Leftovers"
+        "ability": "Color Change",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 440,
@@ -12264,36 +11788,27 @@
     "bestAbility": "Pressure",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Close Combat",
-      "Knock Off",
-      "Night Slash",
-      "Play Rough",
-      "Psycho Cut",
-      "Sucker Punch",
-      "Superpower",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Knock Off",
-          "Sucker Punch",
-          "Swords Dance",
-          "Superpower"
+          "Ice Beam",
+          "Thunderbolt",
+          "Aerial Ace",
+          "Air Slash",
+          "Assurance",
+          "Attract",
+          "Baton Pass",
+          "Bite"
         ],
-        "ability": "Super Luck",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Night Slash",
-          "Play Rough",
-          "Close Combat",
-          "Psycho Cut"
-        ],
-        "ability": "Super Luck",
-        "item": "Choice Band"
+        "ability": "Pressure",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 465,
@@ -12373,35 +11888,27 @@
     "bestAbility": "Thick Fat",
     "tier": 2,
     "generation": 3,
-    "movePool": [
-      "Blizzard",
-      "Earthquake",
-      "Ice Beam",
-      "Protect",
-      "Rest",
-      "Surf",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Ice Beam",
-          "Surf",
-          "Toxic",
-          "Protect"
-        ],
-        "ability": "Ice Body",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Blizzard",
-          "Surf",
           "Earthquake",
-          "Rest"
+          "Ice Beam",
+          "Aqua Tail",
+          "Attract",
+          "Aurora Beam",
+          "Avalanche",
+          "Blizzard",
+          "Block"
         ],
         "ability": "Thick Fat",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 530,
@@ -12429,35 +11936,27 @@
     "bestAbility": "Swift Swim",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Crunch",
-      "Ice Beam",
-      "Ice Fang",
-      "Liquidation",
-      "Shell Smash",
-      "Sucker Punch",
-      "Waterfall"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shell Smash",
-          "Waterfall",
-          "Crunch",
-          "Ice Fang"
+          "Ice Beam",
+          "Surf",
+          "Aqua Tail",
+          "Attract",
+          "Baton Pass",
+          "Bind",
+          "Bite",
+          "Blizzard"
         ],
         "ability": "Swift Swim",
-        "item": "White Herb"
-      },
-      {
-        "moves": [
-          "Liquidation",
-          "Sucker Punch",
-          "Ice Beam",
-          "Shell Smash"
-        ],
-        "ability": "Water Veil",
-        "item": "White Herb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -12485,34 +11984,27 @@
     "bestAbility": "Swift Swim",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Hydro Pump",
-      "Ice Beam",
-      "Psychic",
-      "Shadow Ball",
-      "Shell Smash",
-      "Surf"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shell Smash",
-          "Surf",
           "Ice Beam",
-          "Psychic"
+          "Surf",
+          "Agility",
+          "Amnesia",
+          "Aqua Ring",
+          "Aqua Tail",
+          "Attract",
+          "Baton Pass"
         ],
         "ability": "Swift Swim",
-        "item": "White Herb"
-      },
-      {
-        "moves": [
-          "Hydro Pump",
-          "Ice Beam",
-          "Shadow Ball",
-          "Shell Smash"
-        ],
-        "ability": "Hydration",
-        "item": "White Herb"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -12542,35 +12034,27 @@
     "bestAbility": "Swift Swim",
     "tier": 3,
     "generation": 3,
-    "movePool": [
-      "Earthquake",
-      "Head Smash",
-      "Stealth Rock",
-      "Stone Edge",
-      "Toxic",
-      "Waterfall",
-      "Zen Headbutt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Head Smash",
-          "Waterfall",
           "Earthquake",
-          "Stealth Rock"
+          "Ice Beam",
+          "Amnesia",
+          "Ancient Power",
+          "Aqua Tail",
+          "Attract",
+          "Blizzard",
+          "Body Press"
         ],
-        "ability": "Rock Head",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Stone Edge",
-          "Waterfall",
-          "Zen Headbutt",
-          "Toxic"
-        ],
-        "ability": "Sturdy",
-        "item": "Leftovers"
+        "ability": "Swift Swim",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -13701,34 +13185,27 @@
     "bestAbility": "Simple",
     "tier": 4,
     "generation": 4,
-    "movePool": [
-      "Aqua Jet",
-      "Curse",
-      "Quick Attack",
-      "Return",
-      "Swords Dance",
-      "Waterfall"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Swords Dance",
-          "Waterfall",
-          "Return",
-          "Quick Attack"
+          "Ice Beam",
+          "Thunderbolt",
+          "Amnesia",
+          "Aqua Jet",
+          "Aqua Tail",
+          "Attract",
+          "Blizzard",
+          "Bulldoze"
         ],
         "ability": "Simple",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Curse",
-          "Waterfall",
-          "Return",
-          "Aqua Jet"
-        ],
-        "ability": "Simple",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 410,
@@ -13877,35 +13354,27 @@
     "bestAbility": "Natural Cure",
     "tier": 2,
     "generation": 4,
-    "movePool": [
-      "Giga Drain",
-      "Hidden Power Water",
-      "Leaf Storm",
-      "Sludge Bomb",
-      "Spikes",
-      "Synthesis",
-      "Toxic Spikes"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Leaf Storm",
-          "Sludge Bomb",
-          "Spikes",
-          "Synthesis"
+          "Shadow Ball",
+          "Dazzling Gleam",
+          "Absorb",
+          "Aromatherapy",
+          "Attract",
+          "Body Slam",
+          "Bullet Seed",
+          "Captivate"
         ],
         "ability": "Natural Cure",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Giga Drain",
-          "Sludge Bomb",
-          "Hidden Power Water",
-          "Toxic Spikes"
-        ],
-        "ability": "Technician",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 515,
@@ -14048,35 +13517,27 @@
     "bestAbility": "Anticipation",
     "tier": 4,
     "generation": 4,
-    "movePool": [
-      "Bug Buzz",
-      "Energy Ball",
-      "Hidden Power Water",
-      "Leaf Storm",
-      "Protect",
-      "Psychic",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Leaf Storm",
-          "Bug Buzz",
-          "Protect",
-          "Toxic"
-        ],
-        "ability": "Overcoat",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Energy Ball",
-          "Bug Buzz",
           "Psychic",
-          "Hidden Power Water"
+          "Shadow Ball",
+          "Ally Switch",
+          "Attract",
+          "Bug Bite",
+          "Bug Buzz",
+          "Bullet Seed",
+          "Captivate"
         ],
         "ability": "Anticipation",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 424,
@@ -14105,34 +13566,27 @@
     "bestAbility": "Swarm",
     "tier": 4,
     "generation": 4,
-    "movePool": [
-      "Air Slash",
-      "Bug Buzz",
-      "Energy Ball",
-      "Psychic",
-      "Quiver Dance",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Bug Buzz",
-          "Air Slash",
-          "Energy Ball",
-          "Quiver Dance"
-        ],
-        "ability": "Tinted Lens",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Bug Buzz",
-          "Air Slash",
           "Psychic",
-          "U-turn"
+          "Shadow Ball",
+          "Acrobatics",
+          "Aerial Ace",
+          "Air Cutter",
+          "Air Slash",
+          "Attract",
+          "Bug Bite"
         ],
-        "ability": "Tinted Lens",
-        "item": "Choice Specs"
+        "ability": "Swarm",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 424,
@@ -14350,36 +13804,27 @@
     "bestAbility": "Flower Gift",
     "tier": 4,
     "generation": 4,
-    "movePool": [
-      "Dazzling Gleam",
-      "Energy Ball",
-      "Healing Wish",
-      "Leech Seed",
-      "Protect",
-      "Solar Beam",
-      "Sunny Day",
-      "Synthesis"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Solar Beam",
           "Dazzling Gleam",
-          "Sunny Day",
-          "Synthesis"
+          "Toxic",
+          "Attract",
+          "Bullet Seed",
+          "Captivate",
+          "Confide",
+          "Double Team",
+          "Draining Kiss"
         ],
         "ability": "Flower Gift",
-        "item": "Heat Rock"
-      },
-      {
-        "moves": [
-          "Energy Ball",
-          "Healing Wish",
-          "Leech Seed",
-          "Protect"
-        ],
-        "ability": "Flower Gift",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 450,
@@ -14604,35 +14049,27 @@
     "bestAbility": "Cute Charm",
     "tier": 3,
     "generation": 4,
-    "movePool": [
-      "Close Combat",
-      "Drain Punch",
-      "Fake Out",
-      "Ice Punch",
-      "Return",
-      "Thunder Punch",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Return",
-          "Close Combat",
-          "Ice Punch",
-          "Fake Out"
+          "Ice Beam",
+          "Thunderbolt",
+          "Acrobatics",
+          "After You",
+          "Agility",
+          "Assurance",
+          "Attract",
+          "Aura Sphere"
         ],
-        "ability": "Limber",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Drain Punch",
-          "Return",
-          "Thunder Punch",
-          "U-turn"
-        ],
-        "ability": "Klutz",
-        "item": "Choice Band"
+        "ability": "Cute Charm",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 480,
@@ -14814,35 +14251,27 @@
     "bestAbility": "Thick Fat",
     "tier": 4,
     "generation": 4,
-    "movePool": [
-      "Body Slam",
-      "Fake Out",
-      "Knock Off",
-      "Play Rough",
-      "Return",
-      "Sucker Punch",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Return",
-          "Knock Off",
-          "U-turn",
-          "Fake Out"
-        ],
-        "ability": "Defiant",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
+          "Thunderbolt",
+          "Shadow Ball",
+          "Aerial Ace",
+          "Assist",
+          "Attract",
           "Body Slam",
-          "Sucker Punch",
-          "Play Rough",
-          "U-turn"
+          "Bulldoze",
+          "Captivate"
         ],
         "ability": "Thick Fat",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 452,
@@ -15002,34 +14431,27 @@
     "bestAbility": "Keen Eye",
     "tier": 4,
     "generation": 4,
-    "movePool": [
-      "Boomburst",
-      "Chatter",
-      "Heat Wave",
-      "Nasty Plot",
-      "Roost",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Boomburst",
-          "Heat Wave",
           "U-turn",
-          "Nasty Plot"
-        ],
-        "ability": "Tangled Feet",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
+          "Toxic",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Attract",
           "Boomburst",
-          "Chatter",
-          "U-turn",
-          "Roost"
+          "Captivate"
         ],
-        "ability": "Big Pecks",
-        "item": "Choice Specs"
+        "ability": "Keen Eye",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 411,
@@ -15331,36 +14753,27 @@
     "bestAbility": "Battle Armor",
     "tier": 2,
     "generation": 4,
-    "movePool": [
-      "Aqua Tail",
-      "Cross Poison",
-      "Crunch",
-      "Earthquake",
-      "Knock Off",
-      "Poison Jab",
-      "Swords Dance",
-      "Toxic Spikes"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Knock Off",
           "Earthquake",
-          "Poison Jab",
-          "Swords Dance"
+          "Shadow Ball",
+          "Acupressure",
+          "Aerial Ace",
+          "Agility",
+          "Aqua Tail",
+          "Assurance",
+          "Attract"
         ],
         "ability": "Battle Armor",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Crunch",
-          "Cross Poison",
-          "Aqua Tail",
-          "Toxic Spikes"
-        ],
-        "ability": "Sniper",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -15459,36 +14872,27 @@
     "bestAbility": "Levitate",
     "tier": 4,
     "generation": 4,
-    "movePool": [
-      "Crunch",
-      "Knock Off",
-      "Leaf Storm",
-      "Power Whip",
-      "Return",
-      "Sleep Powder",
-      "Swords Dance",
-      "Synthesis"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Power Whip",
-          "Knock Off",
-          "Sleep Powder",
-          "Swords Dance"
+          "Toxic",
+          "Swords Dance",
+          "Acid Spray",
+          "Attract",
+          "Bind",
+          "Bite",
+          "Bug Bite",
+          "Bullet Seed"
         ],
         "ability": "Levitate",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Leaf Storm",
-          "Crunch",
-          "Return",
-          "Synthesis"
-        ],
-        "ability": "Levitate",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 454,
@@ -15767,36 +15171,27 @@
     "bestAbility": "Own Tempo",
     "tier": 2,
     "generation": 4,
-    "movePool": [
-      "Body Slam",
-      "Drain Punch",
-      "Earthquake",
-      "Knock Off",
-      "Power Whip",
-      "Return",
-      "Swords Dance",
-      "Wish"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Body Slam",
-          "Knock Off",
           "Earthquake",
-          "Swords Dance"
+          "Ice Beam",
+          "Amnesia",
+          "Aqua Tail",
+          "Attract",
+          "Belly Drum",
+          "Bind",
+          "Blizzard"
         ],
         "ability": "Own Tempo",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Return",
-          "Power Whip",
-          "Drain Punch",
-          "Wish"
-        ],
-        "ability": "Cloud Nine",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 515,
@@ -15896,35 +15291,27 @@
     "bestAbility": "Chlorophyll",
     "tier": 2,
     "generation": 4,
-    "movePool": [
-      "Earthquake",
-      "Focus Blast",
-      "Giga Drain",
-      "Knock Off",
-      "Leaf Storm",
-      "Leech Seed",
-      "Sleep Powder"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Giga Drain",
-          "Focus Blast",
-          "Knock Off",
-          "Sleep Powder"
-        ],
-        "ability": "Regenerator",
-        "item": "Assault Vest"
-      },
-      {
-        "moves": [
-          "Leaf Storm",
           "Earthquake",
-          "Knock Off",
-          "Leech Seed"
+          "Poison Jab",
+          "Absorb",
+          "Aerial Ace",
+          "Amnesia",
+          "Ancient Power",
+          "Attract",
+          "Bind"
         ],
-        "ability": "Regenerator",
-        "item": "Leftovers"
+        "ability": "Chlorophyll",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 535,
@@ -16097,35 +15484,27 @@
     "bestAbility": "Serene Grace",
     "tier": 2,
     "generation": 4,
-    "movePool": [
-      "Air Slash",
-      "Aura Sphere",
-      "Dazzling Gleam",
-      "Flamethrower",
-      "Nasty Plot",
-      "Roost",
-      "Thunder Wave"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Air Slash",
-          "Dazzling Gleam",
-          "Nasty Plot",
-          "Roost"
-        ],
-        "ability": "Serene Grace",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Air Slash",
           "Flamethrower",
-          "Thunder Wave",
-          "Aura Sphere"
+          "Psychic",
+          "Aerial Ace",
+          "After You",
+          "Air Cutter",
+          "Air Slash",
+          "Ally Switch",
+          "Amnesia"
         ],
         "ability": "Serene Grace",
-        "item": "Choice Scarf"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 545,
@@ -17743,35 +17122,27 @@
     "bestAbility": "Victory Star",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Blue Flare",
-      "Bolt Strike",
-      "Flamethrower",
-      "Focus Blast",
-      "Psychic",
-      "Thunderbolt",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Thunderbolt",
+          "Flamethrower",
+          "Baton Pass",
+          "Blaze Kick",
           "Blue Flare",
           "Bolt Strike",
-          "U-turn",
-          "Psychic"
+          "Bounce",
+          "Brick Break"
         ],
         "ability": "Victory Star",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Flamethrower",
-          "Thunderbolt",
-          "Psychic",
-          "Focus Blast"
-        ],
-        "ability": "Victory Star",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 600,
@@ -18092,35 +17463,27 @@
     "bestAbility": "Illuminate",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Aqua Tail",
-      "Hypnosis",
-      "Knock Off",
-      "Return",
-      "Super Fang",
-      "Swords Dance",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Return",
-          "Knock Off",
-          "Swords Dance",
-          "Aqua Tail"
+          "Thunderbolt",
+          "Flamethrower",
+          "After You",
+          "Aqua Tail",
+          "Attract",
+          "Baton Pass",
+          "Bide",
+          "Bite"
         ],
-        "ability": "Analytic",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Hypnosis",
-          "Super Fang",
-          "Toxic",
-          "Return"
-        ],
-        "ability": "Analytic",
-        "item": "Leftovers"
+        "ability": "Illuminate",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 420,
@@ -18149,35 +17512,27 @@
     "bestAbility": "Intimidate",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Crunch",
-      "Fire Fang",
-      "Ice Fang",
-      "Retaliate",
-      "Return",
-      "Superpower",
-      "Wild Charge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Return",
-          "Superpower",
-          "Crunch",
-          "Wild Charge"
-        ],
-        "ability": "Sand Rush",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Retaliate",
-          "Crunch",
-          "Fire Fang",
-          "Ice Fang"
+          "Thunderbolt",
+          "Surf",
+          "Aerial Ace",
+          "After You",
+          "Attract",
+          "Baby-Doll Eyes",
+          "Bite",
+          "Charm"
         ],
         "ability": "Intimidate",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -18206,36 +17561,27 @@
     "bestAbility": "Limber",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Copycat",
-      "Dark Pulse",
-      "Encore",
-      "Grass Knot",
-      "Knock Off",
-      "Nasty Plot",
-      "Thunder Wave",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Knock Off",
-          "U-turn",
-          "Thunder Wave",
-          "Encore"
-        ],
-        "ability": "Prankster",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
+          "Shadow Ball",
           "Dark Pulse",
-          "Nasty Plot",
-          "Grass Knot",
-          "Copycat"
+          "Aerial Ace",
+          "Assist",
+          "Assurance",
+          "Attract",
+          "Baton Pass",
+          "Burning Jealousy"
         ],
-        "ability": "Prankster",
-        "item": "Life Orb"
+        "ability": "Limber",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 446,
@@ -18263,35 +17609,27 @@
     "bestAbility": "Gluttony",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Focus Blast",
-      "Knock Off",
-      "Leaf Storm",
-      "Nasty Plot",
-      "Rock Slide",
-      "Seed Bomb",
-      "Superpower"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Leaf Storm",
-          "Focus Blast",
-          "Knock Off",
-          "Nasty Plot"
+          "Toxic",
+          "Return",
+          "Acrobatics",
+          "Attract",
+          "Brick Break",
+          "Confide",
+          "Covet",
+          "Cut"
         ],
-        "ability": "Overgrow",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Seed Bomb",
-          "Superpower",
-          "Knock Off",
-          "Rock Slide"
-        ],
-        "ability": "Overgrow",
-        "item": "Choice Band"
+        "ability": "Gluttony",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 498,
@@ -18319,36 +17657,27 @@
     "bestAbility": "Gluttony",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Fire Blast",
-      "Flame Charge",
-      "Flare Blitz",
-      "Focus Blast",
-      "Grass Knot",
-      "Knock Off",
-      "Nasty Plot",
-      "Superpower"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Fire Blast",
-          "Focus Blast",
-          "Nasty Plot",
-          "Grass Knot"
+          "Flamethrower",
+          "Toxic",
+          "Acrobatics",
+          "Attract",
+          "Brick Break",
+          "Confide",
+          "Covet",
+          "Cut"
         ],
-        "ability": "Blaze",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Flare Blitz",
-          "Superpower",
-          "Knock Off",
-          "Flame Charge"
-        ],
-        "ability": "Blaze",
-        "item": "Life Orb"
+        "ability": "Gluttony",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 498,
@@ -18376,35 +17705,27 @@
     "bestAbility": "Gluttony",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Grass Knot",
-      "Hydro Pump",
-      "Ice Beam",
-      "Knock Off",
-      "Nasty Plot",
-      "Superpower",
-      "Surf"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Hydro Pump",
           "Ice Beam",
-          "Nasty Plot",
-          "Grass Knot"
-        ],
-        "ability": "Torrent",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
           "Surf",
-          "Ice Beam",
-          "Superpower",
-          "Knock Off"
+          "Acrobatics",
+          "Aqua Tail",
+          "Attract",
+          "Blizzard",
+          "Brick Break",
+          "Confide"
         ],
-        "ability": "Torrent",
-        "item": "Choice Specs"
+        "ability": "Gluttony",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 498,
@@ -18433,36 +17754,27 @@
     "bestAbility": "Forewarn",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Calm Mind",
-      "Healing Wish",
-      "Moonblast",
-      "Moonlight",
-      "Psychic",
-      "Psyshock",
-      "Signal Beam",
-      "Thunder Wave"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Psychic",
-          "Moonblast",
+          "Shadow Ball",
+          "After You",
+          "Ally Switch",
+          "Amnesia",
+          "Attract",
           "Calm Mind",
-          "Moonlight"
+          "Charge Beam"
         ],
-        "ability": "Synchronize",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Psyshock",
-          "Signal Beam",
-          "Thunder Wave",
-          "Healing Wish"
-        ],
-        "ability": "Synchronize",
-        "item": "Leftovers"
+        "ability": "Forewarn",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 487,
@@ -18492,33 +17804,27 @@
     "bestAbility": "Big Pecks",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Brave Bird",
-      "Night Slash",
-      "Return",
-      "Roost",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Brave Bird",
-          "Return",
           "U-turn",
-          "Roost"
+          "Toxic",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Air Slash",
+          "Attract",
+          "Brave Bird"
         ],
-        "ability": "Super Luck",
-        "item": "Heavy-Duty Boots"
-      },
-      {
-        "moves": [
-          "Brave Bird",
-          "Return",
-          "Night Slash",
-          "U-turn"
-        ],
-        "ability": "Super Luck",
-        "item": "Choice Band"
+        "ability": "Big Pecks",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 488,
@@ -18597,34 +17903,27 @@
     "bestAbility": "Sturdy",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Earthquake",
-      "Explosion",
-      "Heavy Slam",
-      "Rock Blast",
-      "Stealth Rock",
-      "Stone Edge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Stone Edge",
           "Earthquake",
-          "Stealth Rock",
-          "Explosion"
-        ],
-        "ability": "Sand Stream",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Rock Blast",
-          "Earthquake",
-          "Heavy Slam",
-          "Stealth Rock"
+          "Flash Cannon",
+          "Attract",
+          "Block",
+          "Body Press",
+          "Bulldoze",
+          "Confide",
+          "Double Team"
         ],
         "ability": "Sturdy",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 515,
@@ -18654,35 +17953,27 @@
     "bestAbility": "Unaware",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Air Slash",
-      "Calm Mind",
-      "Energy Ball",
-      "Psychic",
-      "Roost",
-      "Stored Power",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Calm Mind",
-          "Stored Power",
-          "Air Slash",
-          "Roost"
-        ],
-        "ability": "Simple",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
           "Psychic",
+          "Shadow Ball",
+          "Acrobatics",
+          "Aerial Ace",
+          "After You",
+          "Air Cutter",
           "Air Slash",
-          "Energy Ball",
-          "U-turn"
+          "Ally Switch"
         ],
         "ability": "Unaware",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 425,
@@ -18779,36 +18070,27 @@
     "bestAbility": "Healer",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Dazzling Gleam",
-      "Encore",
-      "Flamethrower",
-      "Heal Bell",
-      "Healing Wish",
-      "Knock Off",
-      "Protect",
-      "Wish"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Wish",
-          "Protect",
-          "Heal Bell",
-          "Knock Off"
+          "Ice Beam",
+          "Thunderbolt",
+          "After You",
+          "Ally Switch",
+          "Amnesia",
+          "Attract",
+          "Baby-Doll Eyes",
+          "Bestow"
         ],
-        "ability": "Regenerator",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Dazzling Gleam",
-          "Flamethrower",
-          "Healing Wish",
-          "Encore"
-        ],
-        "ability": "Regenerator",
-        "item": "Leftovers"
+        "ability": "Healer",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 445,
@@ -18888,36 +18170,27 @@
     "bestAbility": "Swift Swim",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Earth Power",
-      "Earthquake",
-      "Hydro Pump",
-      "Ice Beam",
-      "Rain Dance",
-      "Scald",
-      "Stealth Rock",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Earthquake",
-          "Scald",
-          "Stealth Rock",
-          "Toxic"
-        ],
-        "ability": "Water Absorb",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Hydro Pump",
-          "Earth Power",
-          "Ice Beam",
-          "Rain Dance"
+          "Surf",
+          "Acid",
+          "After You",
+          "Aqua Ring",
+          "Attract",
+          "Bounce",
+          "Brick Break"
         ],
         "ability": "Swift Swim",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 509,
@@ -18946,34 +18219,27 @@
     "bestAbility": "Guts",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Bulk Up",
-      "Circle Throw",
-      "Ice Punch",
-      "Knock Off",
-      "Rest",
-      "Storm Throw"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Circle Throw",
-          "Knock Off",
-          "Bulk Up",
-          "Rest"
+          "Earthquake",
+          "Stone Edge",
+          "Attract",
+          "Bide",
+          "Bind",
+          "Block",
+          "Body Slam",
+          "Brick Break"
         ],
         "ability": "Guts",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Storm Throw",
-          "Knock Off",
-          "Ice Punch",
-          "Bulk Up"
-        ],
-        "ability": "Inner Focus",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 465,
@@ -19002,35 +18268,27 @@
     "bestAbility": "Sturdy",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Bulk Up",
-      "Close Combat",
-      "Earthquake",
-      "Ice Punch",
-      "Knock Off",
-      "Poison Jab",
-      "Stone Edge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Close Combat",
-          "Knock Off",
-          "Ice Punch",
-          "Earthquake"
+          "Earthquake",
+          "Stone Edge",
+          "Attract",
+          "Bide",
+          "Block",
+          "Brick Break",
+          "Bulk Up",
+          "Bulldoze"
         ],
         "ability": "Sturdy",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Close Combat",
-          "Poison Jab",
-          "Stone Edge",
-          "Bulk Up"
-        ],
-        "ability": "Mold Breaker",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 465,
@@ -19129,34 +18387,27 @@
     "bestAbility": "Poison Point",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Baton Pass",
-      "Earthquake",
-      "Megahorn",
-      "Poison Jab",
-      "Swords Dance",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
-      {
-        "moves": [
-          "Swords Dance",
-          "Megahorn",
-          "Poison Jab",
-          "Baton Pass"
-        ],
-        "ability": "Speed Boost",
-        "item": "Life Orb"
-      },
       {
         "moves": [
           "Earthquake",
           "X-Scissor",
-          "Poison Jab",
-          "Swords Dance"
+          "Agility",
+          "Aqua Tail",
+          "Assurance",
+          "Attract",
+          "Baton Pass",
+          "Bug Bite"
         ],
-        "ability": "Speed Boost",
-        "item": "Life Orb"
+        "ability": "Poison Point",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -19490,33 +18741,27 @@
     "bestAbility": "Sheer Force",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Earthquake",
-      "Flare Blitz",
-      "Rock Slide",
-      "Superpower",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Flare Blitz",
           "Earthquake",
-          "Rock Slide",
-          "U-turn"
+          "Flamethrower",
+          "Attract",
+          "Belly Drum",
+          "Bite",
+          "Body Press",
+          "Body Slam",
+          "Brick Break"
         ],
         "ability": "Sheer Force",
-        "item": "Choice Scarf"
-      },
-      {
-        "moves": [
-          "Flare Blitz",
-          "Superpower",
-          "Rock Slide",
-          "U-turn"
-        ],
-        "ability": "Sheer Force",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 480,
@@ -19544,34 +18789,27 @@
     "bestAbility": "Gorilla Tactics",
     "tier": 3,
     "generation": 8,
-    "movePool": [
-      "Earthquake",
-      "Flare Blitz",
-      "Icicle Crash",
-      "Rock Slide",
-      "Superpower",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Icicle Crash",
           "Earthquake",
-          "Flare Blitz",
-          "U-turn"
+          "Ice Beam",
+          "Attract",
+          "Avalanche",
+          "Belly Drum",
+          "Bite",
+          "Blizzard",
+          "Body Press"
         ],
         "ability": "Gorilla Tactics",
-        "item": "Choice Scarf"
-      },
-      {
-        "moves": [
-          "Icicle Crash",
-          "Superpower",
-          "U-turn",
-          "Rock Slide"
-        ],
-        "ability": "Gorilla Tactics",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 480,
@@ -19600,36 +18838,27 @@
     "bestAbility": "Water Absorb",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Energy Ball",
-      "Giga Drain",
-      "Leech Seed",
-      "Spikes",
-      "Spore",
-      "Sucker Punch",
-      "Synthesis",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Spore",
-          "Giga Drain",
-          "Leech Seed",
-          "Toxic"
-        ],
-        "ability": "Storm Drain",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Energy Ball",
-          "Sucker Punch",
-          "Spikes",
-          "Synthesis"
+          "Poison Jab",
+          "Toxic",
+          "Absorb",
+          "Acupressure",
+          "Aerial Ace",
+          "After You",
+          "Assurance",
+          "Attract"
         ],
         "ability": "Water Absorb",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 461,
@@ -19659,36 +18888,27 @@
     "bestAbility": "Sturdy",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Earthquake",
-      "Knock Off",
-      "Rock Blast",
-      "Shell Smash",
-      "Spikes",
-      "Stealth Rock",
-      "Stone Edge",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shell Smash",
+          "Earthquake",
           "Stone Edge",
-          "X-Scissor",
-          "Earthquake"
+          "Aerial Ace",
+          "Attract",
+          "Block",
+          "Body Press",
+          "Bug Bite",
+          "Bulldoze"
         ],
         "ability": "Sturdy",
-        "item": "White Herb"
-      },
-      {
-        "moves": [
-          "Stealth Rock",
-          "Spikes",
-          "Rock Blast",
-          "Knock Off"
-        ],
-        "ability": "Sturdy",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -19787,35 +19007,27 @@
     "bestAbility": "Wonder Skin",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Air Slash",
-      "Calm Mind",
-      "Energy Ball",
-      "Heat Wave",
-      "Psychic",
-      "Psyshock",
-      "Roost"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Ice Beam",
           "Psychic",
+          "Aerial Ace",
+          "Air Cutter",
           "Air Slash",
-          "Heat Wave",
-          "Roost"
-        ],
-        "ability": "Magic Guard",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Psyshock",
-          "Air Slash",
-          "Energy Ball",
+          "Ancient Power",
+          "Attract",
           "Calm Mind"
         ],
-        "ability": "Tinted Lens",
-        "item": "Leftovers"
+        "ability": "Wonder Skin",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 490,
@@ -19842,35 +19054,27 @@
     "bestAbility": "Mummy",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Dark Pulse",
-      "Haze",
-      "Hidden Power Water",
-      "Nasty Plot",
-      "Shadow Ball",
-      "Toxic Spikes",
-      "Will-O-Wisp"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Psychic",
           "Shadow Ball",
-          "Will-O-Wisp",
-          "Haze",
-          "Toxic Spikes"
+          "After You",
+          "Ally Switch",
+          "Astonish",
+          "Attract",
+          "Block",
+          "Body Press"
         ],
         "ability": "Mummy",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Nasty Plot",
-          "Shadow Ball",
-          "Dark Pulse",
-          "Hidden Power Water"
-        ],
-        "ability": "Mummy",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 483,
@@ -19900,35 +19104,27 @@
     "bestAbility": "Solid Rock",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Aqua Jet",
-      "Earthquake",
-      "Liquidation",
-      "Shell Smash",
-      "Stealth Rock",
-      "Stone Edge",
-      "Waterfall"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shell Smash",
-          "Liquidation",
-          "Stone Edge",
-          "Aqua Jet"
+          "Earthquake",
+          "Ice Beam",
+          "Ancient Power",
+          "Aqua Jet",
+          "Aqua Tail",
+          "Attract",
+          "Bide",
+          "Bite"
         ],
         "ability": "Solid Rock",
-        "item": "White Herb"
-      },
-      {
-        "moves": [
-          "Waterfall",
-          "Stone Edge",
-          "Earthquake",
-          "Stealth Rock"
-        ],
-        "ability": "Sturdy",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 495,
@@ -19956,34 +19152,27 @@
     "bestAbility": "Defeatist",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Brave Bird",
-      "Earthquake",
-      "Head Smash",
-      "Roost",
-      "Stone Edge",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Earthquake",
           "Stone Edge",
-          "Brave Bird",
-          "Earthquake",
-          "U-turn"
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Air Slash",
+          "Ally Switch",
+          "Ancient Power"
         ],
         "ability": "Defeatist",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Head Smash",
-          "Brave Bird",
-          "Earthquake",
-          "Roost"
-        ],
-        "ability": "Defeatist",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 567,
@@ -20012,34 +19201,27 @@
     "bestAbility": "Stench",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Drain Punch",
-      "Gunk Shot",
-      "Poison Jab",
-      "Seed Bomb",
-      "Spikes",
-      "Toxic Spikes"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Gunk Shot",
-          "Drain Punch",
-          "Spikes",
-          "Toxic Spikes"
+          "Thunderbolt",
+          "Psychic",
+          "Acid Spray",
+          "Amnesia",
+          "Attract",
+          "Belch",
+          "Body Press",
+          "Body Slam"
         ],
-        "ability": "Aftermath",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Poison Jab",
-          "Seed Bomb",
-          "Drain Punch",
-          "Toxic Spikes"
-        ],
-        "ability": "Aftermath",
-        "item": "Rocky Helmet"
+        "ability": "Stench",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 474,
@@ -20436,35 +19618,27 @@
     "bestAbility": "Ice Body",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Aurora Veil",
-      "Autotomize",
-      "Blizzard",
-      "Flash Cannon",
-      "Freeze-Dry",
-      "Hidden Power Water",
-      "Ice Beam"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Blizzard",
-          "Freeze-Dry",
-          "Flash Cannon",
-          "Autotomize"
-        ],
-        "ability": "Snow Warning",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
           "Ice Beam",
-          "Freeze-Dry",
-          "Hidden Power Water",
-          "Aurora Veil"
+          "Flash Cannon",
+          "Acid Armor",
+          "Ally Switch",
+          "Astonish",
+          "Attract",
+          "Avalanche",
+          "Beat Up"
         ],
-        "ability": "Snow Warning",
-        "item": "Light Clay"
+        "ability": "Ice Body",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 535,
@@ -20561,35 +19735,27 @@
     "bestAbility": "Static",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Air Slash",
-      "Encore",
-      "Nuzzle",
-      "Roost",
-      "Thunderbolt",
-      "U-turn",
-      "Volt Switch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Volt Switch",
-          "Air Slash",
-          "Encore",
-          "Roost"
-        ],
-        "ability": "Motor Drive",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
           "Thunderbolt",
-          "Air Slash",
           "U-turn",
-          "Nuzzle"
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Air Slash",
+          "Astonish",
+          "Attract"
         ],
         "ability": "Static",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 428,
@@ -20619,34 +19785,27 @@
     "bestAbility": "Swarm",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Drill Run",
-      "Iron Head",
-      "Knock Off",
-      "Megahorn",
-      "Swords Dance",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Megahorn",
-          "Iron Head",
-          "Knock Off",
-          "Drill Run"
-        ],
-        "ability": "Overcoat",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
+          "Close Combat",
           "X-Scissor",
-          "Iron Head",
-          "Swords Dance",
-          "Knock Off"
+          "Acid Spray",
+          "Aerial Ace",
+          "Agility",
+          "Attract",
+          "Brutal Swing",
+          "Bug Bite"
         ],
-        "ability": "Overcoat",
-        "item": "Leftovers"
+        "ability": "Swarm",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 495,
@@ -20743,35 +19902,27 @@
     "bestAbility": "Water Absorb",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Ice Beam",
-      "Recover",
-      "Scald",
-      "Shadow Ball",
-      "Surf",
-      "Taunt",
-      "Will-O-Wisp"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Scald",
-          "Shadow Ball",
-          "Recover",
-          "Will-O-Wisp"
+          "Ice Beam",
+          "Surf",
+          "Absorb",
+          "Acid Armor",
+          "Attract",
+          "Bind",
+          "Blizzard",
+          "Brine"
         ],
         "ability": "Water Absorb",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Surf",
-          "Shadow Ball",
-          "Ice Beam",
-          "Taunt"
-        ],
-        "ability": "Cursed Body",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 480,
@@ -20917,34 +20068,27 @@
     "bestAbility": "Iron Barbs",
     "tier": 1,
     "generation": 5,
-    "movePool": [
-      "Gyro Ball",
-      "Knock Off",
-      "Leech Seed",
-      "Power Whip",
-      "Spikes",
-      "Stealth Rock"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Power Whip",
-          "Leech Seed",
-          "Stealth Rock",
-          "Knock Off"
+          "Thunderbolt",
+          "Flash Cannon",
+          "Aerial Ace",
+          "Assurance",
+          "Attract",
+          "Block",
+          "Body Press",
+          "Brutal Swing"
         ],
         "ability": "Iron Barbs",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Gyro Ball",
-          "Power Whip",
-          "Spikes",
-          "Leech Seed"
-        ],
-        "ability": "Iron Barbs",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 489,
@@ -20973,34 +20117,27 @@
     "bestAbility": "Plus",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Gear Grind",
-      "Return",
-      "Shift Gear",
-      "Substitute",
-      "Volt Switch",
-      "Wild Charge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shift Gear",
-          "Gear Grind",
-          "Wild Charge",
-          "Substitute"
+          "Thunderbolt",
+          "Flash Cannon",
+          "Ally Switch",
+          "Assurance",
+          "Autotomize",
+          "Bind",
+          "Charge",
+          "Charge Beam"
         ],
-        "ability": "Clear Body",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Gear Grind",
-          "Wild Charge",
-          "Return",
-          "Volt Switch"
-        ],
-        "ability": "Clear Body",
-        "item": "Choice Band"
+        "ability": "Plus",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 520,
@@ -21104,36 +20241,27 @@
     "bestAbility": "Telepathy",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Energy Ball",
-      "Nasty Plot",
-      "Psychic",
-      "Psyshock",
-      "Recover",
-      "Shadow Ball",
-      "Thunderbolt",
-      "Trick Room"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Psychic",
-          "Shadow Ball",
-          "Nasty Plot",
-          "Trick Room"
-        ],
-        "ability": "Analytic",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Psyshock",
           "Thunderbolt",
-          "Energy Ball",
-          "Recover"
+          "Psychic",
+          "After You",
+          "Agility",
+          "Ally Switch",
+          "Attract",
+          "Calm Mind",
+          "Charge Beam"
         ],
-        "ability": "Analytic",
-        "item": "Leftovers"
+        "ability": "Telepathy",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -21429,35 +20557,27 @@
     "bestAbility": "Hydration",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Bug Buzz",
-      "Encore",
-      "Energy Ball",
-      "Focus Blast",
-      "Sludge Bomb",
-      "Spikes",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Bug Buzz",
-          "Focus Blast",
-          "Spikes",
-          "Encore"
+          "U-turn",
+          "Toxic",
+          "Absorb",
+          "Acid",
+          "Acid Armor",
+          "Acid Spray",
+          "Agility",
+          "Attract"
         ],
-        "ability": "Unburden",
-        "item": "Focus Sash"
-      },
-      {
-        "moves": [
-          "Bug Buzz",
-          "Energy Ball",
-          "Sludge Bomb",
-          "U-turn"
-        ],
-        "ability": "Sticky Hold",
-        "item": "Choice Specs"
+        "ability": "Hydration",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 495,
@@ -21487,35 +20607,27 @@
     "bestAbility": "Static",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Discharge",
-      "Earth Power",
-      "Scald",
-      "Stealth Rock",
-      "Thunderbolt",
-      "Toxic",
-      "Yawn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Discharge",
-          "Earth Power",
-          "Stealth Rock",
-          "Toxic"
+          "Earthquake",
+          "Thunderbolt",
+          "Aqua Tail",
+          "Astonish",
+          "Attract",
+          "Bide",
+          "Bounce",
+          "Bulldoze"
         ],
         "ability": "Static",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Thunderbolt",
-          "Earth Power",
-          "Scald",
-          "Yawn"
-        ],
-        "ability": "Limber",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 471,
@@ -21543,34 +20655,27 @@
     "bestAbility": "Mimicry",
     "tier": 3,
     "generation": 8,
-    "movePool": [
-      "Earthquake",
-      "Iron Head",
-      "Revenge",
-      "Snap Trap",
-      "Stealth Rock",
-      "Stone Edge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Earthquake",
-          "Iron Head",
-          "Snap Trap",
-          "Stealth Rock"
+          "Surf",
+          "Astonish",
+          "Attract",
+          "Bind",
+          "Bounce",
+          "Bulldoze",
+          "Counter"
         ],
         "ability": "Mimicry",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Earthquake",
-          "Iron Head",
-          "Stone Edge",
-          "Revenge"
-        ],
-        "ability": "Mimicry",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 471,
@@ -21686,35 +20791,27 @@
     "bestAbility": "Rough Skin",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Dragon Claw",
-      "Earthquake",
-      "Fire Punch",
-      "Glare",
-      "Outrage",
-      "Stealth Rock",
-      "Sucker Punch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Outrage",
           "Earthquake",
-          "Sucker Punch",
-          "Stealth Rock"
-        ],
-        "ability": "Sheer Force",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Dragon Claw",
-          "Fire Punch",
-          "Glare",
-          "Stealth Rock"
+          "Flamethrower",
+          "Aerial Ace",
+          "Aqua Tail",
+          "Attract",
+          "Bite",
+          "Body Slam",
+          "Bulldoze"
         ],
         "ability": "Rough Skin",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -21796,34 +20893,27 @@
     "bestAbility": "Reckless",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Earthquake",
-      "Head Charge",
-      "Megahorn",
-      "Pursuit",
-      "Superpower",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Head Charge",
           "Earthquake",
-          "Swords Dance",
-          "Megahorn"
-        ],
-        "ability": "Sap Sipper",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Head Charge",
-          "Superpower",
-          "Earthquake",
-          "Pursuit"
+          "Surf",
+          "Aerial Ace",
+          "Amnesia",
+          "Assurance",
+          "Attract",
+          "Belch",
+          "Body Slam"
         ],
         "ability": "Reckless",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 490,
@@ -22062,36 +21152,27 @@
     "bestAbility": "Gluttony",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Fire Blast",
-      "Flamethrower",
-      "Focus Blast",
-      "Giga Drain",
-      "Knock Off",
-      "Sucker Punch",
-      "Superpower",
-      "Thunder Punch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Fire Blast",
-          "Giga Drain",
-          "Focus Blast",
-          "Sucker Punch"
-        ],
-        "ability": "Flash Fire",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
           "Flamethrower",
-          "Knock Off",
-          "Superpower",
-          "Thunder Punch"
+          "Toxic",
+          "Aerial Ace",
+          "Amnesia",
+          "Attract",
+          "Belch",
+          "Bind",
+          "Body Slam"
         ],
-        "ability": "Flash Fire",
-        "item": "Life Orb"
+        "ability": "Gluttony",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 484,
@@ -22121,33 +21202,27 @@
     "bestAbility": "Swarm",
     "tier": 3,
     "generation": 5,
-    "movePool": [
-      "Hone Claws",
-      "Iron Head",
-      "Rock Slide",
-      "Superpower",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Iron Head",
-          "X-Scissor",
-          "Superpower",
-          "Rock Slide"
+          "Flash Cannon",
+          "Stone Edge",
+          "Aerial Ace",
+          "Agility",
+          "Attract",
+          "Baton Pass",
+          "Beat Up",
+          "Bite"
         ],
-        "ability": "Hustle",
-        "item": "Choice Scarf"
-      },
-      {
-        "moves": [
-          "Iron Head",
-          "X-Scissor",
-          "Hone Claws",
-          "Rock Slide"
-        ],
-        "ability": "Hustle",
-        "item": "Life Orb"
+        "ability": "Swarm",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 484,
@@ -22901,27 +21976,18 @@
     "bestAbility": "Justified",
     "tier": 2,
     "generation": 5,
-    "movePool": [
-      "Secret Sword",
-      "Scald",
-      "Hydro Pump",
-      "Aura Sphere",
-      "Focus Blast",
-      "Icy Wind",
-      "Calm Mind",
-      "Flip Turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Secret Sword",
-          "Scald",
-          "Hydro Pump",
+          "Surf",
+          "Stone Edge",
+          "Aerial Ace",
+          "Air Slash",
+          "Aqua Jet",
+          "Aqua Tail",
           "Aura Sphere",
-          "Focus Blast",
-          "Icy Wind",
-          "Calm Mind",
-          "Flip Turn"
+          "Baton Pass"
         ],
         "ability": "Justified",
         "item": "Leftovers",
@@ -23029,35 +22095,27 @@
     "bestAbility": "Download",
     "tier": 1,
     "generation": 5,
-    "movePool": [
-      "Blaze Kick",
-      "Extreme Speed",
-      "Flamethrower",
-      "Ice Beam",
-      "Iron Head",
-      "Thunderbolt",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "U-turn",
           "Ice Beam",
           "Thunderbolt",
-          "Flamethrower"
-        ],
-        "ability": "Download",
-        "item": "Choice Scarf"
-      },
-      {
-        "moves": [
-          "Iron Head",
-          "U-turn",
+          "Aerial Ace",
+          "Ally Switch",
+          "Assurance",
           "Blaze Kick",
-          "Extreme Speed"
+          "Blizzard",
+          "Bug Bite"
         ],
         "ability": "Download",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 600,
@@ -23282,35 +22340,27 @@
     "bestAbility": "Pickup",
     "tier": 3,
     "generation": 6,
-    "movePool": [
-      "Earthquake",
-      "Fire Punch",
-      "Knock Off",
-      "Quick Attack",
-      "Return",
-      "Swords Dance",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Earthquake",
-          "Return",
-          "Quick Attack",
-          "Swords Dance"
+          "Surf",
+          "Agility",
+          "Attract",
+          "Body Slam",
+          "Bounce",
+          "Brick Break",
+          "Brutal Swing"
         ],
-        "ability": "Huge Power",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Earthquake",
-          "Fire Punch",
-          "Knock Off",
-          "U-turn"
-        ],
-        "ability": "Huge Power",
-        "item": "Choice Band"
+        "ability": "Pickup",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 423,
@@ -23646,35 +22696,27 @@
     "bestAbility": "Iron Fist",
     "tier": 3,
     "generation": 6,
-    "movePool": [
-      "Bullet Punch",
-      "Close Combat",
-      "Drain Punch",
-      "Gunk Shot",
-      "Ice Punch",
-      "Knock Off",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Knock Off",
-          "Close Combat",
-          "Gunk Shot",
-          "Ice Punch"
+          "Earthquake",
+          "Surf",
+          "Aerial Ace",
+          "Arm Thrust",
+          "Attract",
+          "Beat Up",
+          "Block",
+          "Body Slam"
         ],
         "ability": "Iron Fist",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Drain Punch",
-          "Knock Off",
-          "Swords Dance",
-          "Bullet Punch"
-        ],
-        "ability": "Scrappy",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 495,
@@ -23701,36 +22743,27 @@
     "bestAbility": "Fur Coat",
     "tier": 3,
     "generation": 6,
-    "movePool": [
-      "Body Slam",
-      "Cotton Guard",
-      "Rest",
-      "Return",
-      "Sleep Talk",
-      "Sucker Punch",
-      "Thunder Wave",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Return",
-          "Sucker Punch",
-          "U-turn",
-          "Thunder Wave"
+          "Surf",
+          "Dark Pulse",
+          "Attract",
+          "Baby-Doll Eyes",
+          "Bite",
+          "Captivate",
+          "Charge Beam",
+          "Charm"
         ],
         "ability": "Fur Coat",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Body Slam",
-          "Cotton Guard",
-          "Rest",
-          "Sleep Talk"
-        ],
-        "ability": "Fur Coat",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 472,
@@ -23810,35 +22843,27 @@
     "bestAbility": "Stance Change",
     "tier": 1,
     "generation": 6,
-    "movePool": [
-      "Flash Cannon",
-      "Iron Head",
-      "King's Shield",
-      "Shadow Ball",
-      "Shadow Claw",
-      "Shadow Sneak",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Shadow Ball",
           "Flash Cannon",
-          "Shadow Sneak",
-          "King's Shield"
+          "Aerial Ace",
+          "After You",
+          "Air Slash",
+          "Attract",
+          "Autotomize",
+          "Block"
         ],
         "ability": "Stance Change",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Swords Dance",
-          "Shadow Claw",
-          "Iron Head",
-          "Shadow Sneak"
-        ],
-        "ability": "Stance Change",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -23866,34 +22891,27 @@
     "bestAbility": "Healer",
     "tier": 3,
     "generation": 6,
-    "movePool": [
-      "Aromatherapy",
-      "Calm Mind",
-      "Moonblast",
-      "Protect",
-      "Psychic",
-      "Wish"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Moonblast",
+          "Thunderbolt",
           "Psychic",
-          "Wish",
-          "Protect"
-        ],
-        "ability": "Aroma Veil",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Moonblast",
-          "Calm Mind",
+          "After You",
+          "Ally Switch",
           "Aromatherapy",
-          "Wish"
+          "Aromatic Mist",
+          "Attract",
+          "Calm Mind"
         ],
-        "ability": "Aroma Veil",
-        "item": "Leftovers"
+        "ability": "Healer",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 462,
@@ -23921,36 +22939,27 @@
     "bestAbility": "Sweet Veil",
     "tier": 3,
     "generation": 6,
-    "movePool": [
-      "Belly Drum",
-      "Calm Mind",
-      "Dazzling Gleam",
-      "Drain Punch",
-      "Flamethrower",
-      "Play Rough",
-      "Return",
-      "Wish"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Belly Drum",
-          "Play Rough",
-          "Return",
-          "Drain Punch"
-        ],
-        "ability": "Unburden",
-        "item": "Sitrus Berry"
-      },
-      {
-        "moves": [
-          "Dazzling Gleam",
+          "Thunderbolt",
           "Flamethrower",
+          "After You",
+          "Amnesia",
+          "Aromatherapy",
+          "Attract",
           "Calm Mind",
-          "Wish"
+          "Charm"
         ],
         "ability": "Sweet Veil",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 480,
@@ -24048,35 +23057,27 @@
     "bestAbility": "Tough Claws",
     "tier": 2,
     "generation": 6,
-    "movePool": [
-      "Cross Chop",
-      "Earthquake",
-      "Liquidation",
-      "Razor Shell",
-      "Shell Smash",
-      "Stealth Rock",
-      "Stone Edge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shell Smash",
-          "Liquidation",
-          "Stone Edge",
-          "Cross Chop"
-        ],
-        "ability": "Tough Claws",
-        "item": "White Herb"
-      },
-      {
-        "moves": [
-          "Razor Shell",
-          "Stone Edge",
           "Earthquake",
-          "Stealth Rock"
+          "Ice Beam",
+          "Aerial Ace",
+          "Ancient Power",
+          "Assurance",
+          "Attract",
+          "Beat Up",
+          "Blizzard"
         ],
         "ability": "Tough Claws",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -24232,34 +23233,27 @@
     "bestAbility": "Dry Skin",
     "tier": 3,
     "generation": 6,
-    "movePool": [
-      "Dark Pulse",
-      "Grass Knot",
-      "Hyper Voice",
-      "Surf",
-      "Thunderbolt",
-      "Volt Switch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Thunderbolt",
-          "Hyper Voice",
           "Surf",
-          "Volt Switch"
+          "Agility",
+          "Ally Switch",
+          "Attract",
+          "Breaking Swipe",
+          "Brutal Swing",
+          "Bulldoze"
         ],
         "ability": "Dry Skin",
-        "item": "Choice Specs"
-      },
-      {
-        "moves": [
-          "Thunderbolt",
-          "Dark Pulse",
-          "Grass Knot",
-          "Volt Switch"
-        ],
-        "ability": "Solar Power",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 481,
@@ -24288,35 +23282,27 @@
     "bestAbility": "Strong Jaw",
     "tier": 2,
     "generation": 6,
-    "movePool": [
-      "Dragon Claw",
-      "Dragon Dance",
-      "Earthquake",
-      "Fire Fang",
-      "Head Smash",
-      "Outrage",
-      "Stone Edge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Dragon Dance",
-          "Stone Edge",
           "Earthquake",
-          "Dragon Claw"
+          "Dark Pulse",
+          "Aerial Ace",
+          "Ancient Power",
+          "Assurance",
+          "Attract",
+          "Bide",
+          "Bite"
         ],
-        "ability": "Rock Head",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Head Smash",
-          "Outrage",
-          "Earthquake",
-          "Fire Fang"
-        ],
-        "ability": "Rock Head",
-        "item": "Choice Band"
+        "ability": "Strong Jaw",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 521,
@@ -24345,34 +23331,27 @@
     "bestAbility": "Refrigerate",
     "tier": 2,
     "generation": 6,
-    "movePool": [
-      "Blizzard",
-      "Earth Power",
-      "Freeze-Dry",
-      "Hyper Voice",
-      "Stealth Rock",
-      "Thunderbolt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Freeze-Dry",
-          "Thunderbolt",
-          "Earth Power",
-          "Stealth Rock"
+          "Earthquake",
+          "Ice Beam",
+          "Ancient Power",
+          "Aqua Tail",
+          "Attract",
+          "Aurora Beam",
+          "Avalanche",
+          "Blizzard"
         ],
         "ability": "Refrigerate",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Blizzard",
-          "Hyper Voice",
-          "Stealth Rock",
-          "Thunderbolt"
-        ],
-        "ability": "Refrigerate",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 521,
@@ -24865,36 +23844,27 @@
     "bestAbility": "Pickup",
     "tier": 3,
     "generation": 6,
-    "movePool": [
-      "Leech Seed",
-      "Phantom Force",
-      "Power Whip",
-      "Rock Slide",
-      "Seed Bomb",
-      "Shadow Sneak",
-      "Trick-or-Treat",
-      "Will-O-Wisp"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Seed Bomb",
-          "Shadow Sneak",
-          "Will-O-Wisp",
-          "Leech Seed"
+          "Flamethrower",
+          "Psychic",
+          "Ally Switch",
+          "Astonish",
+          "Attract",
+          "Brutal Swing",
+          "Bullet Seed",
+          "Charge Beam"
         ],
-        "ability": "Frisk",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Phantom Force",
-          "Power Whip",
-          "Rock Slide",
-          "Trick-or-Treat"
-        ],
-        "ability": "Frisk",
-        "item": "Life Orb"
+        "ability": "Pickup",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 494,
@@ -25096,35 +24066,27 @@
     "bestAbility": "Fairy Aura",
     "tier": 1,
     "generation": 6,
-    "movePool": [
-      "Close Combat",
-      "Focus Blast",
-      "Geomancy",
-      "Megahorn",
-      "Moonblast",
-      "Rock Slide",
-      "Thunder"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Geomancy",
-          "Moonblast",
-          "Thunder",
-          "Focus Blast"
+          "Thunderbolt",
+          "Psychic",
+          "Aromatherapy",
+          "Aurora Beam",
+          "Block",
+          "Body Slam",
+          "Calm Mind",
+          "Close Combat"
         ],
         "ability": "Fairy Aura",
-        "item": "Power Herb"
-      },
-      {
-        "moves": [
-          "Moonblast",
-          "Close Combat",
-          "Megahorn",
-          "Rock Slide"
-        ],
-        "ability": "Fairy Aura",
-        "item": "Choice Scarf"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 680,
@@ -25152,36 +24114,27 @@
     "bestAbility": "Dark Aura",
     "tier": 1,
     "generation": 6,
-    "movePool": [
-      "Dark Pulse",
-      "Focus Blast",
-      "Knock Off",
-      "Oblivion Wing",
-      "Roost",
-      "Sucker Punch",
-      "Taunt",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Dark Pulse",
-          "Oblivion Wing",
-          "Focus Blast",
-          "Roost"
+          "Psychic",
+          "Shadow Ball",
+          "Acrobatics",
+          "Aerial Ace",
+          "Air Slash",
+          "Block",
+          "Body Slam",
+          "Confide"
         ],
         "ability": "Dark Aura",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Knock Off",
-          "Sucker Punch",
-          "U-turn",
-          "Taunt"
-        ],
-        "ability": "Dark Aura",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 680,
@@ -25209,35 +24162,27 @@
     "bestAbility": "Aura Break",
     "tier": 1,
     "generation": 6,
-    "movePool": [
-      "Coil",
-      "Dragon Dance",
-      "Dragon Tail",
-      "Extreme Speed",
-      "Glare",
-      "Outrage",
-      "Thousand Arrows"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Thousand Arrows",
-          "Dragon Dance",
-          "Outrage",
-          "Extreme Speed"
+          "Earthquake",
+          "Stone Edge",
+          "Bind",
+          "Bite",
+          "Block",
+          "Body Slam",
+          "Breaking Swipe",
+          "Brick Break"
         ],
         "ability": "Aura Break",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Thousand Arrows",
-          "Dragon Tail",
-          "Glare",
-          "Coil"
-        ],
-        "ability": "Aura Break",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 600,
@@ -26162,35 +25107,27 @@
     "bestAbility": "Schooling",
     "tier": 4,
     "generation": 7,
-    "movePool": [
-      "Earthquake",
-      "Endeavor",
-      "Hidden Power Water",
-      "Hydro Pump",
-      "Ice Beam",
-      "Scald",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Scald",
-          "Ice Beam",
           "Earthquake",
-          "U-turn"
-        ],
-        "ability": "Schooling",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Hydro Pump",
           "Ice Beam",
-          "Hidden Power Water",
-          "Endeavor"
+          "Aqua Ring",
+          "Aqua Tail",
+          "Attract",
+          "Beat Up",
+          "Brine",
+          "Bulldoze"
         ],
         "ability": "Schooling",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 175,
@@ -26445,34 +25382,27 @@
     "bestAbility": "Illuminate",
     "tier": 4,
     "generation": 7,
-    "movePool": [
-      "Giga Drain",
-      "Leech Seed",
-      "Moonblast",
-      "Protect",
-      "Spore",
-      "Strength Sap"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Spore",
-          "Moonblast",
-          "Giga Drain",
-          "Strength Sap"
+          "Dazzling Gleam",
+          "Toxic",
+          "Absorb",
+          "After You",
+          "Amnesia",
+          "Astonish",
+          "Attract",
+          "Charge Beam"
         ],
-        "ability": "Effect Spore",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Spore",
-          "Leech Seed",
-          "Moonblast",
-          "Protect"
-        ],
-        "ability": "Rain Dish",
-        "item": "Leftovers"
+        "ability": "Illuminate",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 405,
@@ -26568,36 +25498,27 @@
     "bestAbility": "Fluffy",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Bulk Up",
-      "Close Combat",
-      "Double-Edge",
-      "Drain Punch",
-      "Ice Punch",
-      "Return",
-      "Shadow Claw",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Earthquake",
           "Close Combat",
-          "Return",
-          "Ice Punch",
-          "Swords Dance"
+          "Aerial Ace",
+          "Attract",
+          "Baby-Doll Eyes",
+          "Bide",
+          "Bind",
+          "Body Press"
         ],
         "ability": "Fluffy",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Drain Punch",
-          "Double-Edge",
-          "Shadow Claw",
-          "Bulk Up"
-        ],
-        "ability": "Fluffy",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 500,
@@ -26890,35 +25811,27 @@
     "bestAbility": "Emergency Exit",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Aqua Jet",
-      "First Impression",
-      "Knock Off",
-      "Leech Life",
-      "Liquidation",
-      "Spikes",
-      "Sucker Punch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "First Impression",
-          "Liquidation",
-          "Knock Off",
-          "Aqua Jet"
+          "Ice Beam",
+          "Surf",
+          "Aerial Ace",
+          "Assurance",
+          "Attract",
+          "Blizzard",
+          "Brick Break",
+          "Bug Bite"
         ],
         "ability": "Emergency Exit",
-        "item": "Assault Vest"
-      },
-      {
-        "moves": [
-          "First Impression",
-          "Leech Life",
-          "Spikes",
-          "Sucker Punch"
-        ],
-        "ability": "Emergency Exit",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 530,
@@ -26996,34 +25909,27 @@
     "bestAbility": "Innards Out",
     "tier": 4,
     "generation": 7,
-    "movePool": [
-      "Counter",
-      "Mirror Coat",
-      "Protect",
-      "Recover",
-      "Soak",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Toxic",
           "Recover",
-          "Counter",
-          "Mirror Coat"
-        ],
-        "ability": "Unaware",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Toxic",
-          "Recover",
-          "Protect",
-          "Soak"
+          "Attract",
+          "Baton Pass",
+          "Bestow",
+          "Bide",
+          "Block",
+          "Confide"
         ],
         "ability": "Innards Out",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 410,
@@ -27050,36 +25956,27 @@
     "bestAbility": "RKS System",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Crunch",
-      "Explosion",
-      "Flame Charge",
-      "Flamethrower",
-      "Iron Head",
-      "Multi-Attack",
-      "Parting Shot",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Multi-Attack",
-          "Flamethrower",
-          "Swords Dance",
-          "Explosion"
-        ],
-        "ability": "RKS System",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
+          "Ice Beam",
+          "Thunderbolt",
+          "Aerial Ace",
+          "Air Slash",
+          "Bite",
+          "Confide",
           "Crunch",
-          "Iron Head",
-          "Flame Charge",
-          "Parting Shot"
+          "Crush Claw"
         ],
         "ability": "RKS System",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -27206,36 +26103,27 @@
     "bestAbility": "Shell Armor",
     "tier": 3,
     "generation": 7,
-    "movePool": [
-      "Body Press",
-      "Draco Meteor",
-      "Dragon Pulse",
-      "Fire Blast",
-      "Flamethrower",
-      "Shell Smash",
-      "Shell Trap",
-      "Stealth Rock"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shell Trap",
-          "Draco Meteor",
-          "Fire Blast",
-          "Stealth Rock"
-        ],
-        "ability": "Shell Armor",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
+          "Earthquake",
           "Flamethrower",
-          "Dragon Pulse",
-          "Shell Smash",
-          "Body Press"
+          "Attract",
+          "Block",
+          "Body Press",
+          "Body Slam",
+          "Brutal Swing",
+          "Bulk Up"
         ],
         "ability": "Shell Armor",
-        "item": "White Herb"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -27265,34 +26153,27 @@
     "bestAbility": "Iron Barbs",
     "tier": 3,
     "generation": 7,
-    "movePool": [
-      "Iron Head",
-      "Nuzzle",
-      "Spiky Shield",
-      "U-turn",
-      "Wish",
-      "Zing Zap"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Zing Zap",
-          "Iron Head",
-          "U-turn",
-          "Nuzzle"
+          "Thunderbolt",
+          "Poison Jab",
+          "After You",
+          "Agility",
+          "Assurance",
+          "Attract",
+          "Bounce",
+          "Charge"
         ],
         "ability": "Iron Barbs",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Zing Zap",
-          "Iron Head",
-          "Wish",
-          "Spiky Shield"
-        ],
-        "ability": "Lightning Rod",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 435,
@@ -27445,36 +26326,27 @@
     "bestAbility": "Berserk",
     "tier": 3,
     "generation": 7,
-    "movePool": [
-      "Draco Meteor",
-      "Dragon Pulse",
-      "Fire Blast",
-      "Flamethrower",
-      "Glare",
-      "Hyper Voice",
-      "Roost",
-      "Thunderbolt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Draco Meteor",
-          "Hyper Voice",
-          "Fire Blast",
-          "Roost"
+          "Earthquake",
+          "Ice Beam",
+          "Amnesia",
+          "Attract",
+          "Blizzard",
+          "Block",
+          "Breaking Swipe",
+          "Bulldoze"
         ],
         "ability": "Berserk",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Dragon Pulse",
-          "Thunderbolt",
-          "Flamethrower",
-          "Glare"
-        ],
-        "ability": "Cloud Nine",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 485,
@@ -27502,35 +26374,27 @@
     "bestAbility": "Steelworker",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Anchor Shot",
-      "Earthquake",
-      "Phantom Force",
-      "Power Whip",
-      "Rapid Spin",
-      "Shadow Claw",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Power Whip",
-          "Anchor Shot",
-          "Shadow Claw",
-          "Rapid Spin"
-        ],
-        "ability": "Steelworker",
-        "item": "Assault Vest"
-      },
-      {
-        "moves": [
-          "Phantom Force",
-          "Power Whip",
           "Earthquake",
-          "Swords Dance"
+          "Surf",
+          "Absorb",
+          "Aerial Ace",
+          "Ally Switch",
+          "Anchor Shot",
+          "Assurance",
+          "Astonish"
         ],
         "ability": "Steelworker",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 517,
@@ -27632,35 +26496,27 @@
     "bestAbility": "Electric Surge",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Brave Bird",
-      "Close Combat",
-      "Dazzling Gleam",
-      "Roost",
-      "Thunderbolt",
-      "U-turn",
-      "Wild Charge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Thunderbolt",
           "Dazzling Gleam",
-          "U-turn",
-          "Roost"
-        ],
-        "ability": "Electric Surge",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Wild Charge",
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Assurance",
           "Brave Bird",
-          "Close Combat",
-          "U-turn"
+          "Calm Mind"
         ],
         "ability": "Electric Surge",
-        "item": "Choice Band"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -27689,34 +26545,27 @@
     "bestAbility": "Psychic Surge",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Calm Mind",
-      "Focus Blast",
-      "Moonblast",
-      "Psychic",
-      "Psyshock",
-      "Taunt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Thunderbolt",
           "Psychic",
-          "Moonblast",
-          "Focus Blast",
-          "Psyshock"
-        ],
-        "ability": "Psychic Surge",
-        "item": "Choice Specs"
-      },
-      {
-        "moves": [
-          "Psyshock",
-          "Moonblast",
+          "Ally Switch",
+          "Aromatherapy",
+          "Aromatic Mist",
+          "Astonish",
           "Calm Mind",
-          "Taunt"
+          "Charge Beam"
         ],
         "ability": "Psychic Surge",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -27745,35 +26594,27 @@
     "bestAbility": "Grassy Surge",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Close Combat",
-      "Horn Leech",
-      "Megahorn",
-      "Stone Edge",
-      "Superpower",
-      "Swords Dance",
-      "Wood Hammer"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Wood Hammer",
-          "Horn Leech",
-          "Superpower",
-          "Stone Edge"
+          "Dazzling Gleam",
+          "Stone Edge",
+          "Brick Break",
+          "Brutal Swing",
+          "Bulk Up",
+          "Bullet Seed",
+          "Calm Mind",
+          "Close Combat"
         ],
         "ability": "Grassy Surge",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Swords Dance",
-          "Horn Leech",
-          "Close Combat",
-          "Megahorn"
-        ],
-        "ability": "Grassy Surge",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -27802,35 +26643,27 @@
     "bestAbility": "Misty Surge",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Calm Mind",
-      "Defog",
-      "Ice Beam",
-      "Moonblast",
-      "Scald",
-      "Surf",
-      "Taunt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Moonblast",
-          "Scald",
-          "Calm Mind",
-          "Taunt"
-        ],
-        "ability": "Misty Surge",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Surf",
-          "Moonblast",
           "Ice Beam",
-          "Defog"
+          "Surf",
+          "Aqua Ring",
+          "Blizzard",
+          "Brine",
+          "Calm Mind",
+          "Confide",
+          "Dazzling Gleam"
         ],
         "ability": "Misty Surge",
-        "item": "Choice Specs"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -27999,35 +26832,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Meteor Beam",
-      "Power Gem",
-      "Sludge Bomb",
-      "Sludge Wave",
-      "Stealth Rock",
-      "Thunderbolt",
-      "Toxic Spikes"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Meteor Beam",
-          "Sludge Wave",
           "Thunderbolt",
-          "Power Gem"
+          "Psychic",
+          "Acid",
+          "Acid Spray",
+          "Ally Switch",
+          "Bind",
+          "Body Slam",
+          "Brutal Swing"
         ],
         "ability": "Beast Boost",
-        "item": "Power Herb"
-      },
-      {
-        "moves": [
-          "Stealth Rock",
-          "Sludge Bomb",
-          "Power Gem",
-          "Toxic Spikes"
-        ],
-        "ability": "Beast Boost",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -28055,35 +26880,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Bulk Up",
-      "Close Combat",
-      "Drain Punch",
-      "Earthquake",
-      "Ice Punch",
-      "Leech Life",
-      "Roost"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Close Combat",
-          "Leech Life",
-          "Ice Punch",
-          "Earthquake"
+          "Earthquake",
+          "Stone Edge",
+          "Body Slam",
+          "Bounce",
+          "Brick Break",
+          "Bug Bite",
+          "Bulk Up",
+          "Bulldoze"
         ],
         "ability": "Beast Boost",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Drain Punch",
-          "Leech Life",
-          "Roost",
-          "Bulk Up"
-        ],
-        "ability": "Beast Boost",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -28111,34 +26928,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Bug Buzz",
-      "Close Combat",
-      "Ice Beam",
-      "Poison Jab",
-      "Rapid Spin",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Close Combat",
-          "U-turn",
           "Ice Beam",
-          "Poison Jab"
+          "Close Combat",
+          "Agility",
+          "Assurance",
+          "Blizzard",
+          "Block",
+          "Bounce",
+          "Brick Break"
         ],
         "ability": "Beast Boost",
-        "item": "Choice Scarf"
-      },
-      {
-        "moves": [
-          "Close Combat",
-          "Bug Buzz",
-          "Ice Beam",
-          "Rapid Spin"
-        ],
-        "ability": "Beast Boost",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -28165,35 +26975,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Dazzling Gleam",
-      "Energy Ball",
-      "Grass Knot",
-      "Hidden Power Water",
-      "Tail Glow",
-      "Thunderbolt",
-      "Volt Switch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Thunderbolt",
-          "Energy Ball",
           "Dazzling Gleam",
-          "Volt Switch"
+          "Bind",
+          "Brutal Swing",
+          "Calm Mind",
+          "Charge",
+          "Charge Beam",
+          "Confide"
         ],
         "ability": "Beast Boost",
-        "item": "Choice Specs"
-      },
-      {
-        "moves": [
-          "Thunderbolt",
-          "Grass Knot",
-          "Tail Glow",
-          "Hidden Power Water"
-        ],
-        "ability": "Beast Boost",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -28221,35 +27023,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Air Slash",
-      "Autotomize",
-      "Flamethrower",
-      "Flash Cannon",
-      "Heavy Slam",
-      "Leech Seed",
-      "Protect"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Heavy Slam",
+          "Earthquake",
           "Flamethrower",
-          "Leech Seed",
-          "Protect"
-        ],
-        "ability": "Beast Boost",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
+          "Absorb",
+          "Acrobatics",
           "Air Slash",
-          "Flash Cannon",
-          "Flamethrower",
-          "Autotomize"
+          "Autotomize",
+          "Block",
+          "Body Slam"
         ],
         "ability": "Beast Boost",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -28277,34 +27071,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Defog",
-      "Knock Off",
-      "Leaf Blade",
-      "Sacred Sword",
-      "Smart Strike",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Leaf Blade",
-          "Sacred Sword",
-          "Smart Strike",
-          "Swords Dance"
+          "X-Scissor",
+          "Toxic",
+          "Aerial Ace",
+          "Air Cutter",
+          "Air Slash",
+          "Brick Break",
+          "Calm Mind",
+          "Confide"
         ],
         "ability": "Beast Boost",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Leaf Blade",
-          "Knock Off",
-          "Sacred Sword",
-          "Defog"
-        ],
-        "ability": "Beast Boost",
-        "item": "Choice Scarf"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -28332,35 +27119,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Dark Pulse",
-      "Draco Meteor",
-      "Dragon Tail",
-      "Earthquake",
-      "Fire Blast",
-      "Knock Off",
-      "Stealth Rock"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Draco Meteor",
-          "Dark Pulse",
-          "Fire Blast",
-          "Knock Off"
-        ],
-        "ability": "Beast Boost",
-        "item": "Choice Specs"
-      },
-      {
-        "moves": [
-          "Dragon Tail",
-          "Knock Off",
           "Earthquake",
-          "Stealth Rock"
+          "Flamethrower",
+          "Amnesia",
+          "Belch",
+          "Bite",
+          "Body Press",
+          "Body Slam",
+          "Brick Break"
         ],
         "ability": "Beast Boost",
-        "item": "Assault Vest"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -28549,34 +27328,27 @@
     "bestAbility": "Technician",
     "tier": 1,
     "generation": 7,
-    "movePool": [
-      "Bulk Up",
-      "Close Combat",
-      "Ice Punch",
-      "Rock Tomb",
-      "Shadow Sneak",
-      "Spectral Thief"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Spectral Thief",
-          "Close Combat",
-          "Shadow Sneak",
-          "Ice Punch"
+          "Shadow Ball",
+          "Stone Edge",
+          "Acrobatics",
+          "Agility",
+          "Assurance",
+          "Aura Sphere",
+          "Blaze Kick",
+          "Bounce"
         ],
         "ability": "Technician",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Spectral Thief",
-          "Close Combat",
-          "Rock Tomb",
-          "Bulk Up"
-        ],
-        "ability": "Technician",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 600,
@@ -28604,34 +27376,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Draco Meteor",
-      "Fire Blast",
-      "Flamethrower",
-      "Nasty Plot",
-      "Sludge Wave",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Draco Meteor",
-          "Sludge Wave",
-          "Fire Blast",
-          "U-turn"
+          "Thunderbolt",
+          "Flamethrower",
+          "Acid",
+          "Acrobatics",
+          "Aerial Ace",
+          "Air Cutter",
+          "Air Slash",
+          "Ally Switch"
         ],
         "ability": "Beast Boost",
-        "item": "Choice Specs"
-      },
-      {
-        "moves": [
-          "Nasty Plot",
-          "Draco Meteor",
-          "Sludge Wave",
-          "Flamethrower"
-        ],
-        "ability": "Beast Boost",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 540,
@@ -28659,35 +27424,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Body Press",
-      "Earthquake",
-      "Gyro Ball",
-      "Iron Head",
-      "Stealth Rock",
-      "Stone Edge",
-      "Trick Room"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Gyro Ball",
-          "Stone Edge",
           "Earthquake",
-          "Trick Room"
+          "Flash Cannon",
+          "Ally Switch",
+          "Autotomize",
+          "Bide",
+          "Bind",
+          "Block",
+          "Body Press"
         ],
         "ability": "Beast Boost",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Body Press",
-          "Stone Edge",
-          "Iron Head",
-          "Stealth Rock"
-        ],
-        "ability": "Beast Boost",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -28715,35 +27472,27 @@
     "bestAbility": "Beast Boost",
     "tier": 2,
     "generation": 7,
-    "movePool": [
-      "Calm Mind",
-      "Fire Blast",
-      "Flamethrower",
-      "Mind Blown",
-      "Psychic",
-      "Shadow Ball",
-      "Trick"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shadow Ball",
           "Flamethrower",
-          "Mind Blown",
-          "Trick"
-        ],
-        "ability": "Beast Boost",
-        "item": "Choice Scarf"
-      },
-      {
-        "moves": [
-          "Shadow Ball",
-          "Fire Blast",
+          "Psychic",
+          "After You",
+          "Astonish",
           "Calm Mind",
-          "Psychic"
+          "Confide",
+          "Confuse Ray",
+          "Dark Pulse"
         ],
         "ability": "Beast Boost",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 570,
@@ -28770,34 +27519,27 @@
     "bestAbility": "Volt Absorb",
     "tier": 1,
     "generation": 7,
-    "movePool": [
-      "Close Combat",
-      "Grass Knot",
-      "Knock Off",
-      "Plasma Fists",
-      "Thunderbolt",
-      "Volt Switch"
-    ],
+    "movePool": [],
     "sets": [
-      {
-        "moves": [
-          "Plasma Fists",
-          "Close Combat",
-          "Knock Off",
-          "Volt Switch"
-        ],
-        "ability": "Volt Absorb",
-        "item": "Choice Band"
-      },
       {
         "moves": [
           "Thunderbolt",
           "Close Combat",
-          "Grass Knot",
-          "Volt Switch"
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Assurance",
+          "Aura Sphere",
+          "Blaze Kick"
         ],
         "ability": "Volt Absorb",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 600,
@@ -28824,35 +27566,27 @@
     "bestAbility": "Magnet Pull",
     "tier": 4,
     "generation": 7,
-    "movePool": [
-      "Acid Armor",
-      "Flash Cannon",
-      "Gyro Ball",
-      "Headbutt",
-      "Thunder Wave",
-      "Thunderbolt",
-      "Toxic"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Flash Cannon",
           "Thunderbolt",
-          "Thunder Wave",
-          "Toxic"
-        ],
-        "ability": "Magnet Pull",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Gyro Ball",
-          "Headbutt",
+          "Flash Cannon",
           "Acid Armor",
-          "Thunder Wave"
+          "Endure",
+          "Facade",
+          "Gyro Ball",
+          "Harden",
+          "Headbutt"
         ],
         "ability": "Magnet Pull",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 300,
@@ -28879,35 +27613,27 @@
     "bestAbility": "Iron Fist",
     "tier": 1,
     "generation": 7,
-    "movePool": [
-      "Body Press",
-      "Double Iron Bash",
-      "Earthquake",
-      "Ice Punch",
-      "Superpower",
-      "Thunder Punch",
-      "Thunder Wave"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Double Iron Bash",
           "Earthquake",
-          "Superpower",
-          "Thunder Punch"
-        ],
-        "ability": "Iron Fist",
-        "item": "Assault Vest"
-      },
-      {
-        "moves": [
-          "Double Iron Bash",
-          "Ice Punch",
+          "Ice Beam",
+          "Acid Armor",
           "Body Press",
-          "Thunder Wave"
+          "Body Slam",
+          "Brick Break",
+          "Brutal Swing",
+          "Darkest Lariat"
         ],
         "ability": "Iron Fist",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 600,
@@ -29239,34 +27965,27 @@
     "bestAbility": "Swarm",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Bug Buzz",
-      "Calm Mind",
-      "Psychic",
-      "Recover",
-      "Sticky Web",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Psychic",
-          "Bug Buzz",
-          "Sticky Web",
-          "U-turn"
-        ],
-        "ability": "Frisk",
-        "item": "Focus Sash"
-      },
-      {
-        "moves": [
-          "Calm Mind",
-          "Psychic",
-          "Bug Buzz",
-          "Recover"
+          "Shadow Ball",
+          "After You",
+          "Agility",
+          "Ally Switch",
+          "Attract",
+          "Baton Pass",
+          "Body Press"
         ],
         "ability": "Swarm",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 505,
@@ -29295,36 +28014,27 @@
     "bestAbility": "Run Away",
     "tier": 3,
     "generation": 8,
-    "movePool": [
-      "Dark Pulse",
-      "Foul Play",
-      "Grass Knot",
-      "Knock Off",
-      "Nasty Plot",
-      "Parting Shot",
-      "Sucker Punch",
-      "U-turn"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Dark Pulse",
-          "Foul Play",
-          "Nasty Plot",
-          "Grass Knot"
+          "Psychic",
+          "Shadow Ball",
+          "Acrobatics",
+          "Agility",
+          "Assurance",
+          "Attract",
+          "Baton Pass",
+          "Beat Up"
         ],
-        "ability": "Stakeout",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Knock Off",
-          "U-turn",
-          "Sucker Punch",
-          "Parting Shot"
-        ],
-        "ability": "Unburden",
-        "item": "Leftovers"
+        "ability": "Run Away",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 455,
@@ -29353,36 +28063,27 @@
     "bestAbility": "Cotton Down",
     "tier": 3,
     "generation": 8,
-    "movePool": [
-      "Aromatherapy",
-      "Cotton Guard",
-      "Energy Ball",
-      "Giga Drain",
-      "Leech Seed",
-      "Pollen Puff",
-      "Rapid Spin",
-      "Synthesis"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Giga Drain",
-          "Pollen Puff",
+          "Hyper Voice",
           "Rapid Spin",
-          "Leech Seed"
-        ],
-        "ability": "Regenerator",
-        "item": "Heavy-Duty Boots"
-      },
-      {
-        "moves": [
-          "Energy Ball",
           "Aromatherapy",
+          "Attract",
+          "Bullet Seed",
+          "Charm",
           "Cotton Guard",
-          "Synthesis"
+          "Cotton Spore"
         ],
         "ability": "Cotton Down",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 460,
@@ -29411,36 +28112,27 @@
     "bestAbility": "Fluffy",
     "tier": 3,
     "generation": 8,
-    "movePool": [
-      "Baton Pass",
-      "Body Press",
-      "Body Slam",
-      "Cotton Guard",
-      "Rest",
-      "Sleep Talk",
-      "Swords Dance",
-      "Zen Headbutt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Swords Dance",
+          "Body Slam",
+          "Agility",
+          "Attract",
+          "Baton Pass",
           "Body Press",
-          "Cotton Guard",
-          "Rest",
-          "Sleep Talk"
+          "Bounce",
+          "Copycat"
         ],
         "ability": "Fluffy",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Body Slam",
-          "Zen Headbutt",
-          "Swords Dance",
-          "Baton Pass"
-        ],
-        "ability": "Steadfast",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 490,
@@ -29536,36 +28228,27 @@
     "bestAbility": "Strong Jaw",
     "tier": 3,
     "generation": 8,
-    "movePool": [
-      "Bulk Up",
-      "Crunch",
-      "Fire Fang",
-      "Play Rough",
-      "Psychic Fangs",
-      "Thunderbolt",
-      "Volt Switch",
-      "Wild Charge"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Thunderbolt",
-          "Crunch",
           "Volt Switch",
-          "Play Rough"
+          "Agility",
+          "Attract",
+          "Bite",
+          "Bulk Up",
+          "Charge",
+          "Charm"
         ],
         "ability": "Strong Jaw",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Wild Charge",
-          "Psychic Fangs",
-          "Fire Fang",
-          "Bulk Up"
-        ],
-        "ability": "Competitive",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 490,
@@ -30034,36 +28717,27 @@
     "bestAbility": "Flash Fire",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Coil",
-      "Fire Lash",
-      "Flare Blitz",
-      "Knock Off",
-      "Leech Life",
-      "Power Whip",
-      "Swords Dance",
-      "X-Scissor"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Fire Lash",
-          "Leech Life",
-          "Knock Off",
-          "Coil"
+          "Flamethrower",
+          "X-Scissor",
+          "Attract",
+          "Bite",
+          "Brutal Swing",
+          "Bug Bite",
+          "Bug Buzz",
+          "Burn Up"
         ],
         "ability": "Flash Fire",
-        "item": "Heavy-Duty Boots"
-      },
-      {
-        "moves": [
-          "Flare Blitz",
-          "X-Scissor",
-          "Power Whip",
-          "Swords Dance"
-        ],
-        "ability": "Flame Body",
-        "item": "Life Orb"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 525,
@@ -30091,36 +28765,27 @@
     "bestAbility": "Limber",
     "tier": 3,
     "generation": 8,
-    "movePool": [
-      "Bulk Up",
-      "Close Combat",
-      "Drain Punch",
-      "Ice Punch",
-      "Knock Off",
-      "Octolock",
-      "Protect",
-      "Sucker Punch"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
+          "Surf",
           "Close Combat",
-          "Knock Off",
-          "Ice Punch",
-          "Bulk Up"
-        ],
-        "ability": "Technician",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Drain Punch",
-          "Sucker Punch",
-          "Octolock",
-          "Protect"
+          "Attract",
+          "Bind",
+          "Body Slam",
+          "Brick Break",
+          "Brine",
+          "Brutal Swing"
         ],
         "ability": "Limber",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 480,
@@ -30357,35 +29022,27 @@
     "bestAbility": "Reckless",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Close Combat",
-      "Cross Chop",
-      "Facade",
-      "Knock Off",
-      "Night Slash",
-      "Obstruct",
-      "Taunt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Facade",
-          "Knock Off",
-          "Close Combat",
-          "Taunt"
+          "Ice Beam",
+          "Thunderbolt",
+          "Assurance",
+          "Attract",
+          "Baby-Doll Eyes",
+          "Blizzard",
+          "Body Press",
+          "Body Slam"
         ],
-        "ability": "Guts",
-        "item": "Flame Orb"
-      },
-      {
-        "moves": [
-          "Obstruct",
-          "Knock Off",
-          "Night Slash",
-          "Cross Chop"
-        ],
-        "ability": "Defiant",
-        "item": "Leftovers"
+        "ability": "Reckless",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 520,
@@ -30482,35 +29139,27 @@
     "bestAbility": "Weak Armor",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Earth Power",
-      "Ice Beam",
-      "Scald",
-      "Shadow Ball",
-      "Stealth Rock",
-      "Strength Sap",
-      "Will-O-Wisp"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Shadow Ball",
-          "Earth Power",
+          "Earthquake",
           "Ice Beam",
-          "Strength Sap"
+          "Amnesia",
+          "Ancient Power",
+          "Astonish",
+          "Attract",
+          "Blizzard",
+          "Body Slam"
         ],
         "ability": "Weak Armor",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Shadow Ball",
-          "Scald",
-          "Will-O-Wisp",
-          "Stealth Rock"
-        ],
-        "ability": "Perish Body",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 510,
@@ -30518,7 +29167,7 @@
   },
   "sirfetchd": {
     "id": "sirfetchd",
-    "name": "Sirfetch\u2019d",
+    "name": "Sirfetch’d",
     "dexNum": 865,
     "types": [
       "Fighting"
@@ -30538,34 +29187,27 @@
     "bestAbility": "Steadfast",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Brave Bird",
-      "Close Combat",
-      "First Impression",
-      "Knock Off",
-      "Leaf Blade",
-      "Swords Dance"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Close Combat",
-          "Knock Off",
+          "Poison Jab",
+          "Assurance",
+          "Attract",
+          "Body Slam",
           "Brave Bird",
-          "Swords Dance"
+          "Brick Break",
+          "Brutal Swing"
         ],
-        "ability": "Scrappy",
-        "item": "Life Orb"
-      },
-      {
-        "moves": [
-          "Close Combat",
-          "Leaf Blade",
-          "Brave Bird",
-          "First Impression"
-        ],
-        "ability": "Scrappy",
-        "item": "Choice Band"
+        "ability": "Steadfast",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 507,
@@ -30595,36 +29237,27 @@
     "bestAbility": "Tangled Feet",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Focus Blast",
-      "Freeze-Dry",
-      "Ice Beam",
-      "Nasty Plot",
-      "Psychic",
-      "Psyshock",
-      "Rapid Spin",
-      "Thunderbolt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Freeze-Dry",
-          "Psychic",
-          "Focus Blast",
-          "Rapid Spin"
-        ],
-        "ability": "Screen Cleaner",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
           "Ice Beam",
-          "Psyshock",
           "Thunderbolt",
-          "Nasty Plot"
+          "After You",
+          "Ally Switch",
+          "Attract",
+          "Avalanche",
+          "Baton Pass",
+          "Blizzard"
         ],
-        "ability": "Ice Body",
-        "item": "Life Orb"
+        "ability": "Tangled Feet",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 520,
@@ -30652,35 +29285,27 @@
     "bestAbility": "Wandering Spirit",
     "tier": 3,
     "generation": 8,
-    "movePool": [
-      "Body Press",
-      "Earthquake",
-      "Phantom Force",
-      "Shadow Claw",
-      "Stealth Rock",
-      "Toxic Spikes",
-      "Will-O-Wisp"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
           "Earthquake",
-          "Shadow Claw",
-          "Stealth Rock",
-          "Will-O-Wisp"
-        ],
-        "ability": "Wandering Spirit",
-        "item": "Leftovers"
-      },
-      {
-        "moves": [
-          "Earthquake",
-          "Phantom Force",
+          "Psychic",
+          "Ally Switch",
+          "Amnesia",
+          "Astonish",
+          "Attract",
           "Body Press",
-          "Toxic Spikes"
+          "Brutal Swing"
         ],
         "ability": "Wandering Spirit",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 483,
@@ -31268,35 +29893,27 @@
     "bestAbility": "Volt Absorb",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Aerial Ace",
-      "Bolt Beak",
-      "Dragon Claw",
-      "Earthquake",
-      "Fire Fang",
-      "Low Kick",
-      "Outrage"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Bolt Beak",
-          "Dragon Claw",
           "Earthquake",
-          "Fire Fang"
-        ],
-        "ability": "Hustle",
-        "item": "Choice Scarf"
-      },
-      {
-        "moves": [
+          "Thunderbolt",
+          "Aerial Ace",
+          "Ancient Power",
+          "Body Slam",
           "Bolt Beak",
-          "Outrage",
-          "Low Kick",
-          "Aerial Ace"
+          "Breaking Swipe",
+          "Brutal Swing"
         ],
-        "ability": "Hustle",
-        "item": "Choice Band"
+        "ability": "Volt Absorb",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 505,
@@ -31326,35 +29943,27 @@
     "bestAbility": "Volt Absorb",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Blizzard",
-      "Bolt Beak",
-      "Freeze-Dry",
-      "Icicle Crash",
-      "Low Kick",
-      "Substitute",
-      "Thunderbolt"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Bolt Beak",
-          "Icicle Crash",
-          "Low Kick",
-          "Freeze-Dry"
-        ],
-        "ability": "Slush Rush",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
+          "Ice Beam",
           "Thunderbolt",
-          "Freeze-Dry",
+          "Ancient Power",
+          "Avalanche",
           "Blizzard",
-          "Substitute"
+          "Body Slam",
+          "Bolt Beak",
+          "Bulldoze"
         ],
-        "ability": "Slush Rush",
-        "item": "Life Orb"
+        "ability": "Volt Absorb",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 505,
@@ -31384,35 +29993,27 @@
     "bestAbility": "Water Absorb",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Crunch",
-      "Dragon Rush",
-      "Earthquake",
-      "Fishious Rend",
-      "Ice Fang",
-      "Outrage",
-      "Psychic Fangs"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Fishious Rend",
-          "Outrage",
-          "Crunch",
-          "Ice Fang"
-        ],
-        "ability": "Strong Jaw",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Fishious Rend",
-          "Dragon Rush",
           "Earthquake",
-          "Psychic Fangs"
+          "Surf",
+          "Ancient Power",
+          "Bite",
+          "Body Slam",
+          "Brine",
+          "Brutal Swing",
+          "Bulldoze"
         ],
-        "ability": "Strong Jaw",
-        "item": "Choice Scarf"
+        "ability": "Water Absorb",
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 505,
@@ -31442,35 +30043,27 @@
     "bestAbility": "Water Absorb",
     "tier": 2,
     "generation": 8,
-    "movePool": [
-      "Crunch",
-      "Fishious Rend",
-      "Freeze-Dry",
-      "Ice Fang",
-      "Icicle Crash",
-      "Psychic Fangs",
-      "Substitute"
-    ],
+    "movePool": [],
     "sets": [
       {
         "moves": [
-          "Fishious Rend",
-          "Freeze-Dry",
-          "Ice Fang",
-          "Psychic Fangs"
-        ],
-        "ability": "Slush Rush",
-        "item": "Choice Band"
-      },
-      {
-        "moves": [
-          "Fishious Rend",
-          "Icicle Crash",
-          "Crunch",
-          "Substitute"
+          "Ice Beam",
+          "Surf",
+          "Ancient Power",
+          "Aurora Veil",
+          "Avalanche",
+          "Bite",
+          "Blizzard",
+          "Body Slam"
         ],
         "ability": "Water Absorb",
-        "item": "Leftovers"
+        "item": "Leftovers",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
       }
     ],
     "bst": 505,

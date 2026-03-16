@@ -2,8 +2,10 @@ import { PokemonSpecies, PokemonSet, BattlePokemon, Tier, PokemonType, Nature } 
 import { createBattlePokemon } from './pokemon-factory';
 import { SeededRNG } from '../utils/rng';
 import pokedexData from '../data/pokedex.json';
+import megaPokedexData from '../data/mega-pokemon.json';
 
 const pokedex = pokedexData as Record<string, PokemonSpecies>;
+const megaPokedex = megaPokedexData as Record<string, PokemonSpecies>;
 
 // Pokemon without animated sprites on Showdown CDN — exclude from generation
 const NO_SPRITE: Set<string> = new Set([
@@ -28,6 +30,7 @@ interface TeamGeneratorOptions {
   itemMode: 'competitive' | 'casual';
   maxGen?: number | null;
   legendaryMode?: boolean;
+  megaMode?: boolean;
 }
 
 /** Build filtered tier pools based on maxGen (null = no filter). */
@@ -104,8 +107,22 @@ export function generateTeam(
     team = all.slice(0, 6);
   }
 
-  // Build battle Pokemon from selected species
+  // Mega mode: ~25% chance to replace one team slot with a mega Pokemon
   const maxGen = options.maxGen ?? null;
+  if (options.megaMode && rng.next() < 0.25) {
+    const eligibleMegas = Object.values(megaPokedex).filter(
+      s => (!maxGen || s.generation <= maxGen)
+    );
+    if (eligibleMegas.length > 0) {
+      rng.shuffle(eligibleMegas);
+      const mega = eligibleMegas[0];
+      // Replace a random non-T1 slot (or last slot as fallback)
+      const replaceIdx = team.findIndex((s, i) => i > 0 && s.tier !== 1);
+      team[replaceIdx >= 0 ? replaceIdx : team.length - 1] = mega;
+    }
+  }
+
+  // Build battle Pokemon from selected species
   return team.map(species => {
     const set = pickSet(species, rng, options.itemMode);
     return createBattlePokemon(species, set, 100, maxGen);

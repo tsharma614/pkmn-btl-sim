@@ -32,7 +32,7 @@ const ROLE_COLORS: Record<DraftRole, string> = {
   physWall: '#cd853f',
   specWall: '#4fc3f7',
   support: '#66bb6a',
-  wildcard: '#FFD700',
+  mega: '#FF6B9D',
 };
 
 interface RoleDraftScreenProps {

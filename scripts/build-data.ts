@@ -3,8 +3,9 @@
  * and randbats JSON to build our game data.
  *
  * Outputs:
- *   src/data/pokedex.json   — final evolutions + single-stage (~400-500 Pokémon)
- *   src/data/moves.json     — all moves
+ *   src/data/pokedex.json        — final evolutions + single-stage (~400-500 Pokémon)
+ *   src/data/moves.json          — all moves
+ *   src/data/mega-pokemon.json   — mega evolutions as standalone species (~48)
  *
  * Usage: npx tsx scripts/build-data.ts
  */
@@ -257,6 +258,76 @@ async function main() {
   }
   console.log(`  Tier distribution: T1=${tierCounts[1]}, T2=${tierCounts[2]}, T3=${tierCounts[3]}, T4=${tierCounts[4]}`);
 
+  // --- Build Mega Pokémon ---
+  console.log('Processing mega evolutions...');
+  const megaPokedex: Record<string, any> = {};
+
+  /** Convert Showdown name (e.g. "Venusaur-Mega", "Charizard-Mega-X") to display name ("Mega Venusaur", "Mega Charizard X") */
+  function formatMegaName(showdownName: string): string {
+    const match = showdownName.match(/^(.+)-Mega(?:-([XY]))?$/);
+    if (!match) return showdownName;
+    const base = match[1];
+    const suffix = match[2] ? ` ${match[2]}` : '';
+    return `Mega ${base}${suffix}`;
+  }
+
+  // Competitive items for megas (they're already mega, so no mega stones)
+  const MEGA_ITEMS = ['Life Orb', 'Choice Band', 'Choice Specs', 'Choice Scarf', 'Leftovers', 'Assault Vest', 'Focus Sash'];
+
+  for (const species of Dex.species.all()) {
+    if (!species.isMega) continue;
+    if (species.isNonstandard && species.isNonstandard !== 'Past') continue;
+    // Skip primals (Groudon-Primal, Kyogre-Primal)
+    if (species.isPrimal) continue;
+    if (species.num <= 0) continue;
+
+    const bst = species.baseStats.hp + species.baseStats.atk + species.baseStats.def +
+                species.baseStats.spa + species.baseStats.spd + species.baseStats.spe;
+    const tier = assignTier(species.name, bst);
+
+    // Get base form for learnset + generation inheritance
+    const baseSpecies = Dex.species.get(species.baseSpecies);
+    const baseGen = baseSpecies.gen || getGenFromDexNum(baseSpecies.num);
+
+    // Mega's ability
+    const megaAbility = species.abilities['0'] || '';
+
+    // Inherit movepool from base form
+    const baseRandbats = randbatsData[baseSpecies.name];
+    const baseLearnset = learnsetCache[baseSpecies.name] || [];
+    const movePool = getMovesFromRandbats(baseRandbats) || baseLearnset.slice(0, 20);
+
+    // Build sets using base form's randbats data but with mega's ability + competitive items
+    const megaSets = buildMegaSets(species.baseStats, baseRandbats, megaAbility, species.types as string[], baseLearnset);
+
+    const id = species.id; // e.g. 'charizardmegax'
+
+    megaPokedex[id] = {
+      id,
+      name: formatMegaName(species.name),
+      dexNum: species.num,
+      types: species.types,
+      baseStats: { ...species.baseStats },
+      abilities: [megaAbility].filter(Boolean),
+      bestAbility: megaAbility,
+      tier,
+      generation: baseGen, // inherit from base form
+      movePool,
+      sets: megaSets,
+      bst,
+      weightkg: species.weightkg,
+      isMega: true,
+      baseSpecies: species.baseSpecies,
+    };
+  }
+
+  console.log(`  Found ${Object.keys(megaPokedex).length} mega evolutions`);
+  const megaTierCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  for (const p of Object.values(megaPokedex)) {
+    megaTierCounts[(p as any).tier as 1 | 2 | 3 | 4]++;
+  }
+  console.log(`  Mega tier distribution: T1=${megaTierCounts[1]}, T2=${megaTierCounts[2]}, T3=${megaTierCounts[3]}, T4=${megaTierCounts[4]}`);
+
   // --- Build Moves ---
   console.log('Processing moves...');
   const moves: Record<string, any> = {};
@@ -320,6 +391,9 @@ async function main() {
 
   fs.writeFileSync(path.join(outDir, 'pokedex.json'), JSON.stringify(pokedex, null, 2));
   console.log('  Wrote pokedex.json');
+
+  fs.writeFileSync(path.join(outDir, 'mega-pokemon.json'), JSON.stringify(megaPokedex, null, 2));
+  console.log(`  Wrote mega-pokemon.json (${Object.keys(megaPokedex).length} megas)`);
 
   fs.writeFileSync(path.join(outDir, 'moves.json'), JSON.stringify(moves, null, 2));
   console.log('  Wrote moves.json');
@@ -470,6 +544,76 @@ function pickFallbackMoves(learnset: string[], types: string[], physical: boolea
   }
 
   return selected.slice(0, 8);
+}
+
+/**
+ * Build sets for mega Pokemon: use base form's randbats data but with mega's ability
+ * and competitive items (no mega stones since already mega).
+ */
+function buildMegaSets(
+  baseStats: { hp: number; atk: number; def: number; spa: number; spd: number; spe: number },
+  baseRandbats: RandbatsEntry | undefined,
+  megaAbility: string,
+  types: string[],
+  learnset: string[],
+): any[] {
+  const megaItems = ['Life Orb', 'Choice Band', 'Choice Specs', 'Choice Scarf', 'Leftovers', 'Assault Vest', 'Focus Sash'];
+  const physical = baseStats.atk >= baseStats.spa;
+  const defaultItem = physical ? 'Life Orb' : 'Life Orb';
+
+  if (!baseRandbats) {
+    const fallbackMoves = pickFallbackMoves(learnset, types, physical);
+    return [{
+      moves: fallbackMoves,
+      ability: megaAbility,
+      item: defaultItem,
+      nature: physical ? 'Adamant' : 'Modest',
+      evs: physical ? { atk: 252, spe: 252, hp: 4 } : { spa: 252, spe: 252, hp: 4 },
+    }];
+  }
+
+  const sets: any[] = [];
+
+  if (baseRandbats.roles) {
+    for (const [roleName, role] of Object.entries(baseRandbats.roles)) {
+      if (!role) continue;
+      // Pick item from mega-appropriate items, preferring role-appropriate ones
+      let item = defaultItem;
+      const roleLower = roleName.toLowerCase();
+      if (roleLower.includes('bulky') || roleLower.includes('stall')) item = 'Leftovers';
+      else if (physical && roleLower.includes('sweeper')) item = 'Life Orb';
+      else if (!physical && roleLower.includes('sweeper')) item = 'Life Orb';
+
+      sets.push({
+        moves: (role.moves || []).slice(0, 8),
+        ability: megaAbility,
+        item,
+        nature: getNatureForRole(roleName, baseStats.atk, baseStats.spa, baseStats.def, baseStats.spd),
+        evs: role.evs || getDefaultEVs(baseStats.atk, baseStats.spa, roleName),
+      });
+    }
+  } else if (baseRandbats.moves) {
+    sets.push({
+      moves: (baseRandbats.moves || []).slice(0, 8),
+      ability: megaAbility,
+      item: defaultItem,
+      nature: physical ? 'Adamant' : 'Modest',
+      evs: baseRandbats.evs || (physical ? { atk: 252, spe: 252, hp: 4 } : { spa: 252, spe: 252, hp: 4 }),
+    });
+  }
+
+  if (sets.length === 0) {
+    const fallbackMoves = pickFallbackMoves(learnset, types, physical);
+    sets.push({
+      moves: fallbackMoves,
+      ability: megaAbility,
+      item: defaultItem,
+      nature: physical ? 'Adamant' : 'Modest',
+      evs: physical ? { atk: 252, spe: 252, hp: 4 } : { spa: 252, spe: 252, hp: 4 },
+    });
+  }
+
+  return sets;
 }
 
 function buildMoveEffects(move: any): any[] {

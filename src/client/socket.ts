@@ -270,11 +270,19 @@ function pickSmartAction(
 
   scoredMoves.sort((a, b) => b.score - a.score);
 
-  // Consider switching if all moves are bad (immune/resisted)
+  // Switch if ALL attacking moves are NVE or immune
   const bestScore = scoredMoves[0].score;
-  const switchThreshold = isHard ? 0.9 : 0.6;
-  if (bestScore < 20 && switches.length > 0 && Math.random() < switchThreshold) {
-    return pickBestSwitch(state, switches, oppTypes, isHard);
+  if (switches.length > 0 && oppTypes.length > 0) {
+    const attackingMoves = usableMoves.filter(m => m.category !== 'Status' && m.power);
+    if (attackingMoves.length > 0) {
+      const allNveOrImmune = attackingMoves.every(m => {
+        const eff = getTypeEffectiveness(m.type as PokemonType, oppTypes);
+        return eff < 1;
+      });
+      if (allNveOrImmune) {
+        return pickBestSwitch(state, switches, oppTypes, isHard);
+      }
+    }
   }
 
   // Hard mode: switch on type disadvantage more aggressively
@@ -363,7 +371,7 @@ export interface BattleConnection {
   /** Call after creation to wait for sockets and start room flow */
   start: () => void;
   /** Online mode: create a new room */
-  startCreateRoom?: (itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null) => void;
+  startCreateRoom?: (itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', megaMode?: boolean) => void;
   /** Online mode: join existing room by code */
   startJoinRoom?: (code: string, itemMode: 'competitive' | 'casual') => void;
   /** Attempt to reconnect after app returns from background */
@@ -412,7 +420,7 @@ function wireHumanEvents(
   });
 
   humanSocket.on('draft_start', (payload: DraftStartPayload) => {
-    dispatch({ type: 'DRAFT_START', pool: payload.pool, yourPlayerIndex: payload.yourPlayerIndex });
+    dispatch({ type: 'DRAFT_START', pool: payload.pool, yourPlayerIndex: payload.yourPlayerIndex, draftType: payload.draftType, roleOrder: payload.roleOrder });
   });
 
   humanSocket.on('draft_pick', (payload: DraftPickBroadcast) => {
@@ -691,7 +699,7 @@ export function createOnlineConnection(
     });
   };
 
-  conn.startCreateRoom = (im: 'competitive' | 'casual', mg?: number | null, lm?: boolean, dm?: boolean, mono?: string | null) => {
+  conn.startCreateRoom = (im: 'competitive' | 'casual', mg?: number | null, lm?: boolean, dm?: boolean, mono?: string | null, dt?: 'snake' | 'role', mega?: boolean) => {
     humanSocket.emit('create_room', {
       playerName,
       itemMode: im,
@@ -699,6 +707,8 @@ export function createOnlineConnection(
       legendaryMode: lm ?? onlineLegendaryMode,
       draftMode: dm ?? false,
       monotype: mono ?? null,
+      draftType: dt ?? 'snake',
+      megaMode: mega ?? false,
     } as any);
   };
 

@@ -45,6 +45,7 @@ interface LocalBattleOptions {
   draftType: DraftType;
   monotype: string | null;
   poolSize: number;
+  megaMode: boolean;
   dispatch: (action: ReducerAction) => void;
 }
 
@@ -53,7 +54,7 @@ interface LocalBattleOptions {
  * Returns a handle with start/action/switch methods.
  */
 export function createLocalBattle(options: LocalBattleOptions) {
-  const { playerName, itemMode, maxGen, difficulty, legendaryMode, draftMode, draftType, monotype, poolSize, dispatch } = options;
+  const { playerName, itemMode, maxGen, difficulty, legendaryMode, draftMode, draftType, monotype, poolSize, megaMode, dispatch } = options;
 
   // Gym leader challenge: legendary + draft + hard + monotype = gym leader mode
   const isGymLeaderChallenge = draftMode && draftType !== 'role' && monotype && difficulty === 'hard' && legendaryMode;
@@ -81,8 +82,8 @@ export function createLocalBattle(options: LocalBattleOptions) {
   let botTeam: BattlePokemon[] = [];
 
   if (!draftMode) {
-    humanTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode });
-    botTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode });
+    humanTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode, megaMode });
+    botTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode, megaMode });
   }
 
   const humanPlayer: Player = {
@@ -342,12 +343,22 @@ export function createLocalBattle(options: LocalBattleOptions) {
 
     const bestScore = scoredMoves[0].score;
 
+    // Switch if ALL attacking moves are NVE or immune
+    if (switches.length > 0 && oppTypes.length > 0) {
+      const attackingMoves = usableMoves.filter(m => m.category !== 'Status' && m.power);
+      if (attackingMoves.length > 0) {
+        const allNveOrImmune = attackingMoves.every(m => {
+          const eff = getTypeEffectiveness(m.type as PokemonType, oppTypes);
+          return eff < 1;
+        });
+        if (allNveOrImmune) {
+          return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, isHard) };
+        }
+      }
+    }
+
     // Only switch when truly necessary — prefer attacking
     if (isHard && switches.length > 0 && oppTypes.length > 0) {
-      // Only switch if move is truly useless (immune or near-zero damage) AND opponent is dangerous
-      if (bestScore <= 0 && oppThreat >= 2) {
-        return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
-      }
       // 4x weakness + weak best move — get out
       if (oppThreat >= 4 && bestScore < 100) {
         return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, true) };
@@ -612,9 +623,9 @@ export function createLocalBattle(options: LocalBattleOptions) {
           draftPool = generateRoleDraftPool(rng, { maxGen, legendaryMode, itemMode });
           rng.shuffle(roleOrder);
         } else if (gymLeader && monotype) {
-          draftPool = generateGymLeaderPool(rng, monotype, { maxGen, legendaryMode, itemMode, poolSize });
+          draftPool = generateGymLeaderPool(rng, monotype, { maxGen, legendaryMode, itemMode, poolSize, megaMode });
         } else {
-          draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode, monotype, poolSize });
+          draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode, monotype, poolSize, megaMode });
         }
         draftHumanPicks = [];
         draftBotPicks = [];
@@ -688,9 +699,9 @@ export function createLocalBattle(options: LocalBattleOptions) {
         draftPool = generateRoleDraftPool(rng, { maxGen, legendaryMode, itemMode });
         rng.shuffle(roleOrder);
       } else if (gymLeader && monotype) {
-        draftPool = generateGymLeaderPool(rng, monotype, { maxGen, legendaryMode, itemMode, poolSize });
+        draftPool = generateGymLeaderPool(rng, monotype, { maxGen, legendaryMode, itemMode, poolSize, megaMode });
       } else {
-        draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode, monotype, poolSize });
+        draftPool = generateDraftPool(rng, { maxGen, legendaryMode, itemMode, monotype, poolSize, megaMode });
       }
       draftHumanPicks = [];
       draftBotPicks = [];

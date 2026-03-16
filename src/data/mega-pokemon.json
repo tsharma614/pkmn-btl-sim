@@ -1,0 +1,2954 @@
+{
+  "venusaurmega": {
+    "id": "venusaurmega",
+    "name": "Mega Venusaur",
+    "dexNum": 3,
+    "types": [
+      "Grass",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 100,
+      "def": 123,
+      "spa": 122,
+      "spd": 120,
+      "spe": 80
+    },
+    "abilities": [
+      "Thick Fat"
+    ],
+    "bestAbility": "Thick Fat",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [
+      "Earth Power",
+      "Energy Ball",
+      "Knock Off",
+      "Sleep Powder",
+      "Sludge Bomb",
+      "Synthesis",
+      "Toxic",
+      "Giga Drain",
+      "Leech Seed",
+      "Substitute"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Earth Power",
+          "Energy Ball",
+          "Knock Off",
+          "Sleep Powder",
+          "Sludge Bomb",
+          "Synthesis",
+          "Toxic"
+        ],
+        "ability": "Thick Fat",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      },
+      {
+        "moves": [
+          "Giga Drain",
+          "Leech Seed",
+          "Sleep Powder",
+          "Sludge Bomb",
+          "Substitute"
+        ],
+        "ability": "Thick Fat",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 625,
+    "weightkg": 155.5,
+    "isMega": true,
+    "baseSpecies": "Venusaur"
+  },
+  "charizardmegax": {
+    "id": "charizardmegax",
+    "name": "Mega Charizard X",
+    "dexNum": 6,
+    "types": [
+      "Fire",
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 78,
+      "atk": 130,
+      "def": 111,
+      "spa": 130,
+      "spd": 85,
+      "spe": 100
+    },
+    "abilities": [
+      "Tough Claws"
+    ],
+    "bestAbility": "Tough Claws",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [
+      "Earthquake",
+      "Flamethrower",
+      "Focus Blast",
+      "Hurricane",
+      "Will-O-Wisp",
+      "Dragon Dance",
+      "Flare Blitz",
+      "Outrage",
+      "Swords Dance"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Flamethrower",
+          "Focus Blast",
+          "Hurricane",
+          "Will-O-Wisp"
+        ],
+        "ability": "Tough Claws",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Dragon Dance",
+          "Earthquake",
+          "Flare Blitz",
+          "Outrage",
+          "Swords Dance"
+        ],
+        "ability": "Tough Claws",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 634,
+    "weightkg": 110.5,
+    "isMega": true,
+    "baseSpecies": "Charizard"
+  },
+  "charizardmegay": {
+    "id": "charizardmegay",
+    "name": "Mega Charizard Y",
+    "dexNum": 6,
+    "types": [
+      "Fire",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 78,
+      "atk": 104,
+      "def": 78,
+      "spa": 159,
+      "spd": 115,
+      "spe": 100
+    },
+    "abilities": [
+      "Drought"
+    ],
+    "bestAbility": "Drought",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [
+      "Earthquake",
+      "Flamethrower",
+      "Focus Blast",
+      "Hurricane",
+      "Will-O-Wisp",
+      "Dragon Dance",
+      "Flare Blitz",
+      "Outrage",
+      "Swords Dance"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Flamethrower",
+          "Focus Blast",
+          "Hurricane",
+          "Will-O-Wisp"
+        ],
+        "ability": "Drought",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Dragon Dance",
+          "Earthquake",
+          "Flare Blitz",
+          "Outrage",
+          "Swords Dance"
+        ],
+        "ability": "Drought",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 634,
+    "weightkg": 100.5,
+    "isMega": true,
+    "baseSpecies": "Charizard"
+  },
+  "blastoisemega": {
+    "id": "blastoisemega",
+    "name": "Mega Blastoise",
+    "dexNum": 9,
+    "types": [
+      "Water"
+    ],
+    "baseStats": {
+      "hp": 79,
+      "atk": 103,
+      "def": 120,
+      "spa": 135,
+      "spd": 115,
+      "spe": 78
+    },
+    "abilities": [
+      "Mega Launcher"
+    ],
+    "bestAbility": "Mega Launcher",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [
+      "Earthquake",
+      "Hydro Pump",
+      "Ice Beam",
+      "Shell Smash",
+      "Tera Blast"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Hydro Pump",
+          "Ice Beam",
+          "Shell Smash"
+        ],
+        "ability": "Mega Launcher",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Hydro Pump",
+          "Ice Beam",
+          "Shell Smash",
+          "Tera Blast"
+        ],
+        "ability": "Mega Launcher",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 630,
+    "weightkg": 101.1,
+    "isMega": true,
+    "baseSpecies": "Blastoise"
+  },
+  "beedrillmega": {
+    "id": "beedrillmega",
+    "name": "Mega Beedrill",
+    "dexNum": 15,
+    "types": [
+      "Bug",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 150,
+      "def": 40,
+      "spa": 15,
+      "spd": 80,
+      "spe": 145
+    },
+    "abilities": [
+      "Adaptability"
+    ],
+    "bestAbility": "Adaptability",
+    "tier": 3,
+    "generation": 1,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "X-Scissor",
+          "Poison Jab",
+          "Acrobatics",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Assurance",
+          "Attract"
+        ],
+        "ability": "Adaptability",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 495,
+    "weightkg": 40.5,
+    "isMega": true,
+    "baseSpecies": "Beedrill"
+  },
+  "pidgeotmega": {
+    "id": "pidgeotmega",
+    "name": "Mega Pidgeot",
+    "dexNum": 18,
+    "types": [
+      "Normal",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 83,
+      "atk": 80,
+      "def": 80,
+      "spa": 135,
+      "spd": 80,
+      "spe": 121
+    },
+    "abilities": [
+      "No Guard"
+    ],
+    "bestAbility": "No Guard",
+    "tier": 2,
+    "generation": 1,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "U-turn",
+          "Toxic",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Air Slash",
+          "Attract",
+          "Bide"
+        ],
+        "ability": "No Guard",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 579,
+    "weightkg": 50.5,
+    "isMega": true,
+    "baseSpecies": "Pidgeot"
+  },
+  "alakazammega": {
+    "id": "alakazammega",
+    "name": "Mega Alakazam",
+    "dexNum": 65,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 55,
+      "atk": 50,
+      "def": 65,
+      "spa": 175,
+      "spd": 105,
+      "spe": 150
+    },
+    "abilities": [
+      "Trace"
+    ],
+    "bestAbility": "Trace",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Psychic",
+          "Shadow Ball",
+          "Ally Switch",
+          "Attract",
+          "Barrier",
+          "Bide",
+          "Body Slam",
+          "Calm Mind"
+        ],
+        "ability": "Trace",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 600,
+    "weightkg": 48,
+    "isMega": true,
+    "baseSpecies": "Alakazam"
+  },
+  "slowbromega": {
+    "id": "slowbromega",
+    "name": "Mega Slowbro",
+    "dexNum": 80,
+    "types": [
+      "Water",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 75,
+      "def": 180,
+      "spa": 130,
+      "spd": 80,
+      "spe": 30
+    },
+    "abilities": [
+      "Shell Armor"
+    ],
+    "bestAbility": "Shell Armor",
+    "tier": 2,
+    "generation": 1,
+    "movePool": [
+      "Body Press",
+      "Fire Blast",
+      "Future Sight",
+      "Ice Beam",
+      "Psychic Noise",
+      "Scald",
+      "Calm Mind",
+      "Psyshock",
+      "Slack Off",
+      "Thunder Wave",
+      "Iron Defense"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Body Press",
+          "Fire Blast",
+          "Future Sight",
+          "Ice Beam",
+          "Psychic Noise",
+          "Scald"
+        ],
+        "ability": "Shell Armor",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "atk": 0
+        }
+      },
+      {
+        "moves": [
+          "Calm Mind",
+          "Psychic Noise",
+          "Psyshock",
+          "Scald",
+          "Slack Off",
+          "Thunder Wave"
+        ],
+        "ability": "Shell Armor",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "atk": 0
+        }
+      },
+      {
+        "moves": [
+          "Body Press",
+          "Iron Defense",
+          "Scald",
+          "Slack Off"
+        ],
+        "ability": "Shell Armor",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 590,
+    "weightkg": 120,
+    "isMega": true,
+    "baseSpecies": "Slowbro"
+  },
+  "gengarmega": {
+    "id": "gengarmega",
+    "name": "Mega Gengar",
+    "dexNum": 94,
+    "types": [
+      "Ghost",
+      "Poison"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 65,
+      "def": 80,
+      "spa": 170,
+      "spd": 95,
+      "spe": 130
+    },
+    "abilities": [
+      "Shadow Tag"
+    ],
+    "bestAbility": "Shadow Tag",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [
+      "Focus Blast",
+      "Nasty Plot",
+      "Shadow Ball",
+      "Sludge Wave",
+      "Trick",
+      "Encore",
+      "Toxic Spikes",
+      "Will-O-Wisp"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Focus Blast",
+          "Nasty Plot",
+          "Shadow Ball",
+          "Sludge Wave",
+          "Trick"
+        ],
+        "ability": "Shadow Tag",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "atk": 0
+        }
+      },
+      {
+        "moves": [
+          "Encore",
+          "Focus Blast",
+          "Shadow Ball",
+          "Sludge Wave",
+          "Toxic Spikes",
+          "Will-O-Wisp"
+        ],
+        "ability": "Shadow Tag",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 600,
+    "weightkg": 40.5,
+    "isMega": true,
+    "baseSpecies": "Gengar"
+  },
+  "kangaskhanmega": {
+    "id": "kangaskhanmega",
+    "name": "Mega Kangaskhan",
+    "dexNum": 115,
+    "types": [
+      "Normal"
+    ],
+    "baseStats": {
+      "hp": 105,
+      "atk": 125,
+      "def": 100,
+      "spa": 60,
+      "spd": 100,
+      "spe": 100
+    },
+    "abilities": [
+      "Parental Bond"
+    ],
+    "bestAbility": "Parental Bond",
+    "tier": 2,
+    "generation": 1,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Ice Beam",
+          "Aerial Ace",
+          "Aqua Tail",
+          "Assurance",
+          "Attract",
+          "Avalanche",
+          "Beat Up"
+        ],
+        "ability": "Parental Bond",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 590,
+    "weightkg": 100,
+    "isMega": true,
+    "baseSpecies": "Kangaskhan"
+  },
+  "pinsirmega": {
+    "id": "pinsirmega",
+    "name": "Mega Pinsir",
+    "dexNum": 127,
+    "types": [
+      "Bug",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 155,
+      "def": 120,
+      "spa": 65,
+      "spd": 90,
+      "spe": 105
+    },
+    "abilities": [
+      "Aerilate"
+    ],
+    "bestAbility": "Aerilate",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Stone Edge",
+          "Attract",
+          "Bide",
+          "Bind",
+          "Body Slam",
+          "Brick Break",
+          "Brutal Swing"
+        ],
+        "ability": "Aerilate",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 600,
+    "weightkg": 59,
+    "isMega": true,
+    "baseSpecies": "Pinsir"
+  },
+  "gyaradosmega": {
+    "id": "gyaradosmega",
+    "name": "Mega Gyarados",
+    "dexNum": 130,
+    "types": [
+      "Water",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 155,
+      "def": 109,
+      "spa": 70,
+      "spd": 130,
+      "spe": 81
+    },
+    "abilities": [
+      "Mold Breaker"
+    ],
+    "bestAbility": "Mold Breaker",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [
+      "Dragon Dance",
+      "Earthquake",
+      "Stone Edge",
+      "Temper Flare",
+      "Waterfall",
+      "Tera Blast"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Dragon Dance",
+          "Earthquake",
+          "Stone Edge",
+          "Temper Flare",
+          "Waterfall"
+        ],
+        "ability": "Mold Breaker",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Dragon Dance",
+          "Earthquake",
+          "Tera Blast",
+          "Waterfall"
+        ],
+        "ability": "Mold Breaker",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 640,
+    "weightkg": 305,
+    "isMega": true,
+    "baseSpecies": "Gyarados"
+  },
+  "aerodactylmega": {
+    "id": "aerodactylmega",
+    "name": "Mega Aerodactyl",
+    "dexNum": 142,
+    "types": [
+      "Rock",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 135,
+      "def": 85,
+      "spa": 70,
+      "spd": 95,
+      "spe": 150
+    },
+    "abilities": [
+      "Tough Claws"
+    ],
+    "bestAbility": "Tough Claws",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Flamethrower",
+          "Aerial Ace",
+          "Agility",
+          "Air Cutter",
+          "Ancient Power",
+          "Aqua Tail",
+          "Assurance"
+        ],
+        "ability": "Tough Claws",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 615,
+    "weightkg": 79,
+    "isMega": true,
+    "baseSpecies": "Aerodactyl"
+  },
+  "mewtwomegax": {
+    "id": "mewtwomegax",
+    "name": "Mega Mewtwo X",
+    "dexNum": 150,
+    "types": [
+      "Psychic",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 106,
+      "atk": 190,
+      "def": 100,
+      "spa": 154,
+      "spd": 100,
+      "spe": 130
+    },
+    "abilities": [
+      "Steadfast"
+    ],
+    "bestAbility": "Steadfast",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [
+      "Aura Sphere",
+      "Dark Pulse",
+      "Fire Blast",
+      "Nasty Plot",
+      "Psystrike",
+      "Recover"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Aura Sphere",
+          "Dark Pulse",
+          "Fire Blast",
+          "Nasty Plot",
+          "Psystrike",
+          "Recover"
+        ],
+        "ability": "Steadfast",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 780,
+    "weightkg": 127,
+    "isMega": true,
+    "baseSpecies": "Mewtwo"
+  },
+  "mewtwomegay": {
+    "id": "mewtwomegay",
+    "name": "Mega Mewtwo Y",
+    "dexNum": 150,
+    "types": [
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 106,
+      "atk": 150,
+      "def": 70,
+      "spa": 194,
+      "spd": 120,
+      "spe": 140
+    },
+    "abilities": [
+      "Insomnia"
+    ],
+    "bestAbility": "Insomnia",
+    "tier": 1,
+    "generation": 1,
+    "movePool": [
+      "Aura Sphere",
+      "Dark Pulse",
+      "Fire Blast",
+      "Nasty Plot",
+      "Psystrike",
+      "Recover"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Aura Sphere",
+          "Dark Pulse",
+          "Fire Blast",
+          "Nasty Plot",
+          "Psystrike",
+          "Recover"
+        ],
+        "ability": "Insomnia",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 780,
+    "weightkg": 33,
+    "isMega": true,
+    "baseSpecies": "Mewtwo"
+  },
+  "ampharosmega": {
+    "id": "ampharosmega",
+    "name": "Mega Ampharos",
+    "dexNum": 181,
+    "types": [
+      "Electric",
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 95,
+      "def": 105,
+      "spa": 165,
+      "spd": 110,
+      "spe": 45
+    },
+    "abilities": [
+      "Mold Breaker"
+    ],
+    "bestAbility": "Mold Breaker",
+    "tier": 1,
+    "generation": 2,
+    "movePool": [
+      "Dazzling Gleam",
+      "Discharge",
+      "Dragon Tail",
+      "Focus Blast",
+      "Thunderbolt",
+      "Volt Switch",
+      "Agility"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Dazzling Gleam",
+          "Discharge",
+          "Dragon Tail",
+          "Focus Blast",
+          "Thunderbolt",
+          "Volt Switch"
+        ],
+        "ability": "Mold Breaker",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Agility",
+          "Dazzling Gleam",
+          "Focus Blast",
+          "Thunderbolt",
+          "Volt Switch"
+        ],
+        "ability": "Mold Breaker",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 610,
+    "weightkg": 61.5,
+    "isMega": true,
+    "baseSpecies": "Ampharos"
+  },
+  "steelixmega": {
+    "id": "steelixmega",
+    "name": "Mega Steelix",
+    "dexNum": 208,
+    "types": [
+      "Steel",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 125,
+      "def": 230,
+      "spa": 55,
+      "spd": 95,
+      "spe": 30
+    },
+    "abilities": [
+      "Sand Force"
+    ],
+    "bestAbility": "Sand Force",
+    "tier": 1,
+    "generation": 2,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Dark Pulse",
+          "Ancient Power",
+          "Aqua Tail",
+          "Attract",
+          "Autotomize",
+          "Bind",
+          "Block"
+        ],
+        "ability": "Sand Force",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 610,
+    "weightkg": 740,
+    "isMega": true,
+    "baseSpecies": "Steelix"
+  },
+  "scizormega": {
+    "id": "scizormega",
+    "name": "Mega Scizor",
+    "dexNum": 212,
+    "types": [
+      "Bug",
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 150,
+      "def": 140,
+      "spa": 65,
+      "spd": 100,
+      "spe": 75
+    },
+    "abilities": [
+      "Technician"
+    ],
+    "bestAbility": "Technician",
+    "tier": 1,
+    "generation": 2,
+    "movePool": [
+      "Bullet Punch",
+      "Close Combat",
+      "Knock Off",
+      "U-turn",
+      "Defog",
+      "Bug Bite",
+      "Swords Dance"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Bullet Punch",
+          "Close Combat",
+          "Knock Off",
+          "U-turn"
+        ],
+        "ability": "Technician",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Bullet Punch",
+          "Close Combat",
+          "Defog",
+          "Knock Off",
+          "U-turn"
+        ],
+        "ability": "Technician",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      },
+      {
+        "moves": [
+          "Bug Bite",
+          "Bullet Punch",
+          "Close Combat",
+          "Knock Off",
+          "Swords Dance"
+        ],
+        "ability": "Technician",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 600,
+    "weightkg": 125,
+    "isMega": true,
+    "baseSpecies": "Scizor"
+  },
+  "heracrossmega": {
+    "id": "heracrossmega",
+    "name": "Mega Heracross",
+    "dexNum": 214,
+    "types": [
+      "Bug",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 185,
+      "def": 115,
+      "spa": 40,
+      "spd": 105,
+      "spe": 75
+    },
+    "abilities": [
+      "Skill Link"
+    ],
+    "bestAbility": "Skill Link",
+    "tier": 1,
+    "generation": 2,
+    "movePool": [
+      "Close Combat",
+      "Facade",
+      "Knock Off",
+      "Trailblaze",
+      "Earthquake",
+      "Megahorn",
+      "Stone Edge"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Close Combat",
+          "Facade",
+          "Knock Off",
+          "Trailblaze"
+        ],
+        "ability": "Skill Link",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Close Combat",
+          "Earthquake",
+          "Knock Off",
+          "Megahorn",
+          "Stone Edge"
+        ],
+        "ability": "Skill Link",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 600,
+    "weightkg": 62.5,
+    "isMega": true,
+    "baseSpecies": "Heracross"
+  },
+  "houndoommega": {
+    "id": "houndoommega",
+    "name": "Mega Houndoom",
+    "dexNum": 229,
+    "types": [
+      "Dark",
+      "Fire"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 90,
+      "def": 90,
+      "spa": 140,
+      "spd": 90,
+      "spe": 115
+    },
+    "abilities": [
+      "Solar Power"
+    ],
+    "bestAbility": "Solar Power",
+    "tier": 1,
+    "generation": 2,
+    "movePool": [
+      "Dark Pulse",
+      "Fire Blast",
+      "Nasty Plot",
+      "Sludge Bomb",
+      "Sucker Punch"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Dark Pulse",
+          "Fire Blast",
+          "Nasty Plot",
+          "Sludge Bomb",
+          "Sucker Punch"
+        ],
+        "ability": "Solar Power",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 600,
+    "weightkg": 49.5,
+    "isMega": true,
+    "baseSpecies": "Houndoom"
+  },
+  "tyranitarmega": {
+    "id": "tyranitarmega",
+    "name": "Mega Tyranitar",
+    "dexNum": 248,
+    "types": [
+      "Rock",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 164,
+      "def": 150,
+      "spa": 95,
+      "spd": 120,
+      "spe": 71
+    },
+    "abilities": [
+      "Sand Stream"
+    ],
+    "bestAbility": "Sand Stream",
+    "tier": 1,
+    "generation": 2,
+    "movePool": [
+      "Dragon Tail",
+      "Earthquake",
+      "Ice Beam",
+      "Knock Off",
+      "Stealth Rock",
+      "Stone Edge",
+      "Thunder Wave",
+      "Dragon Dance",
+      "Ice Punch"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Dragon Tail",
+          "Earthquake",
+          "Ice Beam",
+          "Knock Off",
+          "Stealth Rock",
+          "Stone Edge",
+          "Thunder Wave"
+        ],
+        "ability": "Sand Stream",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      },
+      {
+        "moves": [
+          "Dragon Dance",
+          "Earthquake",
+          "Ice Punch",
+          "Knock Off",
+          "Stone Edge"
+        ],
+        "ability": "Sand Stream",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      }
+    ],
+    "bst": 700,
+    "weightkg": 255,
+    "isMega": true,
+    "baseSpecies": "Tyranitar"
+  },
+  "sceptilemega": {
+    "id": "sceptilemega",
+    "name": "Mega Sceptile",
+    "dexNum": 254,
+    "types": [
+      "Grass",
+      "Dragon"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 110,
+      "def": 75,
+      "spa": 145,
+      "spd": 85,
+      "spe": 145
+    },
+    "abilities": [
+      "Lightning Rod"
+    ],
+    "bestAbility": "Lightning Rod",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [
+      "Earthquake",
+      "Focus Blast",
+      "Giga Drain",
+      "Leaf Storm",
+      "Rock Slide",
+      "Shed Tail",
+      "Leech Seed",
+      "Substitute",
+      "Leaf Blade",
+      "Swords Dance"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Focus Blast",
+          "Giga Drain",
+          "Leaf Storm",
+          "Rock Slide",
+          "Shed Tail"
+        ],
+        "ability": "Lightning Rod",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Focus Blast",
+          "Giga Drain",
+          "Leech Seed",
+          "Substitute"
+        ],
+        "ability": "Lightning Rod",
+        "item": "Life Orb",
+        "nature": "Calm",
+        "evs": {
+          "atk": 0
+        }
+      },
+      {
+        "moves": [
+          "Earthquake",
+          "Leaf Blade",
+          "Rock Slide",
+          "Swords Dance"
+        ],
+        "ability": "Lightning Rod",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 630,
+    "weightkg": 55.2,
+    "isMega": true,
+    "baseSpecies": "Sceptile"
+  },
+  "blazikenmega": {
+    "id": "blazikenmega",
+    "name": "Mega Blaziken",
+    "dexNum": 257,
+    "types": [
+      "Fire",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 160,
+      "def": 80,
+      "spa": 130,
+      "spd": 80,
+      "spe": 100
+    },
+    "abilities": [
+      "Speed Boost"
+    ],
+    "bestAbility": "Speed Boost",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [
+      "Close Combat",
+      "Flare Blitz",
+      "Knock Off",
+      "Protect",
+      "Stone Edge",
+      "Swords Dance"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Close Combat",
+          "Flare Blitz",
+          "Knock Off",
+          "Protect",
+          "Stone Edge",
+          "Swords Dance"
+        ],
+        "ability": "Speed Boost",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 630,
+    "weightkg": 52,
+    "isMega": true,
+    "baseSpecies": "Blaziken"
+  },
+  "swampertmega": {
+    "id": "swampertmega",
+    "name": "Mega Swampert",
+    "dexNum": 260,
+    "types": [
+      "Water",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 100,
+      "atk": 150,
+      "def": 110,
+      "spa": 95,
+      "spd": 110,
+      "spe": 70
+    },
+    "abilities": [
+      "Swift Swim"
+    ],
+    "bestAbility": "Swift Swim",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [
+      "Earthquake",
+      "Flip Turn",
+      "Ice Beam",
+      "Knock Off",
+      "Roar",
+      "Stealth Rock",
+      "Yawn"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Flip Turn",
+          "Ice Beam",
+          "Knock Off",
+          "Roar",
+          "Stealth Rock",
+          "Yawn"
+        ],
+        "ability": "Swift Swim",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      }
+    ],
+    "bst": 635,
+    "weightkg": 102,
+    "isMega": true,
+    "baseSpecies": "Swampert"
+  },
+  "gardevoirmega": {
+    "id": "gardevoirmega",
+    "name": "Mega Gardevoir",
+    "dexNum": 282,
+    "types": [
+      "Psychic",
+      "Fairy"
+    ],
+    "baseStats": {
+      "hp": 68,
+      "atk": 85,
+      "def": 65,
+      "spa": 165,
+      "spd": 135,
+      "spe": 100
+    },
+    "abilities": [
+      "Pixilate"
+    ],
+    "bestAbility": "Pixilate",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [
+      "Calm Mind",
+      "Focus Blast",
+      "Healing Wish",
+      "Moonblast",
+      "Mystical Fire",
+      "Psychic",
+      "Psyshock",
+      "Trick"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Calm Mind",
+          "Focus Blast",
+          "Healing Wish",
+          "Moonblast",
+          "Mystical Fire",
+          "Psychic",
+          "Psyshock",
+          "Trick"
+        ],
+        "ability": "Pixilate",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 618,
+    "weightkg": 48.4,
+    "isMega": true,
+    "baseSpecies": "Gardevoir"
+  },
+  "sableyemega": {
+    "id": "sableyemega",
+    "name": "Mega Sableye",
+    "dexNum": 302,
+    "types": [
+      "Dark",
+      "Ghost"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 85,
+      "def": 125,
+      "spa": 85,
+      "spd": 115,
+      "spe": 20
+    },
+    "abilities": [
+      "Magic Bounce"
+    ],
+    "bestAbility": "Magic Bounce",
+    "tier": 3,
+    "generation": 3,
+    "movePool": [
+      "Encore",
+      "Knock Off",
+      "Recover",
+      "Thunder Wave",
+      "Will-O-Wisp"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Encore",
+          "Knock Off",
+          "Recover",
+          "Thunder Wave",
+          "Will-O-Wisp"
+        ],
+        "ability": "Magic Bounce",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      }
+    ],
+    "bst": 480,
+    "weightkg": 161,
+    "isMega": true,
+    "baseSpecies": "Sableye"
+  },
+  "mawilemega": {
+    "id": "mawilemega",
+    "name": "Mega Mawile",
+    "dexNum": 303,
+    "types": [
+      "Steel",
+      "Fairy"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 105,
+      "def": 125,
+      "spa": 55,
+      "spd": 95,
+      "spe": 50
+    },
+    "abilities": [
+      "Huge Power"
+    ],
+    "bestAbility": "Huge Power",
+    "tier": 3,
+    "generation": 3,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Ice Beam",
+          "Flamethrower",
+          "Ancient Power",
+          "Assurance",
+          "Astonish",
+          "Attract",
+          "Baton Pass",
+          "Bite"
+        ],
+        "ability": "Huge Power",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 480,
+    "weightkg": 23.5,
+    "isMega": true,
+    "baseSpecies": "Mawile"
+  },
+  "aggronmega": {
+    "id": "aggronmega",
+    "name": "Mega Aggron",
+    "dexNum": 306,
+    "types": [
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 140,
+      "def": 230,
+      "spa": 60,
+      "spd": 80,
+      "spe": 50
+    },
+    "abilities": [
+      "Filter"
+    ],
+    "bestAbility": "Filter",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Ice Beam",
+          "Aerial Ace",
+          "Ancient Power",
+          "Aqua Tail",
+          "Attract",
+          "Autotomize",
+          "Avalanche"
+        ],
+        "ability": "Filter",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 630,
+    "weightkg": 395,
+    "isMega": true,
+    "baseSpecies": "Aggron"
+  },
+  "medichammega": {
+    "id": "medichammega",
+    "name": "Mega Medicham",
+    "dexNum": 308,
+    "types": [
+      "Fighting",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 60,
+      "atk": 100,
+      "def": 85,
+      "spa": 80,
+      "spd": 85,
+      "spe": 100
+    },
+    "abilities": [
+      "Pure Power"
+    ],
+    "bestAbility": "Pure Power",
+    "tier": 2,
+    "generation": 3,
+    "movePool": [
+      "Bullet Punch",
+      "Close Combat",
+      "Ice Punch",
+      "Poison Jab",
+      "Zen Headbutt"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Bullet Punch",
+          "Close Combat",
+          "Ice Punch",
+          "Poison Jab",
+          "Zen Headbutt"
+        ],
+        "ability": "Pure Power",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 510,
+    "weightkg": 31.5,
+    "isMega": true,
+    "baseSpecies": "Medicham"
+  },
+  "manectricmega": {
+    "id": "manectricmega",
+    "name": "Mega Manectric",
+    "dexNum": 310,
+    "types": [
+      "Electric"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 75,
+      "def": 80,
+      "spa": 135,
+      "spd": 80,
+      "spe": 135
+    },
+    "abilities": [
+      "Intimidate"
+    ],
+    "bestAbility": "Intimidate",
+    "tier": 2,
+    "generation": 3,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Thunderbolt",
+          "Flamethrower",
+          "Agility",
+          "Attract",
+          "Bite",
+          "Body Slam",
+          "Captivate",
+          "Charge"
+        ],
+        "ability": "Intimidate",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 575,
+    "weightkg": 44,
+    "isMega": true,
+    "baseSpecies": "Manectric"
+  },
+  "sharpedomega": {
+    "id": "sharpedomega",
+    "name": "Mega Sharpedo",
+    "dexNum": 319,
+    "types": [
+      "Water",
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 140,
+      "def": 70,
+      "spa": 110,
+      "spd": 65,
+      "spe": 105
+    },
+    "abilities": [
+      "Strong Jaw"
+    ],
+    "bestAbility": "Strong Jaw",
+    "tier": 2,
+    "generation": 3,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Ice Beam",
+          "Agility",
+          "Ancient Power",
+          "Aqua Jet",
+          "Assurance",
+          "Attract",
+          "Avalanche"
+        ],
+        "ability": "Strong Jaw",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 560,
+    "weightkg": 130.3,
+    "isMega": true,
+    "baseSpecies": "Sharpedo"
+  },
+  "cameruptmega": {
+    "id": "cameruptmega",
+    "name": "Mega Camerupt",
+    "dexNum": 323,
+    "types": [
+      "Fire",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 120,
+      "def": 100,
+      "spa": 145,
+      "spd": 105,
+      "spe": 20
+    },
+    "abilities": [
+      "Sheer Force"
+    ],
+    "bestAbility": "Sheer Force",
+    "tier": 2,
+    "generation": 3,
+    "movePool": [
+      "Earthquake",
+      "Overheat",
+      "Roar",
+      "Stealth Rock",
+      "Will-O-Wisp"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Overheat",
+          "Roar",
+          "Stealth Rock",
+          "Will-O-Wisp"
+        ],
+        "ability": "Sheer Force",
+        "item": "Leftovers",
+        "nature": "Calm",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      }
+    ],
+    "bst": 560,
+    "weightkg": 320.5,
+    "isMega": true,
+    "baseSpecies": "Camerupt"
+  },
+  "altariamega": {
+    "id": "altariamega",
+    "name": "Mega Altaria",
+    "dexNum": 334,
+    "types": [
+      "Dragon",
+      "Fairy"
+    ],
+    "baseStats": {
+      "hp": 75,
+      "atk": 110,
+      "def": 110,
+      "spa": 110,
+      "spd": 105,
+      "spe": 80
+    },
+    "abilities": [
+      "Pixilate"
+    ],
+    "bestAbility": "Pixilate",
+    "tier": 2,
+    "generation": 3,
+    "movePool": [
+      "Brave Bird",
+      "Defog",
+      "Earthquake",
+      "Haze",
+      "Roost",
+      "Will-O-Wisp",
+      "Dragon Dance"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Brave Bird",
+          "Defog",
+          "Earthquake",
+          "Haze",
+          "Roost",
+          "Will-O-Wisp"
+        ],
+        "ability": "Pixilate",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      },
+      {
+        "moves": [
+          "Brave Bird",
+          "Dragon Dance",
+          "Earthquake",
+          "Roost"
+        ],
+        "ability": "Pixilate",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      }
+    ],
+    "bst": 590,
+    "weightkg": 20.6,
+    "isMega": true,
+    "baseSpecies": "Altaria"
+  },
+  "banettemega": {
+    "id": "banettemega",
+    "name": "Mega Banette",
+    "dexNum": 354,
+    "types": [
+      "Ghost"
+    ],
+    "baseStats": {
+      "hp": 64,
+      "atk": 165,
+      "def": 75,
+      "spa": 93,
+      "spd": 83,
+      "spe": 75
+    },
+    "abilities": [
+      "Prankster"
+    ],
+    "bestAbility": "Prankster",
+    "tier": 2,
+    "generation": 3,
+    "movePool": [
+      "Gunk Shot",
+      "Poltergeist",
+      "Shadow Sneak",
+      "Swords Dance",
+      "Thunder Wave"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Gunk Shot",
+          "Poltergeist",
+          "Shadow Sneak",
+          "Swords Dance",
+          "Thunder Wave"
+        ],
+        "ability": "Prankster",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 555,
+    "weightkg": 13,
+    "isMega": true,
+    "baseSpecies": "Banette"
+  },
+  "absolmega": {
+    "id": "absolmega",
+    "name": "Mega Absol",
+    "dexNum": 359,
+    "types": [
+      "Dark"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 150,
+      "def": 60,
+      "spa": 115,
+      "spd": 60,
+      "spe": 115
+    },
+    "abilities": [
+      "Magic Bounce"
+    ],
+    "bestAbility": "Magic Bounce",
+    "tier": 2,
+    "generation": 3,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Ice Beam",
+          "Thunderbolt",
+          "Aerial Ace",
+          "Air Slash",
+          "Assurance",
+          "Attract",
+          "Baton Pass",
+          "Bite"
+        ],
+        "ability": "Magic Bounce",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 565,
+    "weightkg": 49,
+    "isMega": true,
+    "baseSpecies": "Absol"
+  },
+  "glaliemega": {
+    "id": "glaliemega",
+    "name": "Mega Glalie",
+    "dexNum": 362,
+    "types": [
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 120,
+      "def": 80,
+      "spa": 120,
+      "spd": 80,
+      "spe": 100
+    },
+    "abilities": [
+      "Refrigerate"
+    ],
+    "bestAbility": "Refrigerate",
+    "tier": 2,
+    "generation": 3,
+    "movePool": [
+      "Earthquake",
+      "Freeze-Dry",
+      "Spikes",
+      "Taunt"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Earthquake",
+          "Freeze-Dry",
+          "Spikes",
+          "Taunt"
+        ],
+        "ability": "Refrigerate",
+        "item": "Life Orb",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      }
+    ],
+    "bst": 580,
+    "weightkg": 350.2,
+    "isMega": true,
+    "baseSpecies": "Glalie"
+  },
+  "salamencemega": {
+    "id": "salamencemega",
+    "name": "Mega Salamence",
+    "dexNum": 373,
+    "types": [
+      "Dragon",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 95,
+      "atk": 145,
+      "def": 130,
+      "spa": 120,
+      "spd": 90,
+      "spe": 120
+    },
+    "abilities": [
+      "Aerilate"
+    ],
+    "bestAbility": "Aerilate",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [
+      "Dragon Dance",
+      "Dual Wingbeat",
+      "Earthquake",
+      "Outrage",
+      "Roost"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Dragon Dance",
+          "Dual Wingbeat",
+          "Earthquake",
+          "Outrage",
+          "Roost"
+        ],
+        "ability": "Aerilate",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 700,
+    "weightkg": 112.6,
+    "isMega": true,
+    "baseSpecies": "Salamence"
+  },
+  "metagrossmega": {
+    "id": "metagrossmega",
+    "name": "Mega Metagross",
+    "dexNum": 376,
+    "types": [
+      "Steel",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 145,
+      "def": 150,
+      "spa": 105,
+      "spd": 110,
+      "spe": 110
+    },
+    "abilities": [
+      "Tough Claws"
+    ],
+    "bestAbility": "Tough Claws",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [
+      "Bullet Punch",
+      "Earthquake",
+      "Heavy Slam",
+      "Knock Off",
+      "Psychic Fangs",
+      "Stealth Rock",
+      "Agility"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Bullet Punch",
+          "Earthquake",
+          "Heavy Slam",
+          "Knock Off",
+          "Psychic Fangs",
+          "Stealth Rock"
+        ],
+        "ability": "Tough Claws",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      },
+      {
+        "moves": [
+          "Agility",
+          "Earthquake",
+          "Heavy Slam",
+          "Knock Off",
+          "Psychic Fangs"
+        ],
+        "ability": "Tough Claws",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      }
+    ],
+    "bst": 700,
+    "weightkg": 942.9,
+    "isMega": true,
+    "baseSpecies": "Metagross"
+  },
+  "latiasmega": {
+    "id": "latiasmega",
+    "name": "Mega Latias",
+    "dexNum": 380,
+    "types": [
+      "Dragon",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 100,
+      "def": 120,
+      "spa": 140,
+      "spd": 150,
+      "spe": 110
+    },
+    "abilities": [
+      "Levitate"
+    ],
+    "bestAbility": "Levitate",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [
+      "Calm Mind",
+      "Draco Meteor",
+      "Psyshock",
+      "Recover"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Calm Mind",
+          "Draco Meteor",
+          "Psyshock",
+          "Recover"
+        ],
+        "ability": "Levitate",
+        "item": "Leftovers",
+        "nature": "Calm",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 700,
+    "weightkg": 52,
+    "isMega": true,
+    "baseSpecies": "Latias"
+  },
+  "latiosmega": {
+    "id": "latiosmega",
+    "name": "Mega Latios",
+    "dexNum": 381,
+    "types": [
+      "Dragon",
+      "Psychic"
+    ],
+    "baseStats": {
+      "hp": 80,
+      "atk": 130,
+      "def": 100,
+      "spa": 160,
+      "spd": 120,
+      "spe": 110
+    },
+    "abilities": [
+      "Levitate"
+    ],
+    "bestAbility": "Levitate",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [
+      "Aura Sphere",
+      "Draco Meteor",
+      "Luster Purge",
+      "Recover",
+      "Calm Mind",
+      "Psyshock",
+      "Flip Turn"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Aura Sphere",
+          "Draco Meteor",
+          "Luster Purge",
+          "Recover"
+        ],
+        "ability": "Levitate",
+        "item": "Leftovers",
+        "nature": "Calm",
+        "evs": {
+          "atk": 0
+        }
+      },
+      {
+        "moves": [
+          "Calm Mind",
+          "Draco Meteor",
+          "Psyshock",
+          "Recover"
+        ],
+        "ability": "Levitate",
+        "item": "Leftovers",
+        "nature": "Calm",
+        "evs": {
+          "atk": 0
+        }
+      },
+      {
+        "moves": [
+          "Aura Sphere",
+          "Draco Meteor",
+          "Flip Turn",
+          "Luster Purge"
+        ],
+        "ability": "Levitate",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 700,
+    "weightkg": 70,
+    "isMega": true,
+    "baseSpecies": "Latios"
+  },
+  "rayquazamega": {
+    "id": "rayquazamega",
+    "name": "Mega Rayquaza",
+    "dexNum": 384,
+    "types": [
+      "Dragon",
+      "Flying"
+    ],
+    "baseStats": {
+      "hp": 105,
+      "atk": 180,
+      "def": 100,
+      "spa": 180,
+      "spd": 100,
+      "spe": 115
+    },
+    "abilities": [
+      "Delta Stream"
+    ],
+    "bestAbility": "Delta Stream",
+    "tier": 1,
+    "generation": 3,
+    "movePool": [
+      "Dragon Ascent",
+      "Dragon Dance",
+      "Earthquake",
+      "Outrage",
+      "Extreme Speed",
+      "Swords Dance",
+      "U-turn",
+      "Scale Shot"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Dragon Ascent",
+          "Dragon Dance",
+          "Earthquake",
+          "Outrage"
+        ],
+        "ability": "Delta Stream",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Dragon Ascent",
+          "Earthquake",
+          "Extreme Speed",
+          "Swords Dance",
+          "U-turn"
+        ],
+        "ability": "Delta Stream",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Dragon Ascent",
+          "Earthquake",
+          "Scale Shot",
+          "Swords Dance"
+        ],
+        "ability": "Delta Stream",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      }
+    ],
+    "bst": 780,
+    "weightkg": 392,
+    "isMega": true,
+    "baseSpecies": "Rayquaza"
+  },
+  "lopunnymega": {
+    "id": "lopunnymega",
+    "name": "Mega Lopunny",
+    "dexNum": 428,
+    "types": [
+      "Normal",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 65,
+      "atk": 136,
+      "def": 94,
+      "spa": 54,
+      "spd": 96,
+      "spe": 135
+    },
+    "abilities": [
+      "Scrappy"
+    ],
+    "bestAbility": "Scrappy",
+    "tier": 2,
+    "generation": 4,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Ice Beam",
+          "Thunderbolt",
+          "Acrobatics",
+          "After You",
+          "Agility",
+          "Assurance",
+          "Attract",
+          "Aura Sphere"
+        ],
+        "ability": "Scrappy",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 580,
+    "weightkg": 28.3,
+    "isMega": true,
+    "baseSpecies": "Lopunny"
+  },
+  "garchompmega": {
+    "id": "garchompmega",
+    "name": "Mega Garchomp",
+    "dexNum": 445,
+    "types": [
+      "Dragon",
+      "Ground"
+    ],
+    "baseStats": {
+      "hp": 108,
+      "atk": 170,
+      "def": 115,
+      "spa": 120,
+      "spd": 95,
+      "spe": 92
+    },
+    "abilities": [
+      "Sand Force"
+    ],
+    "bestAbility": "Sand Force",
+    "tier": 1,
+    "generation": 4,
+    "movePool": [
+      "Dragon Tail",
+      "Earthquake",
+      "Outrage",
+      "Spikes",
+      "Stealth Rock",
+      "Fire Fang",
+      "Iron Head",
+      "Scale Shot",
+      "Stone Edge",
+      "Swords Dance"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Dragon Tail",
+          "Earthquake",
+          "Outrage",
+          "Spikes",
+          "Stealth Rock"
+        ],
+        "ability": "Sand Force",
+        "item": "Life Orb",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      },
+      {
+        "moves": [
+          "Earthquake",
+          "Fire Fang",
+          "Iron Head",
+          "Scale Shot",
+          "Stone Edge",
+          "Swords Dance"
+        ],
+        "ability": "Sand Force",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 700,
+    "weightkg": 95,
+    "isMega": true,
+    "baseSpecies": "Garchomp"
+  },
+  "lucariomega": {
+    "id": "lucariomega",
+    "name": "Mega Lucario",
+    "dexNum": 448,
+    "types": [
+      "Fighting",
+      "Steel"
+    ],
+    "baseStats": {
+      "hp": 70,
+      "atk": 145,
+      "def": 88,
+      "spa": 140,
+      "spd": 70,
+      "spe": 112
+    },
+    "abilities": [
+      "Adaptability"
+    ],
+    "bestAbility": "Adaptability",
+    "tier": 1,
+    "generation": 4,
+    "movePool": [
+      "Close Combat",
+      "Extreme Speed",
+      "Meteor Mash",
+      "Stone Edge",
+      "Swords Dance",
+      "Aura Sphere",
+      "Flash Cannon",
+      "Focus Blast",
+      "Nasty Plot",
+      "Vacuum Wave"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Close Combat",
+          "Extreme Speed",
+          "Meteor Mash",
+          "Stone Edge",
+          "Swords Dance"
+        ],
+        "ability": "Adaptability",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Aura Sphere",
+          "Flash Cannon",
+          "Focus Blast",
+          "Nasty Plot",
+          "Vacuum Wave"
+        ],
+        "ability": "Adaptability",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 0
+        }
+      }
+    ],
+    "bst": 625,
+    "weightkg": 57.5,
+    "isMega": true,
+    "baseSpecies": "Lucario"
+  },
+  "abomasnowmega": {
+    "id": "abomasnowmega",
+    "name": "Mega Abomasnow",
+    "dexNum": 460,
+    "types": [
+      "Grass",
+      "Ice"
+    ],
+    "baseStats": {
+      "hp": 90,
+      "atk": 132,
+      "def": 105,
+      "spa": 132,
+      "spd": 105,
+      "spe": 30
+    },
+    "abilities": [
+      "Snow Warning"
+    ],
+    "bestAbility": "Snow Warning",
+    "tier": 2,
+    "generation": 4,
+    "movePool": [
+      "Aurora Veil",
+      "Blizzard",
+      "Earthquake",
+      "Ice Shard",
+      "Wood Hammer"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Aurora Veil",
+          "Blizzard",
+          "Earthquake",
+          "Ice Shard",
+          "Wood Hammer"
+        ],
+        "ability": "Snow Warning",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 77
+        }
+      }
+    ],
+    "bst": 594,
+    "weightkg": 185,
+    "isMega": true,
+    "baseSpecies": "Abomasnow"
+  },
+  "gallademega": {
+    "id": "gallademega",
+    "name": "Mega Gallade",
+    "dexNum": 475,
+    "types": [
+      "Psychic",
+      "Fighting"
+    ],
+    "baseStats": {
+      "hp": 68,
+      "atk": 165,
+      "def": 95,
+      "spa": 65,
+      "spd": 115,
+      "spe": 110
+    },
+    "abilities": [
+      "Inner Focus"
+    ],
+    "bestAbility": "Inner Focus",
+    "tier": 1,
+    "generation": 4,
+    "movePool": [
+      "Leaf Blade",
+      "Night Slash",
+      "Psycho Cut",
+      "Sacred Sword",
+      "Agility"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Leaf Blade",
+          "Night Slash",
+          "Psycho Cut",
+          "Sacred Sword"
+        ],
+        "ability": "Inner Focus",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      },
+      {
+        "moves": [
+          "Agility",
+          "Night Slash",
+          "Psycho Cut",
+          "Sacred Sword"
+        ],
+        "ability": "Inner Focus",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "evs": {
+          "atk": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 618,
+    "weightkg": 56.4,
+    "isMega": true,
+    "baseSpecies": "Gallade"
+  },
+  "audinomega": {
+    "id": "audinomega",
+    "name": "Mega Audino",
+    "dexNum": 531,
+    "types": [
+      "Normal",
+      "Fairy"
+    ],
+    "baseStats": {
+      "hp": 103,
+      "atk": 60,
+      "def": 126,
+      "spa": 80,
+      "spd": 126,
+      "spe": 50
+    },
+    "abilities": [
+      "Healer"
+    ],
+    "bestAbility": "Healer",
+    "tier": 2,
+    "generation": 5,
+    "movePool": [],
+    "sets": [
+      {
+        "moves": [
+          "Ice Beam",
+          "Thunderbolt",
+          "After You",
+          "Ally Switch",
+          "Amnesia",
+          "Attract",
+          "Baby-Doll Eyes",
+          "Bestow"
+        ],
+        "ability": "Healer",
+        "item": "Life Orb",
+        "nature": "Modest",
+        "evs": {
+          "spa": 252,
+          "spe": 252,
+          "hp": 4
+        }
+      }
+    ],
+    "bst": 545,
+    "weightkg": 32,
+    "isMega": true,
+    "baseSpecies": "Audino"
+  },
+  "dianciemega": {
+    "id": "dianciemega",
+    "name": "Mega Diancie",
+    "dexNum": 719,
+    "types": [
+      "Rock",
+      "Fairy"
+    ],
+    "baseStats": {
+      "hp": 50,
+      "atk": 160,
+      "def": 110,
+      "spa": 160,
+      "spd": 110,
+      "spe": 110
+    },
+    "abilities": [
+      "Magic Bounce"
+    ],
+    "bestAbility": "Magic Bounce",
+    "tier": 1,
+    "generation": 6,
+    "movePool": [
+      "Body Press",
+      "Diamond Storm",
+      "Earth Power",
+      "Moonblast",
+      "Rock Polish",
+      "Stealth Rock",
+      "Calm Mind",
+      "Draining Kiss"
+    ],
+    "sets": [
+      {
+        "moves": [
+          "Body Press",
+          "Diamond Storm",
+          "Earth Power",
+          "Moonblast",
+          "Rock Polish",
+          "Stealth Rock"
+        ],
+        "ability": "Magic Bounce",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      },
+      {
+        "moves": [
+          "Calm Mind",
+          "Diamond Storm",
+          "Draining Kiss",
+          "Earth Power"
+        ],
+        "ability": "Magic Bounce",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "evs": {
+          "hp": 252,
+          "def": 128,
+          "spd": 128
+        }
+      }
+    ],
+    "bst": 700,
+    "weightkg": 27.8,
+    "isMega": true,
+    "baseSpecies": "Diancie"
+  }
+}
