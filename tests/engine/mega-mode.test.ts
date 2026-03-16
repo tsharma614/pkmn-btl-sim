@@ -160,6 +160,28 @@ describe('Snake Draft: Mega Mode', () => {
     expect(pool.length).toBe(30);
   });
 
+  it('monotype mega slots match the chosen type', () => {
+    // Fire has several megas (Charizard X/Y, Blaziken, Houndoom)
+    for (let seed = 0; seed < 10; seed++) {
+      const pool = generateDraftPool(new SeededRNG(seed), { megaMode: true, monotype: 'Fire' });
+      const megas = pool.filter(p => p.tier === 0);
+      expect(megas.length).toBeGreaterThanOrEqual(1);
+      for (const m of megas) {
+        expect(
+          (m.species.types as string[]).includes('Fire'),
+          `${m.species.name} should be Fire type in monotype Fire draft`
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('monotype mega falls back if not enough typed megas', () => {
+    // Bug type has very few megas (Beedrill, Pinsir, Heracross, Scizor)
+    const pool = generateDraftPool(new SeededRNG(42), { megaMode: true, monotype: 'Bug' });
+    const megas = pool.filter(p => p.tier === 0);
+    expect(megas.length).toBeGreaterThanOrEqual(1);
+  });
+
   it('mega mode works with larger pool sizes', () => {
     for (const size of [24, 27, 30]) {
       const pool = generateDraftPool(new SeededRNG(42), { megaMode: true, poolSize: size });

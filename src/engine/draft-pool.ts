@@ -467,9 +467,16 @@ export function generateDraftPool(
   // Append mega slots if megaMode is on
   if (megaSlots > 0) {
     const poolIds = new Set(pool.map(s => s.id));
-    const eligibleMegas = MEGA_POOL.filter(
+    let eligibleMegas = MEGA_POOL.filter(
       s => (!maxGen || s.generation <= maxGen) && !poolIds.has(s.id)
+        && (!monotype || (s.types as string[]).includes(monotype))
     );
+    // If not enough megas match monotype, fall back to all eligible megas
+    if (monotype && eligibleMegas.length < megaSlots) {
+      eligibleMegas = MEGA_POOL.filter(
+        s => (!maxGen || s.generation <= maxGen) && !poolIds.has(s.id)
+      );
+    }
     rng.shuffle(eligibleMegas);
     for (let i = 0; i < megaSlots && i < eligibleMegas.length; i++) {
       entries.push({ species: eligibleMegas[i], tier: 0 as any }); // tier 0 = mega tier
