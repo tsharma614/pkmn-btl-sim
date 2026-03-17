@@ -93,7 +93,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
 
   // ---------- Stats Screen ----------
   if (screen === 'stats') {
-    return <StatsScreen onBack={() => setScreen('main')} onStartEliteFour={onStartEliteFour ? () => onStartEliteFour(displayName) : undefined} />;
+    return <StatsScreen onBack={() => setScreen('main')} />;
   }
 
   // ---------- Campaign Screen (placeholder — built out in Phase 5) ----------
