@@ -32,7 +32,10 @@ export type BattlePhase =
   | 'disconnected'
   | 'move_selection'
   | 'elite_four_draft'
-  | 'elite_four_intro';
+  | 'elite_four_intro'
+  | 'gauntlet_starter'
+  | 'gauntlet_steal'
+  | 'campaign_intro';
 
 export type GameMode = 'cpu' | 'online';
 
@@ -120,6 +123,24 @@ export interface BattleState {
   moveSelection: boolean;
   /** Elite Four challenge state (null if not in E4 mode) */
   eliteFourStage: number | null; // 0-3 = E4, 4 = Champion
+  /** Campaign mode: 'gauntlet' | 'gym_career' | null */
+  campaignMode: 'gauntlet' | 'gym_career' | null;
+  /** Gauntlet: current battle number (0-based) */
+  gauntletBattle: number;
+  /** Gauntlet: opponent team from last battle (for steal screen) */
+  gauntletOpponentTeam: OwnPokemon[];
+  /** Campaign: opponent trainer name */
+  campaignOpponentName: string;
+  /** Campaign: opponent trainer sprite */
+  campaignOpponentSprite: string;
+  /** Campaign: opponent trainer title */
+  campaignOpponentTitle: string;
+  /** Campaign: total stages */
+  campaignTotalStages: number;
+  /** Campaign: current stage index */
+  campaignStage: number;
+  /** Gym Career: randomized gym types */
+  gymTypes: string[];
 }
 
 function emptyStats(): BattleStats {
@@ -191,6 +212,15 @@ export const initialState: BattleState = {
   monotype: null,
   moveSelection: false,
   eliteFourStage: null,
+  campaignMode: null,
+  gauntletBattle: 0,
+  gauntletOpponentTeam: [],
+  campaignOpponentName: '',
+  campaignOpponentSprite: '',
+  campaignOpponentTitle: '',
+  campaignTotalStages: 0,
+  campaignStage: 0,
+  gymTypes: [],
 };
 
 export type BattleAction =
@@ -219,6 +249,10 @@ export type BattleAction =
   | { type: 'MOVE_SELECTION_COMPLETE'; yourTeam: OwnPokemon[] }
   | { type: 'E4_DRAFT_START'; pool: DraftPoolEntry[]; playerName: string }
   | { type: 'E4_ADVANCE'; stage: number; opponentName: string }
+  | { type: 'GAUNTLET_START'; playerName: string }
+  | { type: 'GAUNTLET_STEAL'; opponentTeam: OwnPokemon[]; trainerName: string; trainerSprite: string }
+  | { type: 'CAMPAIGN_INTRO'; stage: number; totalStages: number; opponentName: string; opponentTitle: string; trainerSprite: string; campaignMode: 'gauntlet' | 'gym_career' }
+  | { type: 'GYM_CAREER_START'; playerName: string; gymTypes: string[] }
   | { type: 'RESET' };
 
 const EMPTY_SIDE: SideEffects = {
@@ -877,6 +911,73 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         turn: 0,
         battleStats: emptyStats(),
         battleLog: [],
+      };
+
+    case 'GAUNTLET_START':
+      return {
+        ...initialState,
+        phase: 'gauntlet_starter',
+        gameMode: 'cpu',
+        playerName: action.playerName,
+        campaignMode: 'gauntlet',
+        gauntletBattle: 0,
+        battleStats: emptyStats(),
+      };
+
+    case 'GAUNTLET_STEAL':
+      return {
+        ...state,
+        phase: 'gauntlet_steal',
+        gauntletOpponentTeam: action.opponentTeam,
+        campaignOpponentName: action.trainerName,
+        campaignOpponentSprite: action.trainerSprite,
+        battleEndData: null,
+        pendingEvents: [],
+        queuedPendingEvents: [],
+        queuedSwitch: null,
+        queuedEnd: null,
+        yourState: null,
+        opponentVisible: null,
+        weather: 'none',
+        turn: 0,
+      };
+
+    case 'CAMPAIGN_INTRO':
+      return {
+        ...state,
+        phase: 'campaign_intro',
+        campaignStage: action.stage,
+        campaignTotalStages: action.totalStages,
+        campaignOpponentName: action.opponentName,
+        campaignOpponentTitle: action.opponentTitle,
+        campaignOpponentSprite: action.trainerSprite,
+        campaignMode: action.campaignMode,
+        battleEndData: null,
+        pendingEvents: [],
+        queuedPendingEvents: [],
+        queuedSwitch: null,
+        queuedEnd: null,
+        yourState: null,
+        opponentVisible: null,
+        weather: 'none',
+        turn: 0,
+        battleStats: emptyStats(),
+        battleLog: [],
+      };
+
+    case 'GYM_CAREER_START':
+      return {
+        ...initialState,
+        phase: 'elite_four_draft', // reuse E4 draft screen for gym career too
+        gameMode: 'cpu',
+        playerName: action.playerName,
+        itemMode: 'competitive',
+        difficulty: 'hard',
+        campaignMode: 'gym_career',
+        gymTypes: action.gymTypes,
+        campaignStage: 0,
+        campaignTotalStages: 13, // 8 gyms + 4 E4 + 1 champion
+        battleStats: emptyStats(),
       };
 
     case 'RESET':

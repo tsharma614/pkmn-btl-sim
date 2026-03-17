@@ -26,6 +26,9 @@ import { RoleDraftScreen } from './RoleDraftScreen';
 import { EliteFourDraftScreen } from './EliteFourDraftScreen';
 import { EliteFourIntroScreen } from './EliteFourIntroScreen';
 import { MoveSelectionScreen } from './MoveSelectionScreen';
+import { GauntletStarterScreen } from './GauntletStarterScreen';
+import { GauntletStealScreen } from './GauntletStealScreen';
+import { CampaignIntroScreen } from './CampaignIntroScreen';
 import { colors, spacing } from '../theme';
 import { getGymLeader } from '../../data/gym-leaders';
 import { getEliteFourMember } from '../../data/elite-four';
@@ -63,7 +66,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, startEliteFour, e4DraftComplete, advanceEliteFour, beginE4Battle, moveSelectionComplete } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, startEliteFour, e4DraftComplete, advanceEliteFour, beginE4Battle, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -138,6 +141,62 @@ export function BattleScreen() {
     }
   }, [screenFlash?.key]);
 
+  // --- Gauntlet Starter Pick ---
+  if (state.phase === 'gauntlet_starter') {
+    return (
+      <SafeAreaView style={styles.full}>
+        <GauntletStarterScreen
+          onPick={gauntletStarterPicked}
+          onBack={returnToMenu}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // --- Gauntlet Steal Screen ---
+  if (state.phase === 'gauntlet_steal') {
+    return (
+      <SafeAreaView style={styles.full}>
+        <GauntletStealScreen
+          opponentTeam={state.gauntletOpponentTeam}
+          playerTeam={state.yourTeam.length > 0 ? state.yourTeam : []}
+          battleNumber={state.campaignStage}
+          mustDrop={state.yourTeam.length >= 6}
+          onComplete={gauntletStealComplete}
+          trainerName={state.campaignOpponentName}
+          trainerSprite={state.campaignOpponentSprite}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // --- Campaign Intro (gym career / gauntlet between battles) ---
+  if (state.phase === 'campaign_intro') {
+    return (
+      <SafeAreaView style={styles.full}>
+        <CampaignIntroScreen
+          stageLabel={
+            state.campaignMode === 'gauntlet'
+              ? `Gauntlet Battle ${state.campaignStage + 1}`
+              : state.campaignStage < 8
+                ? `Gym ${state.campaignStage + 1} of 8`
+                : state.campaignStage < 12
+                  ? `Elite Four ${state.campaignStage - 7} of 4`
+                  : 'Champion'
+          }
+          opponentName={state.campaignOpponentName}
+          opponentTitle={state.campaignOpponentTitle}
+          trainerSprite={state.campaignOpponentSprite}
+          progress={state.campaignStage / state.campaignTotalStages}
+          totalStages={Math.min(state.campaignTotalStages, 13)}
+          currentStage={state.campaignStage}
+          onBack={returnToMenu}
+          onBeginBattle={beginCampaignBattle}
+        />
+      </SafeAreaView>
+    );
+  }
+
   // --- Move Selection (after draft) ---
   if (state.phase === 'move_selection') {
     return (
@@ -152,13 +211,13 @@ export function BattleScreen() {
     );
   }
 
-  // --- Elite Four Draft ---
+  // --- Elite Four / Gym Career Draft ---
   if (state.phase === 'elite_four_draft') {
     return (
       <SafeAreaView style={styles.full}>
         <EliteFourDraftScreen
           pool={state.draftPool}
-          onComplete={e4DraftComplete}
+          onComplete={state.campaignMode === 'gym_career' ? gymCareerDraftComplete : e4DraftComplete}
           onBack={returnToMenu}
           playerName={state.playerName}
         />
@@ -186,7 +245,7 @@ export function BattleScreen() {
   if (state.phase === 'setup') {
     return (
       <SafeAreaView style={styles.full}>
-        <SetupScreen onStart={startGame} onPlayOnline={startOnline} onStartEliteFour={startEliteFour} />
+        <SetupScreen onStart={startGame} onPlayOnline={startOnline} onStartEliteFour={startEliteFour} onStartGauntlet={startGauntlet} onStartGymCareer={startGymCareer} />
       </SafeAreaView>
     );
   }
@@ -474,6 +533,8 @@ export function BattleScreen() {
           badgeName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? getGymLeader(state.monotype)?.badgeName ?? null : null}
           eliteFourStage={state.eliteFourStage}
           onAdvanceEliteFour={state.eliteFourStage !== null ? advanceEliteFour : undefined}
+          campaignMode={state.campaignMode}
+          onAdvanceCampaign={state.campaignMode !== null ? advanceCampaign : undefined}
         />
       )}
 

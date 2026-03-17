@@ -14,6 +14,8 @@ import { colors, spacing, typeColors } from '../theme';
 import { MONOTYPE_TYPES, POOL_SIZES } from '../../engine/draft-pool';
 import type { PoolSize, DraftType } from '../../engine/draft-pool';
 import { StatsScreen } from './StatsScreen';
+import { CampaignScreen } from './CampaignScreen';
+import type { GymCareerSave } from './CampaignScreen';
 
 const NAME_KEY = '@pbs_trainer_name';
 
@@ -25,6 +27,8 @@ interface Props {
   onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, poolSize?: number, megaMode?: boolean, moveSelection?: boolean) => void;
   onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, megaMode?: boolean, moveSelection?: boolean) => void;
   onStartEliteFour?: (playerName: string) => void;
+  onStartGauntlet?: (playerName: string) => void;
+  onStartGymCareer?: (playerName: string) => void;
 }
 
 /** Background sprite positions — fewer, cleaner layout */
@@ -69,7 +73,7 @@ function PokeballLogo({ size = 100 }: { size?: number }) {
 
 type Screen = 'main' | 'cpu_setup' | 'online_setup' | 'stats' | 'campaign';
 
-export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) {
+export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour, onStartGauntlet, onStartGymCareer }: Props) {
   const [screen, setScreen] = useState<Screen>('main');
   const [name, setName] = useState('');
   const [itemMode, setItemMode] = useState<'competitive' | 'casual'>('competitive');
@@ -96,20 +100,14 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
     return <StatsScreen onBack={() => setScreen('main')} />;
   }
 
-  // ---------- Campaign Screen (placeholder — built out in Phase 5) ----------
+  // ---------- Campaign Screen ----------
   if (screen === 'campaign') {
     return (
-      <View style={styles.container}>
-        <View style={styles.setupInner}>
-          <TouchableOpacity onPress={() => setScreen('main')} style={styles.backBtn} activeOpacity={0.7}>
-            <Text style={styles.backText}>{'< Back'}</Text>
-          </TouchableOpacity>
-          <Text style={styles.setupTitle}>CAMPAIGN</Text>
-          <Text style={{ color: colors.textSecondary, fontSize: 14, marginTop: spacing.md }}>
-            Gauntlet and Gym Career modes coming soon.
-          </Text>
-        </View>
-      </View>
+      <CampaignScreen
+        onBack={() => setScreen('main')}
+        onStartGauntlet={() => onStartGauntlet?.(displayName)}
+        onStartGymCareer={() => onStartGymCareer?.(displayName)}
+      />
     );
   }
 

@@ -26,6 +26,11 @@ import { SeededRNG } from '../../utils/rng';
 import { BattlePokemon } from '../../types';
 import { serializeOwnPokemon } from '../../server/state-sanitizer';
 import { saveEliteFourProgress, getEliteFourProgress } from '../utils/badge-tracker';
+import { pickTrainerName, pickTrainerSprite } from '../../data/trainer-names';
+import { MONOTYPE_TYPES } from '../../engine/draft-pool';
+import type { OwnPokemon } from '../../server/types';
+import { saveCampaignRun } from '../utils/stats-storage';
+import { saveGymCareer, clearGymCareerSave } from '../components/CampaignScreen';
 
 const SERVER_URL = getServerUrl();
 
@@ -59,6 +64,13 @@ interface BattleContextValue {
   e4DraftComplete: (pickedIndices: number[], moveSelections: Record<number, string[]>) => void;
   advanceEliteFour: () => void;
   beginE4Battle: () => void;
+  startGauntlet: (playerName: string) => void;
+  gauntletStarterPicked: (speciesId: string) => void;
+  gauntletStealComplete: (stealIndex: number, dropIndex: number | null) => void;
+  advanceCampaign: () => void;
+  beginCampaignBattle: () => void;
+  startGymCareer: (playerName: string) => void;
+  gymCareerDraftComplete: (pickedIndices: number[], moveSelections: Record<number, string[]>) => void;
 }
 
 const BattleContext = createContext<BattleContextValue | null>(null);
@@ -80,6 +92,14 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   // Elite Four state preserved across battles
   const e4PlayerTeamRef = useRef<BattlePokemon[] | null>(null);
   const e4PlayerNameRef = useRef<string>('Player');
+
+  // Campaign state preserved across battles
+  const campaignPlayerTeamRef = useRef<BattlePokemon[] | null>(null);
+  const campaignPlayerNameRef = useRef<string>('Player');
+  const campaignRngRef = useRef(new SeededRNG());
+  const campaignUsedNamesRef = useRef<string[]>([]);
+  /** For gauntlet: the last opponent's BattlePokemon team (so we can steal) */
+  const gauntletOpponentBPRef = useRef<BattlePokemon[] | null>(null);
 
   const cleanupAll = useCallback(() => {
     if (activeConnection) {
@@ -514,6 +534,315 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     startE4Battle(stage);
   }, [startE4Battle]);
 
+  // --- Gauntlet ---
+
+  const startGauntlet = useCallback((playerName: string) => {
+    cleanupAll();
+    campaignPlayerNameRef.current = playerName;
+    campaignPlayerTeamRef.current = null;
+    campaignRngRef.current = new SeededRNG();
+    campaignUsedNamesRef.current = [];
+    dispatch({ type: 'GAUNTLET_START', playerName });
+  }, [cleanupAll]);
+
+  /** Generate a CPU team of a given size for the gauntlet, scaling with battle number. */
+  const generateGauntletOpponent = useCallback((battleNum: number, teamSize: number) => {
+    const rng = campaignRngRef.current;
+    const { generateTeam } = require('../../engine/team-generator');
+    // Scale: early battles use weaker Pokemon, later use legendaries
+    const legendaryMode = battleNum >= 4;
+    const team: BattlePokemon[] = generateTeam(rng, {
+      maxGen: null,
+      legendaryMode,
+      itemMode: 'competitive' as const,
+      teamSize,
+    });
+    return team;
+  }, []);
+
+  const gauntletStarterPicked = useCallback((speciesId: string) => {
+    const species = fullSpeciesById[speciesId];
+    if (!species) return;
+    const rng = campaignRngRef.current;
+    const baseSet = pickSet(species, rng, 'competitive');
+    const starter = createBattlePokemon(species, baseSet, 100, null);
+    campaignPlayerTeamRef.current = [starter];
+
+    // Show intro for first gauntlet battle
+    const opponentName = pickTrainerName(rng, campaignUsedNamesRef.current);
+    campaignUsedNamesRef.current.push(opponentName);
+    const sprite = pickTrainerSprite(rng);
+    dispatch({
+      type: 'CAMPAIGN_INTRO',
+      stage: 0,
+      totalStages: 999, // endless
+      opponentName,
+      opponentTitle: 'Gauntlet Challenger',
+      trainerSprite: sprite,
+      campaignMode: 'gauntlet',
+    });
+  }, []);
+
+  const gauntletStealComplete = useCallback((stealIndex: number, dropIndex: number | null) => {
+    const team = campaignPlayerTeamRef.current;
+    const oppTeam = gauntletOpponentBPRef.current;
+    if (!team || !oppTeam) return;
+
+    const stolen = oppTeam[stealIndex];
+    let newTeam = [...team, stolen];
+    if (dropIndex !== null) {
+      newTeam = newTeam.filter((_, i) => i !== dropIndex);
+    }
+    campaignPlayerTeamRef.current = newTeam;
+
+    // Advance to next battle intro
+    const currentState = stateRef.current;
+    const nextBattle = currentState.gauntletBattle + 1;
+    const rng = campaignRngRef.current;
+    const opponentName = pickTrainerName(rng, campaignUsedNamesRef.current);
+    campaignUsedNamesRef.current.push(opponentName);
+    const sprite = pickTrainerSprite(rng);
+    dispatch({
+      type: 'CAMPAIGN_INTRO',
+      stage: nextBattle,
+      totalStages: 999,
+      opponentName,
+      opponentTitle: 'Gauntlet Challenger',
+      trainerSprite: sprite,
+      campaignMode: 'gauntlet',
+    });
+  }, []);
+
+  /** Called after winning a campaign battle to advance. */
+  const advanceCampaign = useCallback(() => {
+    const currentState = stateRef.current;
+
+    if (currentState.campaignMode === 'gauntlet') {
+      // Generate opponent team for steal screen
+      const battleNum = currentState.campaignStage;
+      const oppTeamSize = Math.min(battleNum + 1, 6);
+      const oppTeam = generateGauntletOpponent(battleNum, oppTeamSize);
+      gauntletOpponentBPRef.current = oppTeam;
+
+      const serialized = oppTeam.map(serializeOwnPokemon);
+      dispatch({
+        type: 'GAUNTLET_STEAL',
+        opponentTeam: serialized,
+        trainerName: currentState.campaignOpponentName,
+        trainerSprite: currentState.campaignOpponentSprite,
+      });
+      return;
+    }
+
+    if (currentState.campaignMode === 'gym_career') {
+      const nextStage = currentState.campaignStage + 1;
+      const total = currentState.campaignTotalStages;
+      const rng = campaignRngRef.current;
+
+      if (nextStage >= total) {
+        // Champion defeated!
+        saveCampaignRun({
+          mode: 'gym_career',
+          progress: 'Champion',
+          team: campaignPlayerTeamRef.current?.map(p => p.species.name) ?? [],
+          result: 'win',
+          date: new Date().toISOString(),
+        });
+        clearGymCareerSave();
+        cleanupAll();
+        campaignPlayerTeamRef.current = null;
+        dispatch({ type: 'RESET' });
+        return;
+      }
+
+      // Determine opponent info for next stage
+      const gymTypes = currentState.gymTypes;
+      let opponentName: string;
+      let opponentTitle: string;
+
+      if (nextStage < 8) {
+        const type = gymTypes[nextStage];
+        opponentName = pickTrainerName(rng, campaignUsedNamesRef.current);
+        campaignUsedNamesRef.current.push(opponentName);
+        opponentTitle = `${type}-type Gym Leader`;
+      } else if (nextStage < 12) {
+        const e4Member = getEliteFourMember(nextStage - 8);
+        opponentName = e4Member?.name ?? pickTrainerName(rng);
+        opponentTitle = e4Member?.title ?? 'Elite Four';
+      } else {
+        // Champion — use bot name pool per user request
+        opponentName = 'Professor Oak';
+        opponentTitle = 'The Pokemon Champion';
+      }
+
+      const sprite = pickTrainerSprite(rng);
+
+      // Save progress
+      saveGymCareer({
+        currentStage: nextStage,
+        gymTypes,
+        team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+        date: new Date().toISOString(),
+      });
+
+      dispatch({
+        type: 'CAMPAIGN_INTRO',
+        stage: nextStage,
+        totalStages: total,
+        opponentName,
+        opponentTitle,
+        trainerSprite: sprite,
+        campaignMode: 'gym_career',
+      });
+      return;
+    }
+  }, [cleanupAll, generateGauntletOpponent]);
+
+  /** Start the current campaign battle. */
+  const beginCampaignBattle = useCallback(() => {
+    cleanupAll();
+    const currentState = stateRef.current;
+    const playerName = campaignPlayerNameRef.current;
+    const playerTeam = campaignPlayerTeamRef.current;
+    if (!playerTeam) return;
+
+    // Heal player team
+    const healedTeam = playerTeam.map(p => ({
+      ...p,
+      currentHp: p.stats.hp,
+      isAlive: true,
+      status: null,
+      volatileStatuses: new Set<string>(),
+      boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 },
+      lastMoveUsed: null,
+      choiceLocked: null,
+      substituteHp: 0,
+      hasMovedThisTurn: false,
+      tookDamageThisTurn: false,
+      protectedLastTurn: false,
+      timesHit: 0,
+      lastDamageTaken: null,
+      toxicCounter: 0,
+      sleepTurns: 0,
+      confusionTurns: 0,
+      encoreTurns: 0,
+      encoreMove: null,
+      moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp, disabled: false })),
+    }));
+    campaignPlayerTeamRef.current = healedTeam;
+
+    let opponentTeam: BattlePokemon[];
+    const stage = currentState.campaignStage;
+
+    if (currentState.campaignMode === 'gauntlet') {
+      const teamSize = Math.min(stage + 1, 6);
+      opponentTeam = generateGauntletOpponent(stage, teamSize);
+      gauntletOpponentBPRef.current = opponentTeam;
+    } else {
+      // Gym career
+      if (stage < 8) {
+        // Gym battle — monotype team
+        const type = currentState.gymTypes[stage];
+        const { generateGymLeaderPool } = require('../../engine/draft-pool');
+        const rng = campaignRngRef.current;
+        const pool = generateGymLeaderPool(rng, type, { legendaryMode: stage >= 4 });
+        // Pick 6 from pool
+        opponentTeam = pool.slice(0, 6).map((entry: any) => {
+          const set = pickSet(entry.species, rng, 'competitive');
+          return createBattlePokemon(entry.species, set, 100, null);
+        });
+      } else if (stage < 12) {
+        // E4
+        opponentTeam = generateEliteFourCpuTeam(campaignRngRef.current, 'competitive');
+      } else {
+        // Champion
+        opponentTeam = generateChampionCpuTeam(campaignRngRef.current, 'competitive');
+      }
+    }
+
+    const local = createLocalBattle({
+      playerName,
+      itemMode: 'competitive',
+      maxGen: null,
+      difficulty: 'hard',
+      legendaryMode: false,
+      draftMode: false,
+      draftType: 'snake',
+      monotype: null,
+      poolSize: 21,
+      megaMode: false,
+      dispatch,
+      eliteFourStage: null,
+      eliteFourPlayerTeam: healedTeam,
+      eliteFourOpponentName: currentState.campaignOpponentName,
+    });
+
+    activeLocalBattle = local;
+    localBattleRef.current = local;
+    local.start();
+  }, [cleanupAll, generateGauntletOpponent]);
+
+  // --- Gym Career ---
+
+  const startGymCareer = useCallback((playerName: string) => {
+    cleanupAll();
+    campaignPlayerNameRef.current = playerName;
+    campaignPlayerTeamRef.current = null;
+    campaignRngRef.current = new SeededRNG();
+    campaignUsedNamesRef.current = [];
+
+    // Randomize 8 gym types from 18
+    const rng = campaignRngRef.current;
+    const shuffled = [...MONOTYPE_TYPES].sort(() => rng.next() - 0.5);
+    const gymTypes = shuffled.slice(0, 8);
+
+    // Generate draft pool (reuse E4 draft flow)
+    const pool = generateDraftPool(rng, {
+      maxGen: null,
+      legendaryMode: false,
+      megaMode: true,
+      targetPoolSize: 21,
+      monotype: null,
+    });
+
+    dispatch({ type: 'GYM_CAREER_START', playerName, gymTypes });
+    dispatch({ type: 'E4_DRAFT_START', pool, playerName });
+  }, [cleanupAll]);
+
+  const gymCareerDraftComplete = useCallback((pickedIndices: number[], moveSelections: Record<number, string[]>) => {
+    const currentState = stateRef.current;
+    const pool = currentState.draftPool;
+    const rng = campaignRngRef.current;
+
+    const playerTeam = pickedIndices.map((poolIdx, pickIdx) => {
+      const species = pool[poolIdx].species;
+      const baseSet = pickSet(species, rng, 'competitive');
+      const customMoves = moveSelections[pickIdx];
+      if (customMoves && customMoves.length === 4) {
+        baseSet.moves = customMoves;
+      }
+      return createBattlePokemon(species, baseSet, 100, null);
+    });
+    campaignPlayerTeamRef.current = playerTeam;
+
+    // Show intro for first gym
+    const gymTypes = currentState.gymTypes;
+    const type = gymTypes[0];
+    const opponentName = pickTrainerName(rng, campaignUsedNamesRef.current);
+    campaignUsedNamesRef.current.push(opponentName);
+    const sprite = pickTrainerSprite(rng);
+
+    dispatch({
+      type: 'CAMPAIGN_INTRO',
+      stage: 0,
+      totalStages: 13,
+      opponentName,
+      opponentTitle: `${type}-type Gym Leader`,
+      trainerSprite: sprite,
+      campaignMode: 'gym_career',
+    });
+  }, []);
+
   return (
     <BattleContext.Provider
       value={{
@@ -537,6 +866,13 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         e4DraftComplete,
         advanceEliteFour,
         beginE4Battle,
+        startGauntlet,
+        gauntletStarterPicked,
+        gauntletStealComplete,
+        advanceCampaign,
+        beginCampaignBattle,
+        startGymCareer,
+        gymCareerDraftComplete,
       }}
     >
       {children}
