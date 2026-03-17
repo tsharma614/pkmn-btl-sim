@@ -2,16 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-  ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getWinLoss } from '../utils/battle-history';
 import { PokemonSprite } from './PokemonSprite';
 import { colors, spacing, typeColors } from '../theme';
 import { MONOTYPE_TYPES, POOL_SIZES } from '../../engine/draft-pool';
@@ -30,57 +27,47 @@ interface Props {
   onStartEliteFour?: (playerName: string) => void;
 }
 
-/** Background sprite positions — 7 rows of 3, filling the whole screen */
+/** Background sprite positions — fewer, cleaner layout */
 const BG_SPRITES: { id: string; x: number; y: number; size: number; opacity: number }[] = [
-  // Row 1 (top)
-  { id: 'mewtwo', x: -10, y: -10, size: 130, opacity: 0.12 },
-  { id: 'ceruledge', x: SCREEN_W / 2 - 55, y: 10, size: 110, opacity: 0.10 },
-  { id: 'garchomp', x: SCREEN_W - 120, y: -5, size: 120, opacity: 0.11 },
+  // Row 1
+  { id: 'mewtwo', x: -10, y: -10, size: 130, opacity: 0.08 },
+  { id: 'garchomp', x: SCREEN_W - 120, y: 5, size: 120, opacity: 0.07 },
   // Row 2
-  { id: 'kyogre', x: -20, y: SCREEN_H * 0.11, size: 120, opacity: 0.10 },
-  { id: 'aggron', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.12, size: 110, opacity: 0.09 },
-  { id: 'groudon', x: SCREEN_W - 110, y: SCREEN_H * 0.11, size: 120, opacity: 0.10 },
+  { id: 'kyogre', x: -20, y: SCREEN_H * 0.15, size: 120, opacity: 0.07 },
+  { id: 'groudon', x: SCREEN_W - 110, y: SCREEN_H * 0.16, size: 120, opacity: 0.07 },
   // Row 3
-  { id: 'electivire', x: -10, y: SCREEN_H * 0.24, size: 110, opacity: 0.09 },
-  { id: 'heracross', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.25, size: 100, opacity: 0.09 },
-  { id: 'roserade', x: SCREEN_W - 100, y: SCREEN_H * 0.24, size: 100, opacity: 0.08 },
+  { id: 'dragonite', x: -15, y: SCREEN_H * 0.35, size: 120, opacity: 0.07 },
+  { id: 'metagross', x: SCREEN_W - 110, y: SCREEN_H * 0.36, size: 110, opacity: 0.06 },
   // Row 4
-  { id: 'rhyperior', x: -15, y: SCREEN_H * 0.37, size: 120, opacity: 0.10 },
-  { id: 'metagross', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.38, size: 110, opacity: 0.09 },
-  { id: 'magmortar', x: SCREEN_W - 110, y: SCREEN_H * 0.37, size: 110, opacity: 0.10 },
+  { id: 'gengar', x: -10, y: SCREEN_H * 0.55, size: 120, opacity: 0.07 },
+  { id: 'tyrantrum', x: SCREEN_W - 120, y: SCREEN_H * 0.56, size: 120, opacity: 0.07 },
   // Row 5
-  { id: 'cinderace', x: -10, y: SCREEN_H * 0.50, size: 110, opacity: 0.10 },
-  { id: 'registeel', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.51, size: 100, opacity: 0.09 },
-  { id: 'empoleon', x: SCREEN_W - 110, y: SCREEN_H * 0.50, size: 110, opacity: 0.09 },
-  // Row 6
-  { id: 'dragonite', x: -15, y: SCREEN_H * 0.63, size: 120, opacity: 0.10 },
-  { id: 'gliscor', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.64, size: 100, opacity: 0.09 },
-  { id: 'tyrantrum', x: SCREEN_W - 120, y: SCREEN_H * 0.63, size: 120, opacity: 0.11 },
-  // Row 7 (bottom)
-  { id: 'gengar', x: -10, y: SCREEN_H * 0.76, size: 120, opacity: 0.11 },
-  { id: 'baxcalibur', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.77, size: 110, opacity: 0.09 },
-  { id: 'glalie', x: SCREEN_W - 100, y: SCREEN_H * 0.76, size: 100, opacity: 0.08 },
+  { id: 'cinderace', x: -10, y: SCREEN_H * 0.75, size: 110, opacity: 0.07 },
+  { id: 'empoleon', x: SCREEN_W - 110, y: SCREEN_H * 0.76, size: 110, opacity: 0.06 },
 ];
 
-function PokeballLogo() {
+function PokeballLogo({ size = 100 }: { size?: number }) {
+  const half = size / 2;
+  const bandH = size * 0.09;
+  const outerR = size * 0.16;
+  const midR = size * 0.13;
+  const innerR = size * 0.10;
   return (
-    <View style={logoStyles.container}>
-      {/* Top half — red */}
+    <View style={[logoStyles.container, { width: size, height: size, borderRadius: half, borderWidth: Math.max(3, size * 0.04) }]}>
       <View style={logoStyles.topHalf} />
-      {/* Bottom half — white */}
       <View style={logoStyles.bottomHalf} />
-      {/* Center band — black */}
-      <View style={logoStyles.centerBand}>
-        {/* Center button */}
-        <View style={logoStyles.buttonOuter}>
-          <View style={logoStyles.buttonInner} />
+      <View style={[logoStyles.centerBand, { top: half - bandH / 2, height: bandH }]}>
+        <View style={[logoStyles.buttonOuter, { width: outerR * 2, height: outerR * 2, borderRadius: outerR }]}>
+          <View style={[logoStyles.buttonMid, { width: midR * 2, height: midR * 2, borderRadius: midR }]}>
+            <View style={[logoStyles.buttonInner, { width: innerR * 2, height: innerR * 2, borderRadius: innerR }]} />
+          </View>
         </View>
       </View>
     </View>
   );
 }
 
-type Screen = 'main' | 'cpu_setup' | 'online_setup' | 'stats';
+type Screen = 'main' | 'cpu_setup' | 'online_setup' | 'stats' | 'campaign';
 
 export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) {
   const [screen, setScreen] = useState<Screen>('main');
@@ -95,25 +82,35 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
   const [poolSize, setPoolSize] = useState<PoolSize>(21);
   const [megaMode, setMegaMode] = useState(false);
   const [moveSelection, setMoveSelection] = useState(false);
-  const [record, setRecord] = useState<{ wins: number; losses: number } | null>(null);
 
   useEffect(() => {
-    getWinLoss().then(setRecord);
     AsyncStorage.getItem(NAME_KEY).then(saved => {
       if (saved) setName(saved);
     });
   }, []);
-
-  const handleNameChange = (text: string) => {
-    setName(text);
-    AsyncStorage.setItem(NAME_KEY, text);
-  };
 
   const displayName = name.trim() || 'Player';
 
   // ---------- Stats Screen ----------
   if (screen === 'stats') {
     return <StatsScreen onBack={() => setScreen('main')} onStartEliteFour={onStartEliteFour ? () => onStartEliteFour(displayName) : undefined} />;
+  }
+
+  // ---------- Campaign Screen (placeholder — built out in Phase 5) ----------
+  if (screen === 'campaign') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.setupInner}>
+          <TouchableOpacity onPress={() => setScreen('main')} style={styles.backBtn} activeOpacity={0.7}>
+            <Text style={styles.backText}>{'< Back'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.setupTitle}>CAMPAIGN</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 14, marginTop: spacing.md }}>
+            Gauntlet and Gym Career modes coming soon.
+          </Text>
+        </View>
+      </View>
+    );
   }
 
   // ---------- Main Menu ----------
@@ -132,54 +129,46 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
 
         <View style={styles.mainMenuInner}>
           <View style={styles.logoSection}>
-            <PokeballLogo />
-            <Text style={styles.title}>PBS</Text>
+            <PokeballLogo size={100} />
             <Text style={styles.subtitle}>Pokemon Battle Simulator</Text>
-            {record && (record.wins > 0 || record.losses > 0) && (
-              <Text style={styles.recordText}>Record: {record.wins}W - {record.losses}L</Text>
-            )}
           </View>
 
-          {/* Name input */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Trainer Name</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={handleNameChange}
-              placeholder="Player"
-              placeholderTextColor={colors.textDim}
-              maxLength={16}
-              autoCapitalize="words"
-              autoCorrect={false}
-            />
+          <View style={styles.menuButtons}>
+            <TouchableOpacity
+              style={styles.menuBtn}
+              onPress={() => setScreen('cpu_setup')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.menuBtnText}>PLAY NOW</Text>
+              <Text style={styles.menuBtnSub}>vs CPU</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuBtn}
+              onPress={() => setScreen('online_setup')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.menuBtnText}>PLAY ONLINE</Text>
+              <Text style={styles.menuBtnSub}>vs Player</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuBtn}
+              onPress={() => setScreen('campaign')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.menuBtnText}>CAMPAIGN</Text>
+              <Text style={styles.menuBtnSub}>Gauntlet & Gym Career</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuBtn}
+              onPress={() => setScreen('stats')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.menuBtnText}>STATS</Text>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={styles.playNowBtn}
-            onPress={() => setScreen('cpu_setup')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.playNowText}>PLAY NOW</Text>
-            <Text style={styles.btnSubtext}>vs CPU</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.playOnlineBtn}
-            onPress={() => setScreen('online_setup')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.playOnlineText}>PLAY ONLINE</Text>
-            <Text style={styles.btnSubtext}>vs Player</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.statsBtn}
-            onPress={() => setScreen('stats')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.statsText}>STATS & BADGES</Text>
-          </TouchableOpacity>
         </View>
       </View>
     );
@@ -601,18 +590,12 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
   );
 }
 
-const LOGO_SIZE = 60;
-
 const logoStyles = StyleSheet.create({
   container: {
-    width: LOGO_SIZE,
-    height: LOGO_SIZE,
-    borderRadius: LOGO_SIZE / 2,
     overflow: 'hidden',
-    borderWidth: 3,
-    borderColor: '#222',
+    borderColor: '#1a1a1a',
     alignSelf: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   topHalf: {
     flex: 1,
@@ -624,29 +607,26 @@ const logoStyles = StyleSheet.create({
   },
   centerBand: {
     position: 'absolute',
-    top: LOGO_SIZE / 2 - 5,
     left: 0,
     right: 0,
-    height: 10,
-    backgroundColor: '#222',
+    backgroundColor: '#1a1a1a',
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#222',
+    backgroundColor: '#1a1a1a',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonMid: {
+    backgroundColor: '#333',
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
     backgroundColor: '#f5f5f5',
     borderWidth: 2,
-    borderColor: '#444',
+    borderColor: '#ccc',
   },
 });
 
@@ -665,6 +645,29 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     zIndex: 1,
   },
+  menuButtons: {
+    gap: spacing.md,
+  },
+  menuBtn: {
+    backgroundColor: colors.surface,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  menuBtnText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 2,
+  },
+  menuBtnSub: {
+    color: colors.textDim,
+    fontSize: 11,
+    marginTop: 2,
+    fontWeight: '600',
+  },
   setupInner: {
     flex: 1,
     padding: spacing.xl,
@@ -673,14 +676,7 @@ const styles = StyleSheet.create({
   },
   logoSection: {
     alignItems: 'center',
-    marginBottom: spacing.xl * 1.5,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: '900',
-    color: colors.accent,
-    textAlign: 'center',
-    letterSpacing: 6,
+    marginBottom: spacing.xl * 2,
   },
   subtitle: {
     fontSize: 14,
@@ -688,16 +684,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.xs,
     letterSpacing: 1,
-  },
-  recordText: {
-    fontSize: 14,
-    color: colors.accent,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-  section: {
-    marginBottom: spacing.xl,
   },
   sectionCompact: {
     marginBottom: spacing.md,
@@ -709,16 +695,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 1,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-    color: colors.text,
-    fontSize: 16,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -744,12 +720,6 @@ const styles = StyleSheet.create({
   },
   toggleTextActive: {
     color: '#fff',
-  },
-  modeDesc: {
-    color: colors.textDim,
-    fontSize: 11,
-    marginTop: spacing.sm,
-    lineHeight: 16,
   },
   pillRow: {
     flexDirection: 'row',
@@ -781,50 +751,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: spacing.sm,
   },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.sm,
-  },
-  checkboxChecked: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  checkmark: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '900',
-    marginTop: -1,
-  },
-  checkboxTextWrap: {
-    flex: 1,
-  },
-  checkboxLabel: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  checkboxDesc: {
-    color: colors.textDim,
-    fontSize: 11,
-    marginTop: 1,
-  },
-  monotypeSection: {
-    marginLeft: spacing.md,
-    marginTop: spacing.xs,
-  },
   typeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -851,60 +777,6 @@ const styles = StyleSheet.create({
   typeChipTextSelected: {
     fontWeight: '900',
   },
-  playNowBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: spacing.lg,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  playNowText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
-  playOnlineBtn: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: spacing.md,
-    borderWidth: 2,
-    borderColor: colors.accent,
-    backgroundColor: 'transparent',
-  },
-  playOnlineText: {
-    color: colors.accent,
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
-  statsBtn: {
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: spacing.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statsText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  btnSubtext: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 11,
-    marginTop: 2,
-    fontWeight: '600',
-  },
   backBtn: {
     marginBottom: spacing.lg,
   },
@@ -919,11 +791,6 @@ const styles = StyleSheet.create({
     color: colors.accent,
     letterSpacing: 3,
     marginBottom: spacing.xs,
-  },
-  setupSubtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: spacing.xl,
   },
   startBtn: {
     backgroundColor: colors.accent,
