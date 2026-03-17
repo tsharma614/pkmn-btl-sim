@@ -4,7 +4,8 @@
  */
 
 import { Battle } from '../engine/battle';
-import { generateTeam } from '../engine/team-generator';
+import { generateTeam, pickSet } from '../engine/team-generator';
+import { createBattlePokemon } from '../engine/pokemon-factory';
 import { generateDraftPool, generateRoleDraftPool, buildTeamFromDraftPicks, SNAKE_ORDER, DRAFT_ROLES } from '../engine/draft-pool';
 import type { DraftPoolEntry, RoleDraftPoolEntry, DraftRole } from '../engine/draft-pool';
 import { SeededRNG } from '../utils/rng';
@@ -197,6 +198,22 @@ export class Room {
     }
 
     return { valid: true, draftComplete: false };
+  }
+
+  /** Update a player's team moves after move selection phase. */
+  updatePlayerMoves(playerIndex: 0 | 1, moveSelections: Record<number, string[]>): boolean {
+    const team = this.teams[playerIndex];
+    if (!team) return false;
+
+    for (let i = 0; i < team.length; i++) {
+      const customMoves = moveSelections[i];
+      if (!customMoves || customMoves.length !== 4) continue;
+      const species = team[i].species;
+      const baseSet = pickSet(species, this.rng, this.players[playerIndex]?.itemMode ?? 'competitive');
+      baseSet.moves = customMoves;
+      team[i] = createBattlePokemon(species, baseSet, 100, null);
+    }
+    return true;
   }
 
   selectLead(playerIndex: 0 | 1, pokemonIndex: number, itemMode: 'competitive' | 'casual'): boolean {

@@ -631,6 +631,12 @@ export function createLocalBattle(options: LocalBattleOptions) {
   return {
     botName,
 
+    /** Update the human player's team (used by move selection). */
+    updateHumanTeam(newTeam: BattlePokemon[]) {
+      humanTeam = newTeam;
+      humanPlayer.team = newTeam;
+    },
+
     start() {
       // Dispatch setup sequence mimicking socket flow
       dispatch({ type: 'ROOM_CREATED', code: 'LOCAL', botName });

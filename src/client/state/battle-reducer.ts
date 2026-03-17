@@ -30,6 +30,7 @@ export type BattlePhase =
   | 'needs_switch'
   | 'battle_end'
   | 'disconnected'
+  | 'move_selection'
   | 'elite_four_draft'
   | 'elite_four_intro';
 
@@ -115,6 +116,8 @@ export interface BattleState {
   difficulty: 'easy' | 'normal' | 'hard';
   /** Monotype filter used in this game (null if not monotype) */
   monotype: string | null;
+  /** Whether move selection phase is enabled after draft */
+  moveSelection: boolean;
   /** Elite Four challenge state (null if not in E4 mode) */
   eliteFourStage: number | null; // 0-3 = E4, 4 = Champion
 }
@@ -186,12 +189,13 @@ export const initialState: BattleState = {
   roleOrder: [...DRAFT_ROLES],
   difficulty: 'normal',
   monotype: null,
+  moveSelection: false,
   eliteFourStage: null,
 };
 
 export type BattleAction =
-  | { type: 'START_GAME'; playerName: string; itemMode: 'competitive' | 'casual'; difficulty?: 'easy' | 'normal' | 'hard'; monotype?: string | null; legendaryMode?: boolean; eliteFourStage?: number | null }
-  | { type: 'START_ONLINE'; playerName: string; itemMode: 'competitive' | 'casual'; maxGen?: number | null; legendaryMode?: boolean }
+  | { type: 'START_GAME'; playerName: string; itemMode: 'competitive' | 'casual'; difficulty?: 'easy' | 'normal' | 'hard'; monotype?: string | null; legendaryMode?: boolean; eliteFourStage?: number | null; moveSelection?: boolean }
+  | { type: 'START_ONLINE'; playerName: string; itemMode: 'competitive' | 'casual'; maxGen?: number | null; legendaryMode?: boolean; moveSelection?: boolean }
   | { type: 'CONNECTED' }
   | { type: 'ROOM_CREATED'; code: string; botName: string }
   | { type: 'ONLINE_ROOM_CREATED'; code: string }
@@ -212,6 +216,7 @@ export type BattleAction =
   | { type: 'DRAFT_START'; pool: DraftPoolEntry[]; yourPlayerIndex: 0 | 1; draftType?: DraftType; roleOrder?: DraftRole[] }
   | { type: 'DRAFT_PICK'; playerIndex: 0 | 1; poolIndex: number }
   | { type: 'DRAFT_COMPLETE'; yourTeam: OwnPokemon[] }
+  | { type: 'MOVE_SELECTION_COMPLETE'; yourTeam: OwnPokemon[] }
   | { type: 'E4_DRAFT_START'; pool: DraftPoolEntry[]; playerName: string }
   | { type: 'E4_ADVANCE'; stage: number; opponentName: string }
   | { type: 'RESET' };
@@ -486,6 +491,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         difficulty: action.difficulty ?? 'normal',
         monotype: action.monotype ?? null,
         legendaryMode: action.legendaryMode ?? false,
+        moveSelection: action.moveSelection ?? false,
         eliteFourStage: action.eliteFourStage ?? null,
       };
 
@@ -498,6 +504,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         itemMode: action.itemMode,
         maxGen: action.maxGen ?? null,
         legendaryMode: action.legendaryMode ?? false,
+        moveSelection: action.moveSelection ?? false,
       };
 
     case 'CONNECTED':
@@ -519,6 +526,8 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       return state;
 
     case 'TEAM_PREVIEW':
+      // Don't override move_selection phase — defer until MOVE_SELECTION_COMPLETE
+      if (state.phase === 'move_selection') return state;
       return {
         ...state,
         phase: 'team_preview',
@@ -822,6 +831,13 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
     }
 
     case 'DRAFT_COMPLETE':
+      return {
+        ...state,
+        phase: state.moveSelection ? 'move_selection' : 'team_preview',
+        yourTeam: action.yourTeam,
+      };
+
+    case 'MOVE_SELECTION_COMPLETE':
       return {
         ...state,
         phase: 'team_preview',

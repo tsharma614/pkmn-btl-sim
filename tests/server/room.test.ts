@@ -224,4 +224,28 @@ describe('Room', () => {
       expect(room.reconnect('socket2', 'Unknown')).toBeNull();
     });
   });
+
+  describe('updatePlayerMoves', () => {
+    it('updates team moves for a player', () => {
+      room.addPlayer('socket1', 'Tanmay');
+      room.addPlayer('socket2', 'Nikhil');
+      expect(room.teams[0]).not.toBeNull();
+
+      const originalMoves = room.teams[0]![0].moves.map(m => m.data.name);
+      const newMoves = room.teams[0]![0].species.movePool.slice(0, 4);
+
+      // Only update if we have enough moves in the pool
+      if (newMoves.length === 4) {
+        const result = room.updatePlayerMoves(0, { 0: newMoves });
+        expect(result).toBe(true);
+        const updatedMoves = room.teams[0]![0].moves.map(m => m.data.name);
+        expect(updatedMoves).toEqual(newMoves);
+      }
+    });
+
+    it('returns false when no team exists', () => {
+      const emptyRoom = new Room('EMPTY1', 99);
+      expect(emptyRoom.updatePlayerMoves(0, { 0: ['Tackle', 'Ember', 'Scratch', 'Growl'] })).toBe(false);
+    });
+  });
 });

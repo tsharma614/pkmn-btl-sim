@@ -231,6 +231,23 @@ export function registerSocketHandlers(
       console.log(`[draft] Pool rerolled in room ${room.code}`);
     });
 
+    socket.on('moves_selected' as any, (payload: { moveSelections: Record<number, string[]> }) => {
+      const room = roomManager.getRoomBySocketId(socket.id);
+      if (!room) return;
+      const playerData = room.getPlayerBySocketId(socket.id);
+      if (!playerData) return;
+
+      room.updatePlayerMoves(playerData.index, payload.moveSelections);
+
+      // Send updated team back to the player
+      const team = room.teams[playerData.index];
+      if (team) {
+        socket.emit('draft_complete', {
+          yourTeam: team.map(serializeOwnPokemon),
+        });
+      }
+    });
+
     socket.on('select_lead', (payload) => {
       const room = roomManager.getRoomBySocketId(socket.id);
       if (!room) {

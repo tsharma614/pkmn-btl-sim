@@ -25,6 +25,7 @@ import { DraftScreen } from './DraftScreen';
 import { RoleDraftScreen } from './RoleDraftScreen';
 import { EliteFourDraftScreen } from './EliteFourDraftScreen';
 import { EliteFourIntroScreen } from './EliteFourIntroScreen';
+import { MoveSelectionScreen } from './MoveSelectionScreen';
 import { colors, spacing } from '../theme';
 import { getGymLeader } from '../../data/gym-leaders';
 import { getEliteFourMember } from '../../data/elite-four';
@@ -62,7 +63,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, startEliteFour, e4DraftComplete, advanceEliteFour, beginE4Battle } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, startEliteFour, e4DraftComplete, advanceEliteFour, beginE4Battle, moveSelectionComplete } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -136,6 +137,20 @@ export function BattleScreen() {
       }).start();
     }
   }, [screenFlash?.key]);
+
+  // --- Move Selection (after draft) ---
+  if (state.phase === 'move_selection') {
+    return (
+      <SafeAreaView style={styles.full}>
+        <MoveSelectionScreen
+          team={state.yourTeam}
+          onComplete={moveSelectionComplete}
+          onBack={returnToMenu}
+          playerName={state.playerName}
+        />
+      </SafeAreaView>
+    );
+  }
 
   // --- Elite Four Draft ---
   if (state.phase === 'elite_four_draft') {

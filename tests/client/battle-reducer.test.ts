@@ -1300,4 +1300,97 @@ describe('battleReducer', () => {
       expect(result.eliteFourStage).toBeNull();
     });
   });
+
+  describe('Move Selection Phase', () => {
+    it('START_GAME stores moveSelection flag', () => {
+      const state = battleReducer(initialState, {
+        type: 'START_GAME',
+        playerName: 'Tanmay',
+        itemMode: 'competitive',
+        moveSelection: true,
+      });
+      expect(state.moveSelection).toBe(true);
+    });
+
+    it('START_ONLINE stores moveSelection flag', () => {
+      const state = battleReducer(initialState, {
+        type: 'START_ONLINE',
+        playerName: 'Tanmay',
+        itemMode: 'competitive',
+        moveSelection: true,
+      });
+      expect(state.moveSelection).toBe(true);
+    });
+
+    it('DRAFT_COMPLETE goes to move_selection when moveSelection enabled', () => {
+      const state: BattleState = {
+        ...initialState,
+        phase: 'drafting',
+        moveSelection: true,
+        draftMode: true,
+      };
+      const result = battleReducer(state, {
+        type: 'DRAFT_COMPLETE',
+        yourTeam: makeTeam(),
+      });
+      expect(result.phase).toBe('move_selection');
+      expect(result.yourTeam).toHaveLength(6);
+    });
+
+    it('DRAFT_COMPLETE goes to team_preview when moveSelection disabled', () => {
+      const state: BattleState = {
+        ...initialState,
+        phase: 'drafting',
+        moveSelection: false,
+        draftMode: true,
+      };
+      const result = battleReducer(state, {
+        type: 'DRAFT_COMPLETE',
+        yourTeam: makeTeam(),
+      });
+      expect(result.phase).toBe('team_preview');
+    });
+
+    it('MOVE_SELECTION_COMPLETE transitions to team_preview with updated team', () => {
+      const team = makeTeam();
+      const state: BattleState = {
+        ...initialState,
+        phase: 'move_selection',
+        moveSelection: true,
+      };
+      const result = battleReducer(state, {
+        type: 'MOVE_SELECTION_COMPLETE',
+        yourTeam: team,
+      });
+      expect(result.phase).toBe('team_preview');
+      expect(result.yourTeam).toBe(team);
+    });
+
+    it('TEAM_PREVIEW is ignored during move_selection phase', () => {
+      const state: BattleState = {
+        ...initialState,
+        phase: 'move_selection',
+        moveSelection: true,
+        yourTeam: makeTeam(),
+      };
+      const result = battleReducer(state, {
+        type: 'TEAM_PREVIEW',
+        payload: { yourTeam: makeTeam(), yourPlayerIndex: 0 },
+      });
+      expect(result.phase).toBe('move_selection');
+    });
+
+    it('moveSelection defaults to false', () => {
+      expect(initialState.moveSelection).toBe(false);
+    });
+
+    it('RESET clears moveSelection', () => {
+      const state: BattleState = {
+        ...initialState,
+        moveSelection: true,
+      };
+      const result = battleReducer(state, { type: 'RESET' });
+      expect(result.moveSelection).toBe(false);
+    });
+  });
 });

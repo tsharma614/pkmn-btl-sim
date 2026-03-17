@@ -18,6 +18,9 @@ import { generateDraftPool, buildTeamFromDraftPicks } from '../../engine/draft-p
 import type { DraftPoolEntry } from '../../engine/draft-pool';
 import { generateEliteFourCpuTeam, generateChampionCpuTeam, pickSet } from '../../engine/team-generator';
 import { createBattlePokemon } from '../../engine/pokemon-factory';
+import pokedexData from '../../data/pokedex.json';
+import megaPokedexData from '../../data/mega-pokemon.json';
+import type { PokemonSpecies } from '../../types';
 import { getEliteFourMember, TOTAL_E4_STAGES } from '../../data/elite-four';
 import { SeededRNG } from '../../utils/rng';
 import { BattlePokemon } from '../../types';
@@ -26,11 +29,20 @@ import { saveEliteFourProgress, getEliteFourProgress } from '../utils/badge-trac
 
 const SERVER_URL = getServerUrl();
 
+// Build species lookup by ID for move selection (need full PokemonSpecies for pickSet/createBattlePokemon)
+const fullSpeciesById: Record<string, PokemonSpecies> = {};
+for (const entry of Object.values(pokedexData as Record<string, any>)) {
+  fullSpeciesById[entry.id] = entry as PokemonSpecies;
+}
+for (const entry of Object.values(megaPokedexData as Record<string, any>)) {
+  fullSpeciesById[entry.id] = entry as PokemonSpecies;
+}
+
 interface BattleContextValue {
   state: BattleState;
   dispatch: React.Dispatch<BattleAction>;
-  startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number, megaMode?: boolean) => void;
-  startOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', megaMode?: boolean) => void;
+  startGame: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number, megaMode?: boolean, moveSelection?: boolean) => void;
+  startOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', megaMode?: boolean, moveSelection?: boolean) => void;
   createRoom: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, monotype?: string | null) => void;
   joinRoom: (playerName: string, itemMode: 'competitive' | 'casual', code: string) => void;
   selectLead: (index: number) => void;
@@ -42,6 +54,7 @@ interface BattleContextValue {
   playAgain: () => void;
   requestRematchOnline: () => void;
   returnToMenu: () => void;
+  moveSelectionComplete: (moveSelections: Record<number, string[]>) => void;
   startEliteFour: (playerName: string) => void;
   e4DraftComplete: (pickedIndices: number[], moveSelections: Record<number, string[]>) => void;
   advanceEliteFour: () => void;
@@ -84,11 +97,11 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
 
   // --- CPU mode: local battle (no server) ---
 
-  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number, megaMode?: boolean) => {
-    console.log(`[battle-context] startGame — draft: ${draftMode}, type: ${draftType}, legendary: ${legendaryMode}, maxGen: ${maxGen}, difficulty: ${difficulty}, monotype: ${monotype}, poolSize: ${poolSize}, mega: ${megaMode}`);
+  const startGame = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: 'easy' | 'normal' | 'hard', legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: 'snake' | 'role', poolSize?: number, megaMode?: boolean, moveSelection?: boolean) => {
+    console.log(`[battle-context] startGame — draft: ${draftMode}, type: ${draftType}, legendary: ${legendaryMode}, maxGen: ${maxGen}, difficulty: ${difficulty}, monotype: ${monotype}, poolSize: ${poolSize}, mega: ${megaMode}, moveSelect: ${moveSelection}`);
     cleanupAll();
     dispatch({ type: 'RESET' });
-    dispatch({ type: 'START_GAME', playerName, itemMode, difficulty, monotype, legendaryMode });
+    dispatch({ type: 'START_GAME', playerName, itemMode, difficulty, monotype, legendaryMode, moveSelection });
 
     // Skip 'connecting' phase — go directly to team preview
     dispatch({ type: 'CONNECTED' });
@@ -119,14 +132,14 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   const draftTypeRef = useRef<'snake' | 'role'>('snake');
   const megaModeRef = useRef(false);
 
-  const startOnlineCreate = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, dm?: boolean, mono?: string | null, dt?: 'snake' | 'role', mega?: boolean) => {
+  const startOnlineCreate = useCallback((playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, dm?: boolean, mono?: string | null, dt?: 'snake' | 'role', mega?: boolean, moveSelect?: boolean) => {
     cleanupAll();
     draftModeRef.current = dm ?? false;
     monotypeRef.current = mono ?? null;
     draftTypeRef.current = dt ?? 'snake';
     megaModeRef.current = mega ?? false;
     dispatch({ type: 'RESET' });
-    dispatch({ type: 'START_ONLINE', playerName, itemMode, maxGen, legendaryMode });
+    dispatch({ type: 'START_ONLINE', playerName, itemMode, maxGen, legendaryMode, moveSelection: moveSelect });
     const conn = createOnlineConnection(SERVER_URL, playerName, itemMode, dispatch, maxGen, legendaryMode);
     activeConnection = conn;
     connectionRef.current = conn;
@@ -312,6 +325,51 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RESET' });
   }, [cleanupAll]);
 
+  // --- Move Selection Complete ---
+
+  const moveSelectionComplete = useCallback((moveSelections: Record<number, string[]>) => {
+    const currentState = stateRef.current;
+    const team = currentState.yourTeam;
+    const rng = new SeededRNG();
+
+    // Rebuild team with custom moves using the engine
+    // Must look up full PokemonSpecies from pokedex — OwnPokemon.species is stripped
+    const rebuiltTeam: BattlePokemon[] = team.map((poke, i) => {
+      const fullSpecies = fullSpeciesById[poke.species.id];
+      if (!fullSpecies) {
+        // Fallback: shouldn't happen, but use partial species
+        const baseSet = pickSet(poke.species as any, rng, currentState.itemMode);
+        return createBattlePokemon(poke.species as any, baseSet, 100, null);
+      }
+      const customMoves = moveSelections[i];
+      if (!customMoves || customMoves.length !== 4) {
+        const baseSet = pickSet(fullSpecies, rng, currentState.itemMode);
+        return createBattlePokemon(fullSpecies, baseSet, 100, null);
+      }
+      const baseSet = pickSet(fullSpecies, rng, currentState.itemMode);
+      baseSet.moves = customMoves;
+      return createBattlePokemon(fullSpecies, baseSet, 100, null);
+    });
+
+    // Update local battle's team if CPU mode
+    const local = localBattleRef.current;
+    if (local) {
+      local.updateHumanTeam(rebuiltTeam);
+    }
+
+    // For online mode, send move selections to server
+    const conn = connectionRef.current;
+    if (conn) {
+      conn.humanSocket.emit('moves_selected' as any, { moveSelections });
+    }
+
+    // Dispatch with serialized team
+    dispatch({
+      type: 'MOVE_SELECTION_COMPLETE',
+      yourTeam: rebuiltTeam.map(serializeOwnPokemon),
+    });
+  }, []);
+
   // --- Elite Four ---
 
   const startEliteFour = useCallback((playerName: string) => {
@@ -466,6 +524,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         playAgain,
         requestRematchOnline,
         returnToMenu,
+        moveSelectionComplete,
         startEliteFour,
         e4DraftComplete,
         advanceEliteFour,

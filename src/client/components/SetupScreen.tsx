@@ -26,8 +26,8 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
 interface Props {
-  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, poolSize?: number, megaMode?: boolean) => void;
-  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, megaMode?: boolean) => void;
+  onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, poolSize?: number, megaMode?: boolean, moveSelection?: boolean) => void;
+  onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, megaMode?: boolean, moveSelection?: boolean) => void;
   onStartEliteFour?: (playerName: string) => void;
 }
 
@@ -95,6 +95,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
   const [draftTypeMode, setDraftTypeMode] = useState<DraftType>('snake');
   const [poolSize, setPoolSize] = useState<PoolSize>(21);
   const [megaMode, setMegaMode] = useState(false);
+  const [moveSelection, setMoveSelection] = useState(false);
   const [record, setRecord] = useState<{ wins: number; losses: number } | null>(null);
 
   useEffect(() => {
@@ -290,6 +291,15 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
               >
                 <Text style={[styles.pillText, megaMode && styles.pillTextActive]}>Mega</Text>
               </TouchableOpacity>
+              {draftMode && (
+                <TouchableOpacity
+                  style={[styles.pill, moveSelection && styles.pillActive]}
+                  onPress={() => setMoveSelection(!moveSelection)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.pillText, moveSelection && styles.pillTextActive]}>Pick Moves</Text>
+                </TouchableOpacity>
+              )}
             </View>
             {/* Active modifier descriptions — one-liners */}
             {(classicMode || legendaryMode || draftMode || megaMode) && (
@@ -301,6 +311,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
                   draftMode && poolSize !== 21 && `${poolSize} Pokemon pool`,
                   monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
                   megaMode && (draftMode ? 'Mega evolutions in draft pool' : '~25% chance of a mega on each team'),
+                  moveSelection && 'Choose your moves after draft',
                   monotype && monotype !== 'random' && difficulty === 'hard' && draftMode && legendaryMode && draftTypeMode !== 'role' && GYM_LEADERS[monotype]
                     ? `vs ${GYM_LEADERS[monotype].name}`
                     : null,
@@ -397,7 +408,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
               if (mono === 'random') {
                 mono = MONOTYPE_TYPES[Math.floor(Math.random() * MONOTYPE_TYPES.length)];
               }
-              onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode, draftMode, mono || null, draftTypeMode, poolSize, megaMode);
+              onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode, draftMode, mono || null, draftTypeMode, poolSize, megaMode, moveSelection);
             }}
             activeOpacity={0.7}
           >
@@ -495,6 +506,15 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
             >
               <Text style={[styles.pillText, megaMode && styles.pillTextActive]}>Mega</Text>
             </TouchableOpacity>
+            {draftMode && (
+              <TouchableOpacity
+                style={[styles.pill, moveSelection && styles.pillActive]}
+                onPress={() => setMoveSelection(!moveSelection)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.pillText, moveSelection && styles.pillTextActive]}>Pick Moves</Text>
+              </TouchableOpacity>
+            )}
           </View>
           {(classicMode || legendaryMode || draftMode || megaMode) && (
             <Text style={styles.modifierDesc}>
@@ -504,6 +524,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
                 draftMode && (draftTypeMode === 'role' ? 'Role draft from shared pool' : 'Snake draft from shared pool'),
                 monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
                 megaMode && (draftMode ? 'Mega evolutions in draft pool' : '~25% chance of a mega on each team'),
+                moveSelection && 'Choose your moves after draft',
               ].filter(Boolean).join(' · ')}
             </Text>
           )}
@@ -578,7 +599,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
             if (mono === 'random') {
               mono = MONOTYPE_TYPES[Math.floor(Math.random() * MONOTYPE_TYPES.length)];
             }
-            onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode, draftMode, mono || null, draftTypeMode, megaMode);
+            onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode, draftMode, mono || null, draftTypeMode, megaMode, moveSelection);
           }}
           activeOpacity={0.7}
         >
