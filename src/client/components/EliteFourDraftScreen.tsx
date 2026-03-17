@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Modal,
   useWindowDimensions,
 } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
@@ -43,6 +44,14 @@ const CATEGORY_COLORS: Record<string, string> = {
   Status: '#A8A77A',
 };
 
+const STAT_LABELS: Record<string, string> = {
+  hp: 'HP', atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe',
+};
+
+const STAT_COLORS: Record<string, string> = {
+  hp: '#FF5959', atk: '#F5AC78', def: '#FAE078', spa: '#9DB7F5', spd: '#A7DB8D', spe: '#FA92B2',
+};
+
 interface Props {
   pool: DraftPoolEntry[];
   onComplete: (pickedIndices: number[], moveSelections: Record<number, string[]>) => void;
@@ -65,6 +74,7 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
   // Move selection state: which Pokemon we're selecting moves for (0-5), and chosen moves per Pokemon
   const [currentMovePickIdx, setCurrentMovePickIdx] = useState(0);
   const [moveSelections, setMoveSelections] = useState<Record<number, string[]>>({});
+  const [detailMove, setDetailMove] = useState<{ name: string; data: any } | null>(null);
 
   const pickedSet = new Set(picks);
 
@@ -151,7 +161,7 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
     ]);
 
     // Moves already in the Pokemon's competitive sets — always shown
-    const setMoves = new Set(
+    const setMoveNames = new Set(
       (currentSpecies.sets || []).flatMap(s => s.moves),
     );
 
@@ -160,7 +170,7 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
       .map(name => ({ name, data: getMoveData(name) }))
       .filter(m => {
         if (!m.data) return false;
-        if (setMoves.has(m.name)) return true;
+        if (setMoveNames.has(m.name)) return true;
         if (m.data.category === 'Status') return GOOD_STATUS_MOVES.has(m.name);
         const power = m.data.basePower ?? m.data.power ?? 0;
         return power >= 60;
@@ -175,6 +185,8 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
       });
 
     const selectedSet = new Set(currentMoves);
+    const baseStats = currentSpecies.baseStats;
+    const bst = Object.values(baseStats).reduce((a: number, b: number) => a + b, 0);
 
     return (
       <View style={styles.container}>
@@ -188,16 +200,32 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
           </View>
         </View>
 
-        {/* Current Pokemon */}
-        <View style={styles.movePokemonRow}>
-          <PokemonSprite speciesId={currentSpecies.id} facing="front" size={56} />
-          <View style={styles.movePokemonInfo}>
-            <Text style={styles.movePokemonName}>{currentSpecies.name}</Text>
-            <View style={styles.moveTypesRow}>
-              {currentSpecies.types.map(t => <TypeBadge key={t} type={t} small />)}
+        {/* Current Pokemon + stats */}
+        <View style={styles.movePokemonSection}>
+          <View style={styles.movePokemonRow}>
+            <PokemonSprite speciesId={currentSpecies.id} facing="front" size={56} />
+            <View style={styles.movePokemonInfo}>
+              <Text style={styles.movePokemonName}>{currentSpecies.name}</Text>
+              <View style={styles.moveTypesRow}>
+                {currentSpecies.types.map(t => <TypeBadge key={t} type={t} small />)}
+              </View>
             </View>
+            <Text style={styles.movePickCount}>{currentMoves.length}/4</Text>
           </View>
-          <Text style={styles.movePickCount}>{currentMoves.length}/4</Text>
+
+          {/* Base stats bars */}
+          <View style={styles.moveStatsRow}>
+            {Object.entries(baseStats).map(([stat, value]) => (
+              <View key={stat} style={styles.moveStatItem}>
+                <Text style={[styles.moveStatLabel, { color: STAT_COLORS[stat] || '#aaa' }]}>{STAT_LABELS[stat] || stat}</Text>
+                <View style={styles.moveStatBarBg}>
+                  <View style={[styles.moveStatBar, { width: `${Math.min((value as number) / 255 * 100, 100)}%`, backgroundColor: STAT_COLORS[stat] || '#aaa' }]} />
+                </View>
+                <Text style={styles.moveStatValue}>{value as number}</Text>
+              </View>
+            ))}
+            <Text style={styles.moveBstText}>BST: {bst}</Text>
+          </View>
         </View>
 
         {/* Selected moves preview */}
@@ -219,19 +247,23 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
         <ScrollView style={styles.moveScroll}>
           {allMoves.map(({ name, data: md }) => {
             const isSelected = selectedSet.has(name);
+            const isSetMove = setMoveNames.has(name);
             const power = md.basePower ?? md.power ?? 0;
             return (
               <TouchableOpacity
                 key={name}
                 style={[styles.moveRow, isSelected && styles.moveRowSelected]}
                 onPress={() => toggleMove(name)}
+                onLongPress={() => setDetailMove({ name, data: md })}
                 activeOpacity={0.7}
               >
                 <View style={[styles.moveCategoryDot, { backgroundColor: CATEGORY_COLORS[md.category] || '#666' }]} />
                 <View style={[styles.moveTypeBadge, { backgroundColor: typeColors[md.type] || '#666' }]}>
                   <Text style={styles.moveTypeBadgeText}>{md.type}</Text>
                 </View>
-                <Text style={[styles.moveName, isSelected && styles.moveNameSelected]}>{name}</Text>
+                <Text style={[styles.moveName, isSelected && styles.moveNameSelected]} numberOfLines={1}>
+                  {name}{isSetMove ? ' *' : ''}
+                </Text>
                 <Text style={styles.movePower}>{power > 0 ? power : '-'}</Text>
                 <Text style={styles.moveAcc}>{md.accuracy ? `${md.accuracy}%` : '-'}</Text>
                 {isSelected && <Text style={styles.moveCheck}>{'>'}</Text>}
@@ -255,6 +287,86 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Team strip */}
+        <View style={styles.moveTeamStrip}>
+          {picks.map((poolIdx, i) => (
+            <TouchableOpacity
+              key={i}
+              style={[styles.moveTeamSlot, i === currentMovePickIdx && styles.moveTeamSlotActive, moveSelections[i]?.length === 4 && styles.moveTeamSlotDone]}
+              onPress={() => {
+                if (i <= currentMovePickIdx || moveSelections[i]?.length === 4) {
+                  setCurrentMovePickIdx(i);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <PokemonSprite speciesId={pool[poolIdx].species.id} facing="front" size={28} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Move detail modal */}
+        <Modal visible={!!detailMove} transparent animationType="fade" onRequestClose={() => setDetailMove(null)}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setDetailMove(null)}>
+            <View style={styles.modalContent}>
+              {detailMove && (
+                <>
+                  <View style={styles.modalHeader}>
+                    <View style={[styles.modalTypeBadge, { backgroundColor: typeColors[detailMove.data.type] || '#666' }]}>
+                      <Text style={styles.modalTypeText}>{detailMove.data.type}</Text>
+                    </View>
+                    <View style={[styles.modalCategoryBadge, { backgroundColor: CATEGORY_COLORS[detailMove.data.category] || '#666' }]}>
+                      <Text style={styles.modalCategoryText}>{detailMove.data.category}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.modalMoveName}>{detailMove.name}</Text>
+                  <View style={styles.modalStatsRow}>
+                    <View style={styles.modalStatBox}>
+                      <Text style={styles.modalStatLabel}>Power</Text>
+                      <Text style={styles.modalStatValue}>{detailMove.data.basePower || detailMove.data.power || '-'}</Text>
+                    </View>
+                    <View style={styles.modalStatBox}>
+                      <Text style={styles.modalStatLabel}>Accuracy</Text>
+                      <Text style={styles.modalStatValue}>{detailMove.data.accuracy ? `${detailMove.data.accuracy}%` : '-'}</Text>
+                    </View>
+                    <View style={styles.modalStatBox}>
+                      <Text style={styles.modalStatLabel}>PP</Text>
+                      <Text style={styles.modalStatValue}>{detailMove.data.pp || '-'}</Text>
+                    </View>
+                    <View style={styles.modalStatBox}>
+                      <Text style={styles.modalStatLabel}>Priority</Text>
+                      <Text style={styles.modalStatValue}>{detailMove.data.priority ?? 0}</Text>
+                    </View>
+                  </View>
+                  {detailMove.data.desc && (
+                    <Text style={styles.modalDesc}>{detailMove.data.desc}</Text>
+                  )}
+                  {detailMove.data.shortDesc && !detailMove.data.desc && (
+                    <Text style={styles.modalDesc}>{detailMove.data.shortDesc}</Text>
+                  )}
+                  {detailMove.data.flags && (
+                    <View style={styles.modalFlags}>
+                      {detailMove.data.flags.contact && <Text style={styles.flagChip}>Contact</Text>}
+                      {detailMove.data.flags.protect && <Text style={styles.flagChip}>Blocked by Protect</Text>}
+                      {detailMove.data.flags.sound && <Text style={styles.flagChip}>Sound</Text>}
+                      {detailMove.data.flags.bullet && <Text style={styles.flagChip}>Bullet</Text>}
+                      {detailMove.data.flags.punch && <Text style={styles.flagChip}>Punch</Text>}
+                      {detailMove.data.flags.bite && <Text style={styles.flagChip}>Bite</Text>}
+                    </View>
+                  )}
+                  {detailMove.data.secondary && (
+                    <Text style={styles.modalSecondary}>
+                      {detailMove.data.secondary.chance
+                        ? `${detailMove.data.secondary.chance}% chance: ${detailMove.data.secondary.status || detailMove.data.secondary.volatileStatus || (detailMove.data.secondary.boosts ? 'stat change' : 'effect')}`
+                        : ''}
+                    </Text>
+                  )}
+                </>
+              )}
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
     );
   }
@@ -425,11 +537,19 @@ const styles = StyleSheet.create({
   confirmBtnDisabled: { backgroundColor: colors.surface, opacity: 0.5 },
   confirmText: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 1 },
   // Move selection styles
-  movePokemonRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: spacing.md, backgroundColor: colors.surface, marginHorizontal: spacing.md, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
+  movePokemonSection: { paddingHorizontal: spacing.md, paddingBottom: spacing.xs },
+  movePokemonRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.surface, padding: spacing.sm, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
   movePokemonInfo: { flex: 1 },
   movePokemonName: { fontSize: 16, fontWeight: '800', color: colors.text },
   moveTypesRow: { flexDirection: 'row', gap: 4, marginTop: 2 },
   movePickCount: { fontSize: 18, fontWeight: '900', color: '#4fc3f7' },
+  moveStatsRow: { marginTop: spacing.xs, backgroundColor: colors.surface, borderRadius: 8, padding: spacing.xs, borderWidth: 1, borderColor: colors.border },
+  moveStatItem: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 1 },
+  moveStatLabel: { fontSize: 9, fontWeight: '700', width: 26, textAlign: 'right' },
+  moveStatBarBg: { flex: 1, height: 4, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' },
+  moveStatBar: { height: 4, borderRadius: 2 },
+  moveStatValue: { fontSize: 9, fontWeight: '600', color: colors.textSecondary, width: 24, textAlign: 'right' },
+  moveBstText: { fontSize: 9, fontWeight: '700', color: colors.textDim, textAlign: 'right', marginTop: 2 },
   selectedMovesRow: { flexDirection: 'row', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, gap: 4, flexWrap: 'wrap' },
   selectedMoveChip: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   selectedMoveChipText: { color: '#fff', fontSize: 11, fontWeight: '700' },
@@ -445,6 +565,28 @@ const styles = StyleSheet.create({
   movePower: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, width: 30, textAlign: 'right' },
   moveAcc: { fontSize: 11, color: colors.textDim, width: 35, textAlign: 'right' },
   moveCheck: { color: '#4fc3f7', fontSize: 14, fontWeight: '800' },
+  // Team strip for move selection
+  moveTeamStrip: { flexDirection: 'row', justifyContent: 'center', gap: 4, paddingVertical: spacing.xs, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
+  moveTeamSlot: { width: 32, height: 32, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.03)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  moveTeamSlotActive: { borderColor: '#4fc3f7', backgroundColor: 'rgba(79,195,247,0.1)' },
+  moveTeamSlotDone: { borderColor: 'rgba(76,175,80,0.5)', backgroundColor: 'rgba(76,175,80,0.08)' },
+  // Move detail modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { backgroundColor: colors.background, borderRadius: 16, padding: spacing.lg, width: '85%', borderWidth: 2, borderColor: colors.border },
+  modalHeader: { flexDirection: 'row', gap: 8, marginBottom: spacing.sm },
+  modalTypeBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 4 },
+  modalTypeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  modalCategoryBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 4 },
+  modalCategoryText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  modalMoveName: { fontSize: 22, fontWeight: '900', color: colors.text, marginBottom: spacing.md },
+  modalStatsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
+  modalStatBox: { alignItems: 'center' },
+  modalStatLabel: { fontSize: 10, color: colors.textDim, fontWeight: '600' },
+  modalStatValue: { fontSize: 16, fontWeight: '800', color: colors.text },
+  modalDesc: { fontSize: 13, color: colors.textSecondary, lineHeight: 18, marginBottom: spacing.sm },
+  modalFlags: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: spacing.sm },
+  flagChip: { fontSize: 10, color: colors.textDim, backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' },
+  modalSecondary: { fontSize: 11, color: colors.accent, fontStyle: 'italic' },
   // Exit overlay
   exitOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', zIndex: 100 },
   exitModal: { backgroundColor: colors.background, borderRadius: 16, padding: spacing.xl, width: '80%', alignItems: 'center', borderWidth: 2, borderColor: colors.border },

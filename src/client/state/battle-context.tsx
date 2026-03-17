@@ -434,7 +434,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       protectCount: 0,
       choiceLocked: null,
       substituteHp: 0,
-      moves: p.moves.map(m => ({ ...m, currentPp: m.pp })),
+      moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp })),
     }));
     e4PlayerTeamRef.current = healedTeam;
 
