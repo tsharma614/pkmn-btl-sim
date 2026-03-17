@@ -738,6 +738,22 @@ export function pickGymLeaderDraftPick(
     }
   }
 
+  // Always pick mega first if available and no mega picked yet
+  const hasMega = myPicks.some(i => pool[i].tier === 0);
+  if (!hasMega) {
+    const megaRemaining = remaining.filter(({ entry }) => entry.tier === 0);
+    if (megaRemaining.length > 0) {
+      // Prefer mega matching gym type, then highest BST
+      const typed = megaRemaining.filter(({ entry }) => (entry.species.types as string[]).includes(gymType));
+      if (typed.length > 0) {
+        typed.sort((a, b) => getBST(b.entry.species) - getBST(a.entry.species));
+        return typed[0].index;
+      }
+      megaRemaining.sort((a, b) => getBST(b.entry.species) - getBST(a.entry.species));
+      return megaRemaining[0].index;
+    }
+  }
+
   const scored = remaining.map(({ entry, index }) => {
     let score = 0;
     const speciesTypes = entry.species.types as string[];
@@ -747,8 +763,8 @@ export function pickGymLeaderDraftPick(
       score += 30;
     }
 
-    // Tier value
-    const tierValue = { 1: 40, 2: 30, 3: 20, 4: 10 }[entry.tier] ?? 15;
+    // Tier value (tier 0 = mega, already handled above)
+    const tierValue = entry.tier === 0 ? 35 : ({ 1: 40, 2: 30, 3: 20, 4: 10 }[entry.tier] ?? 15);
     score += tierValue;
 
     // BST bonus

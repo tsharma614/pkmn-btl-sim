@@ -23,6 +23,9 @@ interface Props {
   /** Gym leader info for gym badge display */
   gymLeaderName?: string | null;
   badgeName?: string | null;
+  /** Elite Four mode */
+  eliteFourStage?: number | null;
+  onAdvanceEliteFour?: () => void;
 }
 
 function formatReason(reason: string): string {
@@ -239,7 +242,7 @@ function buildBattleLogText(
   return sections.join('\n\n');
 }
 
-export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp }: Props) {
+export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp, eliteFourStage, onAdvanceEliteFour }: Props) {
   const isWinner = data.winner === playerName;
   const savedRef = useRef(false);
   const [newBadge, setNewBadge] = React.useState<string | null>(null);
@@ -446,14 +449,29 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.btn} onPress={onPlayAgain} activeOpacity={0.7}>
-            <Text style={styles.btnText}>
-              {gameMode === 'online' ? 'Rematch' : 'Play Again'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
-            <Text style={styles.exitBtnText}>Exit to Menu</Text>
-          </TouchableOpacity>
+          {isWinner && eliteFourStage !== null && eliteFourStage !== undefined && onAdvanceEliteFour ? (
+            <>
+              <TouchableOpacity style={styles.btn} onPress={onAdvanceEliteFour} activeOpacity={0.7}>
+                <Text style={styles.btnText}>
+                  {eliteFourStage < 3 ? 'Next Battle' : eliteFourStage === 3 ? 'Face the Champion' : 'Victory!'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
+                <Text style={styles.exitBtnText}>Forfeit Run</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity style={styles.btn} onPress={onPlayAgain} activeOpacity={0.7}>
+                <Text style={styles.btnText}>
+                  {gameMode === 'online' ? 'Rematch' : 'Play Again'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
+                <Text style={styles.exitBtnText}>Exit to Menu</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </ScrollView>
     </View>

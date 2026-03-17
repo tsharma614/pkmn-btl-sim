@@ -14,6 +14,15 @@ import type { BattleConnection } from '../socket';
 import { createLocalBattle } from '../local-battle';
 import type { LocalBattle } from '../local-battle';
 import { getServerUrl } from '../config';
+import { generateDraftPool, buildTeamFromDraftPicks } from '../../engine/draft-pool';
+import type { DraftPoolEntry } from '../../engine/draft-pool';
+import { generateEliteFourCpuTeam, generateChampionCpuTeam, pickSet } from '../../engine/team-generator';
+import { createBattlePokemon } from '../../engine/pokemon-factory';
+import { getEliteFourMember, TOTAL_E4_STAGES } from '../../data/elite-four';
+import { SeededRNG } from '../../utils/rng';
+import { BattlePokemon } from '../../types';
+import { serializeOwnPokemon } from '../../server/state-sanitizer';
+import { saveEliteFourProgress, getEliteFourProgress } from '../utils/badge-tracker';
 
 const SERVER_URL = getServerUrl();
 
@@ -33,6 +42,10 @@ interface BattleContextValue {
   playAgain: () => void;
   requestRematchOnline: () => void;
   returnToMenu: () => void;
+  startEliteFour: (playerName: string) => void;
+  e4DraftComplete: (pickedIndices: number[], moveSelections: Record<number, string[]>) => void;
+  advanceEliteFour: () => void;
+  beginE4Battle: () => void;
 }
 
 const BattleContext = createContext<BattleContextValue | null>(null);
@@ -50,6 +63,10 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   stateRef.current = state;
   /** Guard against double-tap: set true on action submit, cleared when turn result arrives */
   const actionPendingRef = useRef(false);
+
+  // Elite Four state preserved across battles
+  const e4PlayerTeamRef = useRef<BattlePokemon[] | null>(null);
+  const e4PlayerNameRef = useRef<string>('Player');
 
   const cleanupAll = useCallback(() => {
     if (activeConnection) {
@@ -291,8 +308,145 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   const returnToMenu = useCallback(() => {
     console.log('[battle-context] returnToMenu — cleaning up');
     cleanupAll();
+    e4PlayerTeamRef.current = null;
     dispatch({ type: 'RESET' });
   }, [cleanupAll]);
+
+  // --- Elite Four ---
+
+  const startEliteFour = useCallback((playerName: string) => {
+    console.log('[battle-context] startEliteFour');
+    cleanupAll();
+    e4PlayerNameRef.current = playerName;
+    e4PlayerTeamRef.current = null;
+
+    // Generate a standard mega draft pool (21 Pokemon)
+    const rng = new SeededRNG();
+    const pool = generateDraftPool(rng, {
+      maxGen: null,
+      legendaryMode: false,
+      megaMode: true,
+      targetPoolSize: 21,
+      monotype: null,
+    });
+
+    dispatch({ type: 'E4_DRAFT_START', pool, playerName });
+  }, [cleanupAll]);
+
+  /** Called when player finishes picking 6 from the E4 draft pool + moves. */
+  const e4DraftComplete = useCallback((pickedIndices: number[], moveSelections: Record<number, string[]>) => {
+    const currentState = stateRef.current;
+    const pool = currentState.draftPool;
+    const rng = new SeededRNG();
+
+    // Build player team from picks with custom moves
+    const playerTeam = pickedIndices.map((poolIdx, pickIdx) => {
+      const species = pool[poolIdx].species;
+      const baseSet = pickSet(species, rng, 'competitive');
+      const customMoves = moveSelections[pickIdx];
+      if (customMoves && customMoves.length === 4) {
+        baseSet.moves = customMoves;
+      }
+      return createBattlePokemon(species, baseSet, 100, null);
+    });
+    e4PlayerTeamRef.current = playerTeam;
+
+    // Show intro for first E4 battle
+    const member = getEliteFourMember(0)!;
+    dispatch({ type: 'E4_ADVANCE', stage: 0, opponentName: member.name });
+  }, []);
+
+  /** Start an E4/Champion battle at the given stage. */
+  const startE4Battle = useCallback((stage: number) => {
+    cleanupAll();
+    const playerName = e4PlayerNameRef.current;
+    const playerTeam = e4PlayerTeamRef.current;
+    if (!playerTeam) return;
+
+    // Heal player team to full
+    const healedTeam = playerTeam.map(p => ({
+      ...p,
+      currentHp: p.stats.hp,
+      isAlive: true,
+      status: null,
+      volatileStatuses: new Set<string>(),
+      boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
+      hasActed: false,
+      lastMoveUsed: null,
+      protectCount: 0,
+      choiceLocked: null,
+      substituteHp: 0,
+      moves: p.moves.map(m => ({ ...m, currentPp: m.pp })),
+    }));
+    e4PlayerTeamRef.current = healedTeam;
+
+    const member = getEliteFourMember(stage)!;
+
+    const local = createLocalBattle({
+      playerName,
+      itemMode: 'competitive',
+      maxGen: null,
+      difficulty: 'hard',
+      legendaryMode: false,
+      draftMode: false,
+      draftType: 'snake',
+      monotype: null,
+      poolSize: 21,
+      megaMode: false,
+      dispatch,
+      // E4 options
+      eliteFourStage: stage,
+      eliteFourPlayerTeam: healedTeam,
+      eliteFourOpponentName: member.name,
+    });
+
+    activeLocalBattle = local;
+    localBattleRef.current = local;
+    local.start();
+  }, [cleanupAll]);
+
+  /** Called after winning an E4 battle to advance to the next one. */
+  const advanceEliteFour = useCallback(() => {
+    const currentStage = stateRef.current.eliteFourStage;
+    if (currentStage === null) return;
+
+    const nextStage = currentStage + 1;
+
+    if (nextStage >= TOTAL_E4_STAGES) {
+      // Champion defeated! Save progress and return to menu
+      console.log('[battle-context] Champion defeated!');
+      getEliteFourProgress().then(progress => {
+        progress.championDefeated = true;
+        progress.completedDate = new Date().toISOString();
+        if (!progress.clearedStages.includes(currentStage)) {
+          progress.clearedStages.push(currentStage);
+        }
+        saveEliteFourProgress(progress);
+      });
+      cleanupAll();
+      e4PlayerTeamRef.current = null;
+      dispatch({ type: 'RESET' });
+      return;
+    }
+
+    // Save stage progress
+    getEliteFourProgress().then(progress => {
+      if (!progress.clearedStages.includes(currentStage)) {
+        progress.clearedStages.push(currentStage);
+      }
+      saveEliteFourProgress(progress);
+    });
+
+    const member = getEliteFourMember(nextStage)!;
+    dispatch({ type: 'E4_ADVANCE', stage: nextStage, opponentName: member.name });
+  }, [cleanupAll, startE4Battle]);
+
+  /** Called from intro screen BATTLE button to start the current E4 stage. */
+  const beginE4Battle = useCallback(() => {
+    const stage = stateRef.current.eliteFourStage;
+    if (stage === null) return;
+    startE4Battle(stage);
+  }, [startE4Battle]);
 
   return (
     <BattleContext.Provider
@@ -312,6 +466,10 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         playAgain,
         requestRematchOnline,
         returnToMenu,
+        startEliteFour,
+        e4DraftComplete,
+        advanceEliteFour,
+        beginE4Battle,
       }}
     >
       {children}

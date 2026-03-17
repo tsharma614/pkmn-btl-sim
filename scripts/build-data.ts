@@ -230,7 +230,11 @@ async function main() {
     const randbats = randbatsData[species.name];
     const learnset = learnsetCache[species.name] || [];
     const sets = buildSets(species.baseStats, randbats, bestAbility, species.types, learnset);
-    const movePool = getMovesFromRandbats(randbats) || learnset.slice(0, 20);
+    // Combine randbats moves with full learnset for a rich move pool
+    const randbatsMoves = getMovesFromRandbats(randbats);
+    const movePoolSet = new Set(randbatsMoves);
+    for (const m of learnset) movePoolSet.add(m);
+    const movePool = [...movePoolSet];
 
     const id = species.id; // lowercase, no special chars
 
@@ -295,7 +299,10 @@ async function main() {
     // Inherit movepool from base form
     const baseRandbats = randbatsData[baseSpecies.name];
     const baseLearnset = learnsetCache[baseSpecies.name] || [];
-    const movePool = getMovesFromRandbats(baseRandbats) || baseLearnset.slice(0, 20);
+    const baseRandbatsMoves = getMovesFromRandbats(baseRandbats);
+    const megaMovePoolSet = new Set(baseRandbatsMoves);
+    for (const m of baseLearnset) megaMovePoolSet.add(m);
+    const movePool = [...megaMovePoolSet];
 
     // Build sets using base form's randbats data but with mega's ability + competitive items
     const megaSets = buildMegaSets(species.baseStats, baseRandbats, megaAbility, species.types as string[], baseLearnset);

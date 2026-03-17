@@ -1,27 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { getWinLoss } from '../utils/battle-history';
-import { getBadges } from '../utils/badge-tracker';
-import type { BadgeData } from '../utils/badge-tracker';
+import { getBadges, getEliteFourProgress } from '../utils/badge-tracker';
+import type { BadgeData, EliteFourProgress } from '../utils/badge-tracker';
 import { MONOTYPE_TYPES } from '../../engine/draft-pool';
 import { GYM_LEADERS } from '../../data/gym-leaders';
+import { ELITE_FOUR, CHAMPION } from '../../data/elite-four';
 import { colors, spacing, typeColors } from '../theme';
 
 interface Props {
   onBack: () => void;
+  onStartEliteFour?: () => void;
 }
 
-export function StatsScreen({ onBack }: Props) {
+export function StatsScreen({ onBack, onStartEliteFour }: Props) {
   const [record, setRecord] = useState<{ wins: number; losses: number } | null>(null);
   const [badges, setBadges] = useState<BadgeData | null>(null);
+  const [e4Progress, setE4Progress] = useState<EliteFourProgress | null>(null);
 
   useEffect(() => {
     getWinLoss().then(setRecord);
     getBadges().then(setBadges);
+    getEliteFourProgress().then(setE4Progress);
   }, []);
 
   const earnedCount = badges ? Object.keys(badges.gymBadges).filter(k => badges.gymBadges[k].length > 0).length : 0;
   const totalWins = badges ? Object.values(badges.gymBadges).reduce((sum, arr) => sum + arr.length, 0) : 0;
+  const allBadgesEarned = earnedCount >= MONOTYPE_TYPES.length;
 
   return (
     <View style={styles.container}>
@@ -100,6 +105,36 @@ export function StatsScreen({ onBack }: Props) {
               );
             })}
           </View>
+        </View>
+
+        {/* Elite Four Challenge */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ELITE FOUR</Text>
+          {allBadgesEarned ? (
+            <>
+              <Text style={styles.sectionSubtitle}>
+                {e4Progress?.championDefeated
+                  ? 'You are the Champion! Challenge again anytime.'
+                  : 'All gym badges earned. The Elite Four awaits!'}
+              </Text>
+              {e4Progress?.championDefeated && e4Progress.completedDate && (
+                <Text style={styles.e4CompletedDate}>
+                  First cleared: {new Date(e4Progress.completedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                </Text>
+              )}
+              {onStartEliteFour && (
+                <TouchableOpacity style={styles.e4Button} onPress={onStartEliteFour} activeOpacity={0.7}>
+                  <Text style={styles.e4ButtonText}>
+                    {e4Progress?.championDefeated ? 'CHALLENGE AGAIN' : 'BEGIN CHALLENGE'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
+          ) : (
+            <Text style={styles.sectionSubtitle}>
+              Earn all {MONOTYPE_TYPES.length} gym badges to unlock ({earnedCount}/{MONOTYPE_TYPES.length})
+            </Text>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -243,6 +278,25 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
+    fontWeight: '600',
+  },
+  e4Button: {
+    backgroundColor: colors.accent,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  e4ButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 2,
+  },
+  e4CompletedDate: {
+    fontSize: 11,
+    color: '#FFD700',
+    marginTop: 4,
     fontWeight: '600',
   },
 });

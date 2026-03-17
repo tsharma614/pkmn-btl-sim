@@ -23,8 +23,11 @@ import { PokemonInfoModal } from './PokemonInfoModal';
 import { BattleLog } from './BattleLog';
 import { DraftScreen } from './DraftScreen';
 import { RoleDraftScreen } from './RoleDraftScreen';
+import { EliteFourDraftScreen } from './EliteFourDraftScreen';
+import { EliteFourIntroScreen } from './EliteFourIntroScreen';
 import { colors, spacing } from '../theme';
 import { getGymLeader } from '../../data/gym-leaders';
+import { getEliteFourMember } from '../../data/elite-four';
 import type { SideEffects } from '../../types';
 
 const WEATHER_TINTS: Record<string, string> = {
@@ -59,7 +62,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, startEliteFour, e4DraftComplete, advanceEliteFour, beginE4Battle } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -134,11 +137,41 @@ export function BattleScreen() {
     }
   }, [screenFlash?.key]);
 
+  // --- Elite Four Draft ---
+  if (state.phase === 'elite_four_draft') {
+    return (
+      <SafeAreaView style={styles.full}>
+        <EliteFourDraftScreen
+          pool={state.draftPool}
+          onComplete={e4DraftComplete}
+          onBack={returnToMenu}
+          playerName={state.playerName}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // --- Elite Four Intro (between battles) ---
+  if (state.phase === 'elite_four_intro') {
+    const member = state.eliteFourStage !== null ? getEliteFourMember(state.eliteFourStage) : null;
+    return (
+      <SafeAreaView style={styles.full}>
+        <EliteFourIntroScreen
+          stage={state.eliteFourStage ?? 0}
+          memberName={member?.name ?? 'Unknown'}
+          memberTitle={member?.title ?? ''}
+          onBack={returnToMenu}
+          onBeginBattle={beginE4Battle}
+        />
+      </SafeAreaView>
+    );
+  }
+
   // --- Setup ---
   if (state.phase === 'setup') {
     return (
       <SafeAreaView style={styles.full}>
-        <SetupScreen onStart={startGame} onPlayOnline={startOnline} />
+        <SetupScreen onStart={startGame} onPlayOnline={startOnline} onStartEliteFour={startEliteFour} />
       </SafeAreaView>
     );
   }
@@ -424,6 +457,8 @@ export function BattleScreen() {
           badgeType={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? state.monotype : null}
           gymLeaderName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? getGymLeader(state.monotype)?.name ?? null : null}
           badgeName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? getGymLeader(state.monotype)?.badgeName ?? null : null}
+          eliteFourStage={state.eliteFourStage}
+          onAdvanceEliteFour={state.eliteFourStage !== null ? advanceEliteFour : undefined}
         />
       )}
 

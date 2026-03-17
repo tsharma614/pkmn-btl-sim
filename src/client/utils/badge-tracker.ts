@@ -79,3 +79,34 @@ export async function earnBadge(
 export async function resetBadges(): Promise<void> {
   await AsyncStorage.setItem(BADGES_KEY, JSON.stringify(emptyBadgeData()));
 }
+
+// --- Elite Four tracking ---
+
+const E4_KEY = '@pbs_elite_four';
+
+export interface EliteFourProgress {
+  /** Which stages have been cleared (0-3 = E4, 4 = Champion) */
+  clearedStages: number[];
+  /** Whether the full run (all 5) has been completed */
+  championDefeated: boolean;
+  /** Date the champion was first defeated */
+  completedDate?: string;
+}
+
+export async function getEliteFourProgress(): Promise<EliteFourProgress> {
+  try {
+    const raw = await AsyncStorage.getItem(E4_KEY);
+    if (!raw) return { clearedStages: [], championDefeated: false };
+    return JSON.parse(raw);
+  } catch {
+    return { clearedStages: [], championDefeated: false };
+  }
+}
+
+export async function saveEliteFourProgress(progress: EliteFourProgress): Promise<void> {
+  await AsyncStorage.setItem(E4_KEY, JSON.stringify(progress));
+}
+
+export async function resetEliteFourProgress(): Promise<void> {
+  await AsyncStorage.removeItem(E4_KEY);
+}

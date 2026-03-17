@@ -327,3 +327,91 @@ function getMoveData(moveName: string): any | null {
   const id = moveName.toLowerCase().replace(/[^a-z0-9]/g, '');
   return movesLookup[id] || null;
 }
+
+/**
+ * Generate a team for an Elite Four CPU opponent.
+ * 1 mega + 5 T1 Pokemon.
+ */
+export function generateEliteFourCpuTeam(rng: SeededRNG, itemMode: 'competitive' | 'casual'): BattlePokemon[] {
+  // Pick 1 mega
+  const allMegas = Object.values(megaPokedex);
+  rng.shuffle(allMegas);
+  const mega = allMegas[0];
+
+  // Pick 5 T1
+  const t1Pool = [...TIERS[1]];
+  rng.shuffle(t1Pool);
+  const team: PokemonSpecies[] = [mega];
+  for (const species of t1Pool) {
+    if (team.length >= 6) break;
+    if (team.some(t => t.id === species.id)) continue;
+    // Avoid duplicate type combos
+    const key = typeKey(species);
+    if (team.some(t => typeKey(t) === key)) continue;
+    team.push(species);
+  }
+  // Fallback if not enough unique T1
+  if (team.length < 6) {
+    for (const species of t1Pool) {
+      if (team.length >= 6) break;
+      if (!team.some(t => t.id === species.id)) team.push(species);
+    }
+  }
+
+  return team.map(species => {
+    const set = pickSet(species, rng, itemMode);
+    return createBattlePokemon(species, set, 100, null);
+  });
+}
+
+/**
+ * Generate the Champion's team: 6 mega-evolved Pokemon.
+ */
+export function generateChampionCpuTeam(rng: SeededRNG, itemMode: 'competitive' | 'casual'): BattlePokemon[] {
+  const allMegas = Object.values(megaPokedex);
+  rng.shuffle(allMegas);
+  // Pick 6 unique megas, avoiding duplicate type combos
+  const team: PokemonSpecies[] = [];
+  for (const mega of allMegas) {
+    if (team.length >= 6) break;
+    const key = typeKey(mega);
+    if (team.some(t => typeKey(t) === key)) continue;
+    team.push(mega);
+  }
+  // Fallback if not enough unique typings
+  if (team.length < 6) {
+    for (const mega of allMegas) {
+      if (team.length >= 6) break;
+      if (!team.some(t => t.id === mega.id)) team.push(mega);
+    }
+  }
+  return team.map(species => {
+    const set = pickSet(species, rng, itemMode);
+    return createBattlePokemon(species, set, 100, null);
+  });
+}
+
+/**
+ * Generate the human player's team for the Champion battle: 6 random T2 Pokemon.
+ */
+export function generateChampionPlayerTeam(rng: SeededRNG, itemMode: 'competitive' | 'casual'): BattlePokemon[] {
+  const pool = [...TIERS[2]];
+  rng.shuffle(pool);
+  const team: PokemonSpecies[] = [];
+  for (const species of pool) {
+    if (team.length >= 6) break;
+    const key = typeKey(species);
+    if (team.some(t => typeKey(t) === key)) continue;
+    team.push(species);
+  }
+  if (team.length < 6) {
+    for (const species of pool) {
+      if (team.length >= 6) break;
+      if (!team.some(t => t.id === species.id)) team.push(species);
+    }
+  }
+  return team.map(species => {
+    const set = pickSet(species, rng, itemMode);
+    return createBattlePokemon(species, set, 100, null);
+  });
+}

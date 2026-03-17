@@ -28,6 +28,7 @@ export type Difficulty = 'easy' | 'normal' | 'hard';
 interface Props {
   onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, poolSize?: number, megaMode?: boolean) => void;
   onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, megaMode?: boolean) => void;
+  onStartEliteFour?: (playerName: string) => void;
 }
 
 /** Background sprite positions — 7 rows of 3, filling the whole screen */
@@ -82,7 +83,7 @@ function PokeballLogo() {
 
 type Screen = 'main' | 'cpu_setup' | 'online_setup' | 'stats';
 
-export function SetupScreen({ onStart, onPlayOnline }: Props) {
+export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) {
   const [screen, setScreen] = useState<Screen>('main');
   const [name, setName] = useState('');
   const [itemMode, setItemMode] = useState<'competitive' | 'casual'>('competitive');
@@ -112,7 +113,7 @@ export function SetupScreen({ onStart, onPlayOnline }: Props) {
 
   // ---------- Stats Screen ----------
   if (screen === 'stats') {
-    return <StatsScreen onBack={() => setScreen('main')} />;
+    return <StatsScreen onBack={() => setScreen('main')} onStartEliteFour={onStartEliteFour ? () => onStartEliteFour(displayName) : undefined} />;
   }
 
   // ---------- Main Menu ----------

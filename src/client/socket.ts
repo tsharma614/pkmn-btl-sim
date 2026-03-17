@@ -270,18 +270,18 @@ function pickSmartAction(
 
   scoredMoves.sort((a, b) => b.score - a.score);
 
-  // Switch if ALL attacking moves are NVE or immune
+  // Only switch on all-NVE/immune if a teammate actually has a better matchup
   const bestScore = scoredMoves[0].score;
-  if (switches.length > 0 && oppTypes.length > 0) {
-    const attackingMoves = usableMoves.filter(m => m.category !== 'Status' && m.power);
-    if (attackingMoves.length > 0) {
-      const allNveOrImmune = attackingMoves.every(m => {
-        const eff = getTypeEffectiveness(m.type as PokemonType, oppTypes);
-        return eff < 1;
-      });
-      if (allNveOrImmune) {
-        return pickBestSwitch(state, switches, oppTypes, isHard);
-      }
+  if (switches.length > 0 && oppTypes.length > 0 && bestScore <= 0) {
+    const hasBetterSwitch = switches.some(s => {
+      const p = state.team[s.idx];
+      return p.moves.some(m =>
+        m.category !== 'Status' && m.power && m.currentPp > 0 &&
+        getTypeEffectiveness(m.type as PokemonType, oppTypes) >= 1
+      );
+    });
+    if (hasBetterSwitch) {
+      return pickBestSwitch(state, switches, oppTypes, isHard);
     }
   }
 

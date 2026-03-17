@@ -7,7 +7,7 @@
  */
 
 import { Battle } from '../engine/battle';
-import { generateTeam } from '../engine/team-generator';
+import { generateTeam, generateEliteFourCpuTeam, generateChampionCpuTeam } from '../engine/team-generator';
 import { generateDraftPool, generateGymLeaderPool, pickBotDraftPick, pickGymLeaderDraftPick, buildTeamFromDraftPicks, SNAKE_ORDER } from '../engine/draft-pool';
 import type { DraftPoolEntry, DraftType, RoleDraftPoolEntry, DraftRole } from '../engine/draft-pool';
 import { generateRoleDraftPool, DRAFT_ROLES } from '../engine/draft-pool';
@@ -47,6 +47,10 @@ interface LocalBattleOptions {
   poolSize: number;
   megaMode: boolean;
   dispatch: (action: ReducerAction) => void;
+  // Elite Four options
+  eliteFourStage?: number;
+  eliteFourPlayerTeam?: BattlePokemon[];
+  eliteFourOpponentName?: string;
 }
 
 /**
@@ -55,14 +59,17 @@ interface LocalBattleOptions {
  */
 export function createLocalBattle(options: LocalBattleOptions) {
   const { playerName, itemMode, maxGen, difficulty, legendaryMode, draftMode, draftType, monotype, poolSize, megaMode, dispatch } = options;
+  const isEliteFour = options.eliteFourStage !== undefined;
 
   // Gym leader challenge: legendary + draft + hard + monotype = gym leader mode
-  const isGymLeaderChallenge = draftMode && draftType !== 'role' && monotype && difficulty === 'hard' && legendaryMode;
+  const isGymLeaderChallenge = !isEliteFour && draftMode && draftType !== 'role' && monotype && difficulty === 'hard' && legendaryMode;
   const gymLeader = isGymLeaderChallenge ? getGymLeader(monotype) : null;
 
   const rng = new SeededRNG();
   const botCandidates = BOT_NAMES.filter(n => n.toLowerCase() !== playerName.toLowerCase());
-  const botName = gymLeader ? gymLeader.name : botCandidates[Math.floor(Math.random() * botCandidates.length)];
+  const botName = isEliteFour ? (options.eliteFourOpponentName ?? 'Elite Four')
+    : gymLeader ? gymLeader.name
+    : botCandidates[Math.floor(Math.random() * botCandidates.length)];
 
   // Draft state
   let draftPool: DraftPoolEntry[] = [];
@@ -81,7 +88,18 @@ export function createLocalBattle(options: LocalBattleOptions) {
   let humanTeam: BattlePokemon[] = [];
   let botTeam: BattlePokemon[] = [];
 
-  if (!draftMode) {
+  if (isEliteFour) {
+    // Elite Four: player team provided, CPU team generated based on stage
+    humanTeam = options.eliteFourPlayerTeam ?? [];
+    const stage = options.eliteFourStage!;
+    if (stage === 4) {
+      // Champion: 6 megas
+      botTeam = generateChampionCpuTeam(rng, itemMode);
+    } else {
+      // Elite Four member: 1 mega + 5 T1
+      botTeam = generateEliteFourCpuTeam(rng, itemMode);
+    }
+  } else if (!draftMode) {
     humanTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode, megaMode });
     botTeam = generateTeam(rng, { itemMode, maxGen, legendaryMode, megaMode });
   }
@@ -343,17 +361,17 @@ export function createLocalBattle(options: LocalBattleOptions) {
 
     const bestScore = scoredMoves[0].score;
 
-    // Switch if ALL attacking moves are NVE or immune
-    if (switches.length > 0 && oppTypes.length > 0) {
-      const attackingMoves = usableMoves.filter(m => m.category !== 'Status' && m.power);
-      if (attackingMoves.length > 0) {
-        const allNveOrImmune = attackingMoves.every(m => {
-          const eff = getTypeEffectiveness(m.type as PokemonType, oppTypes);
-          return eff < 1;
-        });
-        if (allNveOrImmune) {
-          return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, isHard) };
-        }
+    // Only switch on all-NVE/immune if a teammate actually has a better matchup
+    if (switches.length > 0 && oppTypes.length > 0 && bestScore <= 0) {
+      const hasBetterSwitch = switches.some(s => {
+        const p = botState!.team[s.idx];
+        return p.moves.some(m =>
+          m.category !== 'Status' && m.power && m.currentPp > 0 &&
+          getTypeEffectiveness(m.type as PokemonType, oppTypes) >= 1
+        );
+      });
+      if (hasBetterSwitch) {
+        return { type: 'switch', playerId: 'p2', pokemonIndex: pickBestSwitchIdx(switches, oppTypes, isHard) };
       }
     }
 
@@ -414,17 +432,17 @@ export function createLocalBattle(options: LocalBattleOptions) {
             if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) score += 0.4;
           }
         }
-        for (const oppType of oppTypes) {
-          const eff = getTypeEffectiveness(oppType, pTypes);
-          if (eff < 1) score += isHard ? 0.5 : 0.2;
-          if (eff === 0) score += isHard ? 1.5 : 0.5;
-        }
+        // Defensive matchup: how much damage will we take?
+        const totalDefEff = oppTypes.reduce((acc, oppType) => {
+          return acc * getTypeEffectiveness(oppType, pTypes);
+        }, 1);
+        if (totalDefEff < 1) score += isHard ? 1.0 : 0.4;
+        if (totalDefEff === 0) score += isHard ? 2.0 : 1.0;
+        // Heavy penalty for being weak — never switch INTO a bad matchup
+        if (totalDefEff > 1) score -= isHard ? 2.0 : 1.0;
+        if (totalDefEff >= 4) score -= isHard ? 3.0 : 1.5;
+
         if (isHard) {
-          for (const oppType of oppTypes) {
-            const eff = getTypeEffectiveness(oppType, pTypes);
-            if (eff > 1) score -= 0.6;
-            if (eff >= 4) score -= 1.2;
-          }
           score += (p.species.baseStats?.spe ?? 0) / 400;
           if (bestMoveEff > 1) score += 0.3;
         }
@@ -473,13 +491,14 @@ export function createLocalBattle(options: LocalBattleOptions) {
         }
 
         // Defensive advantage: resist/immune to opponent's types
-        for (const oppType of oppTypes) {
-          const eff = getTypeEffectiveness(oppType, pTypes);
-          if (eff < 1) score += isHard ? 0.5 : 0.2;
-          if (eff === 0) score += isHard ? 1.5 : 0.5;
-          if (isHard && eff > 1) score -= 0.6;
-          if (isHard && eff >= 4) score -= 1.2;
-        }
+        const totalDefEff = oppTypes.reduce((acc, oppType) => {
+          return acc * getTypeEffectiveness(oppType, pTypes);
+        }, 1);
+        if (totalDefEff < 1) score += isHard ? 1.0 : 0.4;
+        if (totalDefEff === 0) score += isHard ? 2.0 : 1.0;
+        // Heavy penalty for weakness — avoid sending in Pokemon that'll get wrecked
+        if (totalDefEff > 1) score -= isHard ? 2.0 : 1.0;
+        if (totalDefEff >= 4) score -= isHard ? 3.0 : 1.5;
 
         if (isHard) {
           score += (p.species.baseStats?.spe ?? 0) / 400;
@@ -615,6 +634,18 @@ export function createLocalBattle(options: LocalBattleOptions) {
     start() {
       // Dispatch setup sequence mimicking socket flow
       dispatch({ type: 'ROOM_CREATED', code: 'LOCAL', botName });
+
+      if (isEliteFour) {
+        // E4 mode: skip draft, go straight to team preview
+        dispatch({
+          type: 'TEAM_PREVIEW',
+          payload: {
+            yourTeam: humanTeam.map(serializeOwnPokemon),
+            yourPlayerIndex: 0,
+          },
+        });
+        return;
+      }
 
       if (draftMode) {
         // Generate draft pool instead of teams

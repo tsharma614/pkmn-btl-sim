@@ -18,6 +18,7 @@ const NUM_COLUMNS = 3;
 const CARD_GAP = 8;
 
 const TIER_COLORS: Record<number, string> = {
+  0: '#FF6B9D', // mega pink
   1: '#FFD700', // gold
   2: '#C0C0C0', // silver
   3: '#CD7F32', // bronze
@@ -167,9 +168,12 @@ export function DraftScreen({
           </View>
         </View>
 
-        {/* Pool grid */}
+        {/* Pool grid — megas first, then by tier */}
         <View style={styles.poolGrid}>
-        {pool.map((entry, i) => {
+        {pool
+          .map((entry, i) => ({ entry, i }))
+          .sort((a, b) => a.entry.tier - b.entry.tier)
+          .map(({ entry, i }) => {
           const isPicked = pickedIndices.has(i);
           const isYourPick = yourPickIndices.has(i);
           const isOppPick = oppPickIndices.has(i);
@@ -181,6 +185,7 @@ export function DraftScreen({
               style={[
                 styles.poolCard,
                 { width: cardW },
+                entry.tier === 0 && styles.poolCardMega,
                 isSelected && styles.poolCardSelected,
                 isPicked && styles.poolCardPicked,
               ]}
@@ -403,6 +408,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
     overflow: 'hidden',
+  },
+  poolCardMega: {
+    borderColor: '#FF6B9D',
+    backgroundColor: 'rgba(255,107,157,0.08)',
   },
   poolCardSelected: {
     borderColor: '#4fc3f7',
