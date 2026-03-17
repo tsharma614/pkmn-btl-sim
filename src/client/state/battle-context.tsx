@@ -421,20 +421,28 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     const playerTeam = e4PlayerTeamRef.current;
     if (!playerTeam) return;
 
-    // Heal player team to full
+    // Heal player team to full — reset all battle state fields
     const healedTeam = playerTeam.map(p => ({
       ...p,
       currentHp: p.stats.hp,
       isAlive: true,
       status: null,
       volatileStatuses: new Set<string>(),
-      boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 },
-      hasActed: false,
+      boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 },
       lastMoveUsed: null,
-      protectCount: 0,
       choiceLocked: null,
       substituteHp: 0,
-      moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp })),
+      hasMovedThisTurn: false,
+      tookDamageThisTurn: false,
+      protectedLastTurn: false,
+      timesHit: 0,
+      lastDamageTaken: null,
+      toxicCounter: 0,
+      sleepTurns: 0,
+      confusionTurns: 0,
+      encoreTurns: 0,
+      encoreMove: null,
+      moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp, disabled: false })),
     }));
     e4PlayerTeamRef.current = healedTeam;
 
