@@ -16,7 +16,6 @@ import { PokemonSprite } from './PokemonSprite';
 import { colors, spacing, typeColors } from '../theme';
 import { MONOTYPE_TYPES, POOL_SIZES } from '../../engine/draft-pool';
 import type { PoolSize, DraftType } from '../../engine/draft-pool';
-import { GYM_LEADERS } from '../../data/gym-leaders';
 import { StatsScreen } from './StatsScreen';
 
 const NAME_KEY = '@pbs_trainer_name';
@@ -312,9 +311,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
                   monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
                   megaMode && (draftMode ? 'Mega evolutions in draft pool' : '~25% chance of a mega on each team'),
                   moveSelection && 'Choose your moves after draft',
-                  monotype && monotype !== 'random' && difficulty === 'hard' && draftMode && legendaryMode && draftTypeMode !== 'role' && GYM_LEADERS[monotype]
-                    ? `vs ${GYM_LEADERS[monotype].name}`
-                    : null,
+                  null,
                 ].filter(Boolean).join(' · ')}
               </Text>
             )}
@@ -375,10 +372,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
                 >
                   <Text style={[styles.typeChipText, monotype === 'random' && styles.typeChipTextSelected]}>Random</Text>
                 </TouchableOpacity>
-                {MONOTYPE_TYPES.map(t => {
-                  const leader = GYM_LEADERS[t];
-                  const showLeader = difficulty === 'hard' && legendaryMode && draftTypeMode !== 'role' && leader;
-                  return (
+                {MONOTYPE_TYPES.map(t => (
                     <TouchableOpacity
                       key={t}
                       style={[
@@ -390,11 +384,10 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
                       activeOpacity={0.7}
                     >
                       <Text style={[styles.typeChipText, monotype === t && styles.typeChipTextSelected]}>
-                        {showLeader ? `${leader.name}` : t}
+                        {t}
                       </Text>
                     </TouchableOpacity>
-                  );
-                })}
+                ))}
               </View>
             </View>
           )}
@@ -412,9 +405,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour }: Props) 
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.startBtnText}>
-              {draftMode && monotype && difficulty === 'hard' && legendaryMode && draftTypeMode !== 'role' ? 'CHALLENGE GYM' : 'START BATTLE'}
-            </Text>
+            <Text style={styles.startBtnText}>START BATTLE</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
