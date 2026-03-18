@@ -70,6 +70,10 @@ interface BattleContextValue {
   startGymCareer: (playerName: string) => void;
   gymCareerDraftComplete: (picks: { speciesId: string; tier: number }[]) => void;
   itemSelectComplete: (itemSelections: Record<number, string>) => void;
+  shopSwapMove: (pokemonIdx: number, moveSlotIdx: number, newMoveName: string) => void;
+  shopSwapItem: (pokemonIdx: number, newItem: string) => void;
+  shopBuyPokemon: (species: PokemonSpecies, cost: number, replaceIdx: number) => void;
+  shopDone: () => void;
   showGymMap: () => void;
   challengeGym: (gymIndex: number) => void;
   showE4Locks: () => void;
@@ -516,7 +520,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       const stage = currentState.campaignStage;
 
       if (stage < 8) {
-        // Gym beaten — mark it and return to gym map
+        // Gym beaten — mark it, save, show shop (+1 pt)
         dispatch({ type: 'GYM_BEATEN', gymIndex: stage });
         const beatenCount = currentState.beatenGyms.filter(Boolean).length + 1;
 
@@ -525,16 +529,12 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
           gymTypes: currentState.gymTypes,
           team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
           date: new Date().toISOString(),
+          shopBalance: currentState.shopBalance + 1,
         });
 
-        if (beatenCount >= 8) {
-          // All gyms beaten → show E4 locks
-          dispatch({ type: 'SHOW_E4_LOCKS' });
-        } else {
-          dispatch({ type: 'SHOW_GYM_MAP' });
-        }
+        dispatch({ type: 'SHOW_SHOP', payout: 1 });
       } else if (stage < 12) {
-        // E4 member beaten — mark it and return to E4 locks
+        // E4 member beaten — mark it, save, show shop (+2 pts)
         const memberIdx = stage - 8;
         dispatch({ type: 'E4_MEMBER_BEATEN', memberIndex: memberIdx });
         const e4BeatenCount = currentState.beatenE4.filter(Boolean).length + 1;
@@ -544,9 +544,10 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
           gymTypes: currentState.gymTypes,
           team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
           date: new Date().toISOString(),
+          shopBalance: currentState.shopBalance + 2,
         });
 
-        dispatch({ type: 'SHOW_E4_LOCKS' });
+        dispatch({ type: 'SHOW_SHOP', payout: 2 });
       } else {
         // Champion defeated!
         saveCampaignRun({
@@ -675,6 +676,11 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     });
     campaignPlayerTeamRef.current = playerTeam;
 
+    // Calculate shop balance from unspent draft budget (14 - spent)
+    const BUDGET_COSTS: Record<number, number> = { 0: 4, 1: 3, 2: 2, 3: 0, 4: 0 };
+    const spent = picks.reduce((sum, p) => sum + (BUDGET_COSTS[p.tier] ?? 0), 0);
+    dispatch({ type: 'SET_SHOP_BALANCE', balance: 14 - spent });
+
     // Go to move selection phase
     dispatch({
       type: 'DRAFT_COMPLETE',
@@ -719,6 +725,61 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       date: new Date().toISOString(),
     });
     dispatch({ type: 'SHOW_GYM_MAP' });
+  }, []);
+
+  /** Shop: swap a move on a team member */
+  const shopSwapMove = useCallback((pokemonIdx: number, moveSlotIdx: number, newMoveName: string) => {
+    const team = campaignPlayerTeamRef.current;
+    if (!team || !team[pokemonIdx]) return;
+    const pokemon = team[pokemonIdx];
+    const fullSpecies = fullSpeciesById[pokemon.species.id];
+    if (!fullSpecies) return;
+    // Find the move data from the species movePool
+    const movesData = require('../../data/moves.json') as Record<string, any>;
+    const moveKey = newMoveName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const moveData = movesData[moveKey];
+    if (moveData && pokemon.moves[moveSlotIdx]) {
+      pokemon.moves[moveSlotIdx] = {
+        data: moveData,
+        currentPp: moveData.pp,
+        maxPp: moveData.pp,
+        disabled: false,
+      };
+    }
+    dispatch({ type: 'SET_SHOP_BALANCE', balance: stateRef.current.shopBalance - 1 });
+  }, []);
+
+  /** Shop: swap an item on a team member */
+  const shopSwapItem = useCallback((pokemonIdx: number, newItem: string) => {
+    const team = campaignPlayerTeamRef.current;
+    if (!team || !team[pokemonIdx]) return;
+    team[pokemonIdx].item = newItem;
+    dispatch({ type: 'SET_SHOP_BALANCE', balance: stateRef.current.shopBalance - 1 });
+  }, []);
+
+  /** Shop: buy a Pokemon and replace a team slot */
+  const shopBuyPokemon = useCallback((species: PokemonSpecies, cost: number, replaceIdx: number) => {
+    const team = campaignPlayerTeamRef.current;
+    if (!team) return;
+    const rng = campaignRngRef.current;
+    const set = pickSet(species, rng, 'competitive');
+    const newMon = createBattlePokemon(species, set, 100, null);
+    team[replaceIdx] = newMon;
+    dispatch({ type: 'SET_SHOP_BALANCE', balance: stateRef.current.shopBalance - cost });
+  }, []);
+
+  /** Shop: done shopping, go back to gym map or E4 locks */
+  const shopDone = useCallback(() => {
+    const currentState = stateRef.current;
+    // Save updated team
+    saveGymCareer({
+      currentStage: currentState.beatenGyms.filter(Boolean).length + currentState.beatenE4.filter(Boolean).length,
+      gymTypes: currentState.gymTypes,
+      team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+      date: new Date().toISOString(),
+      shopBalance: currentState.shopBalance,
+    });
+    dispatch({ type: 'SHOP_DONE' });
   }, []);
 
   const showGymMap = useCallback(() => {
@@ -778,6 +839,10 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         startGymCareer,
         gymCareerDraftComplete,
         itemSelectComplete,
+        shopSwapMove,
+        shopSwapItem,
+        shopBuyPokemon,
+        shopDone,
         showGymMap,
         challengeGym,
         showE4Locks,

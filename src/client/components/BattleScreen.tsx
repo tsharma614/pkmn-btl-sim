@@ -31,6 +31,7 @@ import { GauntletStealScreen } from './GauntletStealScreen';
 import { CampaignIntroScreen } from './CampaignIntroScreen';
 import { BudgetDraftScreen } from './BudgetDraftScreen';
 import { ItemSelectScreen } from './ItemSelectScreen';
+import { ShopScreen } from './ShopScreen';
 import { GymMapScreen } from './GymMapScreen';
 import { E4LockScreen } from './E4LockScreen';
 import { generateBudgetDraftOptions } from '../../engine/draft-pool';
@@ -72,7 +73,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete, itemSelectComplete, showGymMap, challengeGym, showE4Locks } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete, itemSelectComplete, shopSwapMove, shopSwapItem, shopBuyPokemon, shopDone, showGymMap, challengeGym, showE4Locks } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -171,6 +172,43 @@ export function BattleScreen() {
           onComplete={itemSelectComplete}
           onBack={returnToMenu}
           playerName={state.playerName}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // --- Shop (after gym/E4 win) ---
+  if (state.phase === 'shop') {
+    // Generate buy pool
+    const shopBuyPool = (() => {
+      const rng = new SeededRNG();
+      const { MEGA_POOL, TIERS: draftTiers } = require('../../engine/draft-pool');
+      const pool: { species: any; tier: number; cost: number }[] = [];
+      const megas = [...(MEGA_POOL as any[])];
+      rng.shuffle(megas);
+      pool.push(...megas.slice(0, 3).map((s: any) => ({ species: s, tier: 0, cost: 4 })));
+      const t1 = [...(draftTiers as any)[1]];
+      rng.shuffle(t1);
+      pool.push(...t1.slice(0, 4).map((s: any) => ({ species: s, tier: 1, cost: 3 })));
+      const t2 = [...(draftTiers as any)[2]];
+      rng.shuffle(t2);
+      pool.push(...t2.slice(0, 5).map((s: any) => ({ species: s, tier: 2, cost: 2 })));
+      return pool;
+    })();
+
+    return (
+      <SafeAreaView style={styles.full}>
+        <ShopScreen
+          balance={state.shopBalance}
+          team={state.yourTeam}
+          buyPool={shopBuyPool}
+          onSwapMove={shopSwapMove}
+          onSwapItem={shopSwapItem}
+          onBuyPokemon={(poolIdx, replaceIdx) => {
+            const item = shopBuyPool[poolIdx];
+            if (item) shopBuyPokemon(item.species, item.cost, replaceIdx);
+          }}
+          onDone={shopDone}
         />
       </SafeAreaView>
     );

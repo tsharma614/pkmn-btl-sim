@@ -37,7 +37,8 @@ export type BattlePhase =
   | 'budget_draft'
   | 'item_select'
   | 'gym_map'
-  | 'e4_locks';
+  | 'e4_locks'
+  | 'shop';
 
 export type GameMode = 'cpu' | 'online';
 
@@ -147,6 +148,8 @@ export interface BattleState {
   beatenGyms: boolean[];
   /** Gym Career: which E4 members have been beaten */
   beatenE4: boolean[];
+  /** Gym Career: shop currency balance */
+  shopBalance: number;
 }
 
 function emptyStats(): BattleStats {
@@ -229,6 +232,7 @@ export const initialState: BattleState = {
   gymTypes: [],
   beatenGyms: [],
   beatenE4: [],
+  shopBalance: 0,
 };
 
 export type BattleAction =
@@ -264,6 +268,9 @@ export type BattleAction =
   | { type: 'SHOW_E4_LOCKS' }
   | { type: 'GYM_BEATEN'; gymIndex: number }
   | { type: 'E4_MEMBER_BEATEN'; memberIndex: number }
+  | { type: 'SHOW_SHOP'; payout: number }
+  | { type: 'SHOP_DONE' }
+  | { type: 'SET_SHOP_BALANCE'; balance: number }
   | { type: 'RESET' };
 
 const EMPTY_SIDE: SideEffects = {
@@ -1005,6 +1012,30 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       newBeaten[action.memberIndex] = true;
       return { ...state, beatenE4: newBeaten };
     }
+
+    case 'SHOW_SHOP':
+      return {
+        ...state,
+        phase: 'shop',
+        shopBalance: state.shopBalance + action.payout,
+        battleEndData: null,
+        pendingEvents: [],
+        queuedPendingEvents: [],
+        yourState: null,
+        opponentVisible: null,
+        weather: 'none',
+        turn: 0,
+      };
+
+    case 'SHOP_DONE':
+      // Return to gym map or e4 locks depending on progress
+      return {
+        ...state,
+        phase: state.beatenGyms.filter(Boolean).length >= 8 ? 'e4_locks' : 'gym_map',
+      };
+
+    case 'SET_SHOP_BALANCE':
+      return { ...state, shopBalance: action.balance };
 
     case 'RESET':
       return {

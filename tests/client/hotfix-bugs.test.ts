@@ -168,8 +168,8 @@ describe('Gym Career flow trace', () => {
     expect(contextSource).toContain("'GYM_BEATEN'");
   });
 
-  it('All 8 gyms → E4 Locks: shows E4 locks after beatenCount >= 8', () => {
-    expect(contextSource).toContain('beatenCount >= 8');
-    expect(contextSource).toContain("'SHOW_E4_LOCKS'");
+  it('All 8 gyms → Shop → E4 Locks: shop appears after gym wins', () => {
+    expect(contextSource).toContain("'SHOW_SHOP'");
+    expect(contextSource).toContain("'SHOP_DONE'");
   });
 });

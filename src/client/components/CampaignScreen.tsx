@@ -15,6 +15,8 @@ export interface GymCareerSave {
   team: any[];
   /** Date save was created */
   date: string;
+  /** Shop currency balance */
+  shopBalance?: number;
 }
 
 interface Props {
