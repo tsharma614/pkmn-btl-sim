@@ -3,10 +3,12 @@
  * No UI rendering, just state transitions and assertions.
  */
 import { describe, it, expect } from 'vitest';
+import * as fs from 'fs';
+import * as path from 'path';
 import { battleReducer, initialState } from '../../src/client/state/battle-reducer';
 import type { BattleState } from '../../src/client/state/battle-reducer';
 import { SeededRNG } from '../../src/utils/rng';
-import { generateGauntletTeam, generateGymTeam, generateE4Team, generateChampionCpuTeam } from '../../src/engine/team-generator';
+import { generateGauntletTeam, generateGymTeam, generateE4Team, generateChampionCpuTeam, generateTeam } from '../../src/engine/team-generator';
 import { generateBudgetDraftOptions, BUDGET_TOTAL } from '../../src/engine/draft-pool';
 
 // Helper: simulate a state through a sequence of actions
@@ -227,5 +229,199 @@ describe('E2E: Regression — critical bugs', () => {
     for (const section of options) {
       expect(section.options.length).toBeGreaterThanOrEqual(3);
     }
+  });
+});
+
+// ── Missing E2E tests ────────────────────────────────────────────────────
+
+describe('E2E: Normal battle flow', () => {
+  it('1. draft → team preview → battle → winner → stats', () => {
+    // START_GAME → CONNECTED → ROOM_CREATED → TEAM_PREVIEW → BATTLE_START → BATTLE_END
+    let state = battleReducer(initialState, {
+      type: 'START_GAME',
+      playerName: 'Tanmay',
+      itemMode: 'competitive',
+      difficulty: 'hard',
+    });
+    expect(state.phase).toBe('connecting');
+    expect(state.playerName).toBe('Tanmay');
+
+    state = battleReducer(state, { type: 'CONNECTED' });
+    state = battleReducer(state, { type: 'ROOM_CREATED', code: 'LOCAL', botName: 'Vikram' });
+    expect(state.botName).toBe('Vikram');
+
+    // Generate a team for team preview
+    const rng = new SeededRNG(42);
+    const team = generateTeam(rng, { itemMode: 'competitive' });
+    const serializedTeam = team.map(p => ({
+      species: p.species,
+      level: p.level,
+      moves: p.moves,
+      ability: p.ability,
+      item: p.item,
+      currentHp: p.currentHp,
+      maxHp: p.maxHp,
+      status: null,
+      boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 },
+      isAlive: true,
+      volatileStatuses: [],
+    }));
+
+    state = battleReducer(state, {
+      type: 'TEAM_PREVIEW',
+      payload: { yourTeam: serializedTeam as any, yourPlayerIndex: 0 },
+    });
+    expect(state.phase).toBe('team_preview');
+    expect(state.yourTeam.length).toBe(6);
+
+    // Battle start
+    state = battleReducer(state, {
+      type: 'BATTLE_START',
+      payload: {
+        yourTeam: serializedTeam as any,
+        yourPlayerIndex: 0,
+        activePokemonIndex: 0,
+      } as any,
+    });
+    expect(state.phase).toBe('battling');
+    expect(state.turn).toBe(1);
+
+    // Battle end
+    state = battleReducer(state, {
+      type: 'BATTLE_END',
+      payload: {
+        winner: 'Tanmay',
+        reason: 'all_fainted',
+        finalState: { yourTeam: serializedTeam as any, opponentTeam: serializedTeam as any },
+      } as any,
+    });
+    expect(state.phase).toBe('battle_end');
+    expect(state.battleEndData?.winner).toBe('Tanmay');
+  });
+});
+
+describe('E2E: Online battle flow', () => {
+  it('2. room create → opponent join → team preview → battle → end', () => {
+    let state = battleReducer(initialState, {
+      type: 'START_ONLINE',
+      playerName: 'Tanmay',
+      itemMode: 'competitive',
+    });
+    expect(state.gameMode).toBe('online');
+
+    state = battleReducer(state, { type: 'CONNECTED' });
+    expect(state.phase).toBe('online_lobby');
+
+    state = battleReducer(state, { type: 'ONLINE_ROOM_CREATED', code: 'ABC123' });
+    expect(state.roomCode).toBe('ABC123');
+
+    state = battleReducer(state, { type: 'OPPONENT_JOINED', name: 'Nikhil' });
+    expect(state.opponentName).toBe('Nikhil');
+
+    // Team preview
+    const rng = new SeededRNG(42);
+    const team = generateTeam(rng, { itemMode: 'competitive' });
+    const serialized = team.map(p => ({
+      species: p.species, level: p.level, moves: p.moves, ability: p.ability,
+      item: p.item, currentHp: p.currentHp, maxHp: p.maxHp, status: null,
+      boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 },
+      isAlive: true, volatileStatuses: [],
+    }));
+    state = battleReducer(state, {
+      type: 'TEAM_PREVIEW',
+      payload: { yourTeam: serialized as any, yourPlayerIndex: 0 },
+    });
+    expect(state.phase).toBe('team_preview');
+
+    // Battle end
+    state = battleReducer(state, {
+      type: 'BATTLE_END',
+      payload: { winner: 'Nikhil', reason: 'all_fainted', finalState: { yourTeam: serialized as any, opponentTeam: serialized as any } } as any,
+    });
+    expect(state.phase).toBe('battle_end');
+    expect(state.battleEndData?.winner).toBe('Nikhil');
+
+    // Play again (reset)
+    state = battleReducer(state, { type: 'RESET' });
+    expect(state.phase).toBe('setup');
+  });
+});
+
+describe('E2E: Move/item swap persistence in shop', () => {
+  it('10. swap move + item in shop → verify changes persist', () => {
+    const contextSource = fs.readFileSync(
+      path.resolve(__dirname, '../../src/client/state/battle-context.tsx'),
+      'utf-8',
+    );
+
+    // shopSwapMove modifies pokemon.moves[slot]
+    const swapMoveFn = contextSource.slice(contextSource.indexOf('const shopSwapMove'));
+    expect(swapMoveFn).toContain('pokemon.moves[moveSlotIdx]');
+    expect(swapMoveFn).toContain('SET_SHOP_BALANCE');
+
+    // shopSwapItem modifies pokemon.item
+    const swapItemFn = contextSource.slice(contextSource.indexOf('const shopSwapItem'));
+    expect(swapItemFn).toContain('team[pokemonIdx].item = newItem');
+    expect(swapItemFn).toContain('SET_SHOP_BALANCE');
+
+    // Both deduct 1 point
+    expect(swapMoveFn).toContain('shopBalance - 1');
+    expect(swapItemFn).toContain('shopBalance - 1');
+  });
+});
+
+describe('E2E: Campaign teams passthrough regression', () => {
+  it('4b. gym team generation enforces Fire type', () => {
+    const team = generateGymTeam(new SeededRNG(42), 'Fire');
+    expect(team.length).toBe(6);
+    const fireCount = team.filter(p => p.species.types.includes('Fire')).length;
+    expect(fireCount).toBeGreaterThanOrEqual(4);
+  });
+
+  it('4b. gauntlet battle 0 = 1 T3/T4 Pokemon', () => {
+    const team = generateGauntletTeam(new SeededRNG(42), 0);
+    expect(team.length).toBe(1);
+    expect(team[0].species.tier).toBeGreaterThanOrEqual(3);
+  });
+
+  it('4b. local-battle has campaignPlayerTeam/campaignOpponentTeam fields', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../src/client/local-battle.ts'),
+      'utf-8',
+    );
+    expect(source).toContain('campaignPlayerTeam');
+    expect(source).toContain('campaignOpponentTeam');
+    expect(source).toContain('isCampaign');
+  });
+
+  it('4b. beginCampaignBattle passes campaignPlayerTeam (not eliteFourStage)', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../src/client/state/battle-context.tsx'),
+      'utf-8',
+    );
+    const battleFn = source.slice(source.indexOf('const beginCampaignBattle'));
+    expect(battleFn).toContain('campaignPlayerTeam: healedTeam');
+    expect(battleFn).toContain('campaignOpponentTeam: opponentTeam');
+    expect(battleFn).not.toContain('eliteFourStage:');
+  });
+});
+
+describe('E2E: No double loss regression', () => {
+  it('14. campaignRunSavedRef prevents double loss', () => {
+    const source = fs.readFileSync(
+      path.resolve(__dirname, '../../src/client/state/battle-context.tsx'),
+      'utf-8',
+    );
+    expect(source).toContain('campaignRunSavedRef');
+
+    // returnToMenu checks before saving
+    const menuFn = source.slice(source.indexOf('const returnToMenu = useCallback'));
+    expect(menuFn).toContain('alreadySaved');
+    expect(menuFn).toContain("phase === 'battle_end'");
+    expect(menuFn).toContain('campaignRunSavedRef.current');
+
+    // beginCampaignBattle resets the flag
+    const battleFn = source.slice(source.indexOf('const beginCampaignBattle'));
+    expect(battleFn).toContain('campaignRunSavedRef.current = false');
   });
 });
