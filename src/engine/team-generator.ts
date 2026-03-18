@@ -31,6 +31,8 @@ interface TeamGeneratorOptions {
   maxGen?: number | null;
   legendaryMode?: boolean;
   megaMode?: boolean;
+  /** If set, return only this many Pokemon (sliced from a full 6-team). */
+  teamSize?: number;
 }
 
 /** Build filtered tier pools based on maxGen (null = no filter). */
@@ -123,10 +125,17 @@ export function generateTeam(
   }
 
   // Build battle Pokemon from selected species
-  return team.map(species => {
+  let result = team.map(species => {
     const set = pickSet(species, rng, options.itemMode);
     return createBattlePokemon(species, set, 100, maxGen);
   });
+
+  // Optional team size limit (for gauntlet scaling)
+  if (options.teamSize && options.teamSize < result.length) {
+    result = result.slice(0, options.teamSize);
+  }
+
+  return result;
 }
 
 /** Get a canonical key for a Pokemon's type combination (sorted, joined). */
@@ -385,6 +394,153 @@ export function generateChampionCpuTeam(rng: SeededRNG, itemMode: 'competitive' 
       if (!team.some(t => t.id === mega.id)) team.push(mega);
     }
   }
+  return team.map(species => {
+    const set = pickSet(species, rng, itemMode);
+    return createBattlePokemon(species, set, 100, null);
+  });
+}
+
+// ── Gauntlet scaling ─────────────────────────────────────────────────────
+
+/**
+ * Generate a gauntlet opponent team with proper difficulty scaling.
+ * - Battles 0-3: mostly T3/T4
+ * - Battles 4-7: mix of T2/T1
+ * - Battles 8-11: T1 and megas
+ * - Battles 12+: full teams of 6 megas (endgame plateau)
+ */
+export function generateGauntletTeam(
+  rng: SeededRNG,
+  battleNum: number,
+  itemMode: 'competitive' | 'casual' = 'competitive',
+): BattlePokemon[] {
+  const teamSize = Math.min(battleNum + 1, 6);
+
+  // Endgame plateau: all megas
+  if (battleNum >= 12) {
+    return generateChampionCpuTeam(rng, itemMode).slice(0, teamSize);
+  }
+
+  // Late game: T1 + megas
+  if (battleNum >= 8) {
+    return generateTeam(rng, {
+      itemMode,
+      legendaryMode: true,
+      megaMode: true,
+      teamSize,
+    });
+  }
+
+  // Mid game: T2/T1 mix
+  if (battleNum >= 4) {
+    return generateTeam(rng, {
+      itemMode,
+      legendaryMode: true,
+      teamSize,
+    });
+  }
+
+  // Early game: T3/T4
+  return generateTeam(rng, { itemMode, teamSize });
+}
+
+// ── Gym Career team generators ──────────────────────────────────────────
+
+/**
+ * Generate a gym leader team: 1 Mega + 1 T1 + 2 T2 + 2 T3.
+ * All Pokemon match the gym's type (at least one type matches).
+ */
+export function generateGymTeam(
+  rng: SeededRNG,
+  gymType: string,
+  itemMode: 'competitive' | 'casual' = 'competitive',
+): BattlePokemon[] {
+  const megas = Object.values(megaPokedex).filter(
+    s => s.types.includes(gymType) && !NO_SPRITE.has(s.id)
+  );
+  const t1 = TIERS[1].filter(s => s.types.includes(gymType));
+  const t2 = TIERS[2].filter(s => s.types.includes(gymType));
+  const t3 = TIERS[3].filter(s => s.types.includes(gymType));
+
+  rng.shuffle(megas);
+  rng.shuffle(t1);
+  rng.shuffle(t2);
+  rng.shuffle(t3);
+
+  const team: PokemonSpecies[] = [];
+  const usedIds = new Set<string>();
+
+  function pick(pool: PokemonSpecies[], count: number) {
+    let added = 0;
+    for (const s of pool) {
+      if (added >= count) break;
+      if (usedIds.has(s.id)) continue;
+      team.push(s);
+      usedIds.add(s.id);
+      added++;
+    }
+  }
+
+  pick(megas, 1);
+  pick(t1, 1);
+  pick(t2, 2);
+  pick(t3, 2);
+
+  // Fallback: fill from any matching type if not enough
+  if (team.length < 6) {
+    const all = [...TIERS[1], ...TIERS[2], ...TIERS[3], ...TIERS[4]]
+      .filter(s => s.types.includes(gymType));
+    rng.shuffle(all);
+    pick(all, 6 - team.length);
+  }
+
+  return team.map(species => {
+    const set = pickSet(species, rng, itemMode);
+    return createBattlePokemon(species, set, 100, null);
+  });
+}
+
+/**
+ * Generate an E4 team: 1 Mega + 3 T1 + 2 T2.
+ * NOT type-restricted.
+ */
+export function generateE4Team(
+  rng: SeededRNG,
+  itemMode: 'competitive' | 'casual' = 'competitive',
+): BattlePokemon[] {
+  const allMegas = Object.values(megaPokedex).filter(s => !NO_SPRITE.has(s.id));
+  rng.shuffle(allMegas);
+
+  const t1Pool = [...TIERS[1]];
+  rng.shuffle(t1Pool);
+  const t2Pool = [...TIERS[2]];
+  rng.shuffle(t2Pool);
+
+  const team: PokemonSpecies[] = [];
+  const usedIds = new Set<string>();
+
+  // 1 Mega
+  if (allMegas.length > 0) {
+    team.push(allMegas[0]);
+    usedIds.add(allMegas[0].id);
+  }
+
+  // 3 T1
+  for (const s of t1Pool) {
+    if (team.length >= 4) break;
+    if (usedIds.has(s.id)) continue;
+    team.push(s);
+    usedIds.add(s.id);
+  }
+
+  // 2 T2
+  for (const s of t2Pool) {
+    if (team.length >= 6) break;
+    if (usedIds.has(s.id)) continue;
+    team.push(s);
+    usedIds.add(s.id);
+  }
+
   return team.map(species => {
     const set = pickSet(species, rng, itemMode);
     return createBattlePokemon(species, set, 100, null);

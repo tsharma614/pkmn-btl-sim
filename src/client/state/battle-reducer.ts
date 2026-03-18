@@ -921,6 +921,7 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         playerName: action.playerName,
         campaignMode: 'gauntlet',
         gauntletBattle: 0,
+        moveSelection: true, // move select on starter
         battleStats: emptyStats(),
       };
 
