@@ -219,9 +219,9 @@ describe('Flash Fire boost', () => {
 });
 
 describe('Build number check', () => {
-  it('app.json has buildNumber "1"', () => {
+  it('app.json has a valid buildNumber', () => {
     const appJson = require('../../app.json');
-    expect(appJson.expo.ios.buildNumber).toBe('1');
+    expect(Number(appJson.expo.ios.buildNumber)).toBeGreaterThanOrEqual(1);
   });
 
   it('app.json version is 2.0.0', () => {

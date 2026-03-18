@@ -635,9 +635,10 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       poolSize: 21,
       megaMode: false,
       dispatch,
-      eliteFourStage: null,
-      eliteFourPlayerTeam: healedTeam,
-      eliteFourOpponentName: currentState.campaignOpponentName,
+      // Campaign: pass both pre-built teams directly
+      campaignPlayerTeam: healedTeam,
+      campaignOpponentTeam: opponentTeam,
+      campaignOpponentName: currentState.campaignOpponentName,
     });
 
     activeLocalBattle = local;

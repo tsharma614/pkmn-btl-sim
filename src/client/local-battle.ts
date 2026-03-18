@@ -51,6 +51,10 @@ interface LocalBattleOptions {
   eliteFourStage?: number;
   eliteFourPlayerTeam?: BattlePokemon[];
   eliteFourOpponentName?: string;
+  // Campaign options (pre-built teams)
+  campaignPlayerTeam?: BattlePokemon[];
+  campaignOpponentTeam?: BattlePokemon[];
+  campaignOpponentName?: string;
 }
 
 /**
@@ -59,15 +63,17 @@ interface LocalBattleOptions {
  */
 export function createLocalBattle(options: LocalBattleOptions) {
   const { playerName, itemMode, maxGen, difficulty, legendaryMode, draftMode, draftType, monotype, poolSize, megaMode, dispatch } = options;
-  const isEliteFour = options.eliteFourStage !== undefined;
+  const isCampaign = !!(options.campaignPlayerTeam && options.campaignOpponentTeam);
+  const isEliteFour = !isCampaign && options.eliteFourStage != null;
 
   // Gym leader challenge: legendary + draft + hard + monotype = gym leader mode
-  const isGymLeaderChallenge = !isEliteFour && draftMode && draftType !== 'role' && monotype && difficulty === 'hard' && legendaryMode;
+  const isGymLeaderChallenge = !isEliteFour && !isCampaign && draftMode && draftType !== 'role' && monotype && difficulty === 'hard' && legendaryMode;
   const gymLeader = isGymLeaderChallenge ? getGymLeader(monotype) : null;
 
   const rng = new SeededRNG();
   const botCandidates = BOT_NAMES.filter(n => n.toLowerCase() !== playerName.toLowerCase());
-  const botName = isEliteFour ? (options.eliteFourOpponentName ?? 'Elite Four')
+  const botName = isCampaign ? (options.campaignOpponentName ?? 'Opponent')
+    : isEliteFour ? (options.eliteFourOpponentName ?? 'Elite Four')
     : gymLeader ? gymLeader.name
     : botCandidates[Math.floor(Math.random() * botCandidates.length)];
 
@@ -88,7 +94,11 @@ export function createLocalBattle(options: LocalBattleOptions) {
   let humanTeam: BattlePokemon[] = [];
   let botTeam: BattlePokemon[] = [];
 
-  if (isEliteFour) {
+  if (isCampaign) {
+    // Campaign mode: both teams pre-built by battle-context
+    humanTeam = options.campaignPlayerTeam!;
+    botTeam = options.campaignOpponentTeam!;
+  } else if (isEliteFour) {
     // Elite Four: player team provided, CPU team generated based on stage
     humanTeam = options.eliteFourPlayerTeam ?? [];
     const stage = options.eliteFourStage!;
@@ -641,8 +651,8 @@ export function createLocalBattle(options: LocalBattleOptions) {
       // Dispatch setup sequence mimicking socket flow
       dispatch({ type: 'ROOM_CREATED', code: 'LOCAL', botName });
 
-      if (isEliteFour) {
-        // E4 mode: skip draft, go straight to team preview
+      if (isCampaign || isEliteFour) {
+        // Campaign/E4 mode: skip draft, go straight to team preview
         dispatch({
           type: 'TEAM_PREVIEW',
           payload: {
