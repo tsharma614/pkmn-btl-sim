@@ -137,6 +137,31 @@ describe('Safety Goggles — weather + powder immunity', () => {
     (battle as any).applyWeatherDamage(pokemon, 0, events);
     expect(pokemon.currentHp).toBe(hpBefore); // no damage
   });
+
+  it('blocks powder/spore moves (Sleep Powder, Stun Spore, Spore)', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.item = 'Safety Goggles';
+
+    for (const moveName of ['Sleep Powder', 'Stun Spore', 'Spore', 'Poison Powder']) {
+      const move = { name: moveName, type: 'Grass', category: 'Status', power: null, accuracy: 75, pp: 15, priority: 0, flags: {}, target: 'normal' };
+      const events: any[] = [];
+      const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+      expect(blocked, `${moveName} should be blocked by Safety Goggles`).toBe(true);
+      const immuneEvent = events.find((e: any) => e.type === 'immune' && e.data.reason === 'Safety Goggles');
+      expect(immuneEvent, `${moveName} should produce immune event`).toBeDefined();
+    }
+  });
+
+  it('does NOT block non-powder moves', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.item = 'Safety Goggles';
+    const move = { name: 'Thunder Wave', type: 'Electric', category: 'Status', power: null, accuracy: 90, pp: 20, priority: 0, flags: {}, target: 'normal' };
+    const events: any[] = [];
+    const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+    expect(blocked).toBe(false); // Thunder Wave is NOT a powder move
+  });
 });
 
 // === EXISTING ITEMS (verify they work) ===
