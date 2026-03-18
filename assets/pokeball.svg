@@ -1,28 +1,60 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <!-- Background fills to edges -->
+  <defs>
+    <!-- Radial gradient for depth on the ball -->
+    <radialGradient id="topGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ff6b7f"/>
+      <stop offset="100%" stop-color="#c22040"/>
+    </radialGradient>
+    <radialGradient id="bottomGrad" cx="40%" cy="65%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#cccccc"/>
+    </radialGradient>
+    <!-- Glow behind the ball -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#2a1a3e"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </radialGradient>
+    <!-- Button shine -->
+    <radialGradient id="btnShine" cx="35%" cy="35%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#dddddd"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background with subtle glow -->
   <rect width="1024" height="1024" fill="#1a1a2e"/>
+  <circle cx="512" cy="512" r="500" fill="url(#bgGlow)"/>
 
-  <!-- Pokeball outer border — fills nearly edge-to-edge -->
-  <circle cx="512" cy="512" r="500" fill="#1a1a1a"/>
+  <!-- Outer border with slight bevel -->
+  <circle cx="512" cy="512" r="470" fill="#111111"/>
+  <circle cx="512" cy="512" r="460" fill="#1a1a1a"/>
 
-  <!-- Red top half -->
+  <!-- Red top half with gradient -->
   <clipPath id="topHalf">
     <rect x="0" y="0" width="1024" height="512"/>
   </clipPath>
-  <circle cx="512" cy="512" r="468" fill="#e94560" clip-path="url(#topHalf)"/>
+  <circle cx="512" cy="512" r="445" fill="url(#topGrad)" clip-path="url(#topHalf)"/>
 
-  <!-- White bottom half -->
+  <!-- White bottom half with gradient -->
   <clipPath id="bottomHalf">
     <rect x="0" y="512" width="1024" height="512"/>
   </clipPath>
-  <circle cx="512" cy="512" r="468" fill="#f5f5f5" clip-path="url(#bottomHalf)"/>
+  <circle cx="512" cy="512" r="445" fill="url(#bottomGrad)" clip-path="url(#bottomHalf)"/>
+
+  <!-- Highlight on top half (shine) -->
+  <ellipse cx="380" cy="320" rx="180" ry="100" fill="rgba(255,255,255,0.15)"/>
 
   <!-- Thick center band -->
-  <rect x="12" y="476" width="1000" height="72" fill="#1a1a1a"/>
+  <rect x="52" y="478" width="920" height="68" fill="#1a1a1a"/>
 
-  <!-- Center button — much bigger with visible ring -->
-  <circle cx="512" cy="512" r="100" fill="#1a1a1a"/>
-  <circle cx="512" cy="512" r="82" fill="#333333"/>
-  <circle cx="512" cy="512" r="64" fill="#f5f5f5"/>
-  <circle cx="512" cy="512" r="50" fill="none" stroke="#cccccc" stroke-width="4"/>
+  <!-- Center button outer ring -->
+  <circle cx="512" cy="512" r="88" fill="#1a1a1a"/>
+  <!-- Ring border -->
+  <circle cx="512" cy="512" r="76" fill="#333333"/>
+  <!-- Inner button with shine -->
+  <circle cx="512" cy="512" r="58" fill="url(#btnShine)"/>
+  <!-- Inner ring detail -->
+  <circle cx="512" cy="512" r="46" fill="none" stroke="#bbbbbb" stroke-width="3"/>
+  <!-- Tiny highlight dot -->
+  <circle cx="498" cy="498" r="12" fill="rgba(255,255,255,0.6)"/>
 </svg>

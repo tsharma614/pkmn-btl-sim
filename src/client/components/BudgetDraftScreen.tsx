@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
+import { PokemonDetailModal } from './PokemonDetailModal';
 import { colors, spacing } from '../theme';
 import type { PokemonSpecies } from '../../types';
 
@@ -58,8 +59,8 @@ export function BudgetDraftScreen({
   const cardW =
     (screenW - spacing.lg * 2 - CARD_GAP * (NUM_TIERS - 1)) / NUM_TIERS;
 
-  // Map of role -> selected option index within that role's options array
   const [selections, setSelections] = useState<Record<string, number>>({});
+  const [detailSpecies, setDetailSpecies] = useState<PokemonSpecies | null>(null);
 
   const spent = useMemo(() => {
     let total = 0;
@@ -153,6 +154,7 @@ export function BudgetDraftScreen({
                         disabled && styles.cardDisabled,
                       ]}
                       onPress={() => !disabled && handleSelect(section.role, idx, opt.cost)}
+                      onLongPress={() => setDetailSpecies(opt.species)}
                       activeOpacity={disabled ? 1 : 0.7}
                       disabled={disabled}
                     >
@@ -195,6 +197,7 @@ export function BudgetDraftScreen({
           </Text>
         </TouchableOpacity>
       </View>
+      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} onClose={() => setDetailSpecies(null)} />
     </View>
   );
 }

@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
+import { PokemonDetailModal } from './PokemonDetailModal';
 import { colors, spacing } from '../theme';
 import { GAUNTLET_STARTERS } from '../../data/starters';
+import pokedexData from '../../data/pokedex.json';
+import type { PokemonSpecies } from '../../types';
+
+const pokedex = pokedexData as Record<string, PokemonSpecies>;
 
 interface Props {
   onPick: (speciesId: string) => void;
@@ -11,6 +16,7 @@ interface Props {
 
 export function GauntletStarterScreen({ onPick, onBack }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [detailSpecies, setDetailSpecies] = useState<PokemonSpecies | null>(null);
 
   return (
     <View style={styles.container}>
@@ -28,6 +34,7 @@ export function GauntletStarterScreen({ onPick, onBack }: Props) {
             key={id}
             style={[styles.card, selected === id && styles.cardSelected]}
             onPress={() => setSelected(id)}
+            onLongPress={() => { const s = Object.values(pokedex).find(p => p.id === id); if (s) setDetailSpecies(s); }}
             activeOpacity={0.7}
           >
             <PokemonSprite speciesId={id} facing="front" size={64} />
@@ -48,6 +55,7 @@ export function GauntletStarterScreen({ onPick, onBack }: Props) {
           <Text style={styles.confirmBtnText}>CONFIRM</Text>
         </TouchableOpacity>
       </View>
+      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} onClose={() => setDetailSpecies(null)} />
     </View>
   );
 }

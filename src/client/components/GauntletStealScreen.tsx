@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
+import { PokemonDetailModal } from './PokemonDetailModal';
 import { colors, spacing } from '../theme';
 import type { OwnPokemon } from '../../server/types';
+import type { PokemonSpecies } from '../../types';
 
 interface Props {
   /** Opponent's team to steal from */
@@ -29,6 +31,7 @@ export function GauntletStealScreen({
 }: Props) {
   const [stealIndex, setStealIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const [detailSpecies, setDetailSpecies] = useState<PokemonSpecies | null>(null);
 
   const canConfirm = stealIndex !== null && (!mustDrop || dropIndex !== null);
 
@@ -56,6 +59,7 @@ export function GauntletStealScreen({
               key={`steal-${i}`}
               style={[styles.card, stealIndex === i && styles.cardSelected]}
               onPress={() => setStealIndex(i)}
+              onLongPress={() => setDetailSpecies(p.species as any)}
               activeOpacity={0.7}
             >
               <PokemonSprite speciesId={p.species.id} facing="front" size={52} />
@@ -100,6 +104,7 @@ export function GauntletStealScreen({
           <Text style={styles.confirmBtnText}>CONFIRM</Text>
         </TouchableOpacity>
       </View>
+      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} onClose={() => setDetailSpecies(null)} />
     </View>
   );
 }
