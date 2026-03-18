@@ -481,6 +481,12 @@ export class Battle {
       return;
     }
 
+    // Assault Vest: blocks status moves
+    if (attacker.item === 'Assault Vest' && move.category === 'Status') {
+      this.addEvent(events, 'cant_move', { pokemon: attacker.species.name, reason: 'assault vest', move: move.name });
+      return;
+    }
+
     // Check paralysis
     if (attacker.status === 'paralysis' && this.rng.chance(25)) {
       this.addEvent(events, 'cant_move', { pokemon: attacker.species.name, reason: 'paralysis' });
@@ -985,6 +991,17 @@ export class Battle {
       }
     }
 
+    // Sitrus Berry: heal 25% when dropping below 50% HP
+    if (defender.isAlive && !defender.itemConsumed && defender.item === 'Sitrus Berry' && totalDamage > 0) {
+      if (defender.currentHp <= Math.floor(defender.maxHp / 2)) {
+        defender.itemConsumed = true;
+        const heal = Math.max(1, Math.floor(defender.maxHp / 4));
+        const actualHeal = Math.min(heal, defender.maxHp - defender.currentHp);
+        defender.currentHp = clampHp(defender.currentHp + heal, defender.maxHp);
+        this.addEvent(events, 'item_heal', { pokemon: defender.species.name, item: 'Sitrus Berry', amount: actualHeal });
+      }
+    }
+
     // Moxie: +1 Atk when KOing opponent
     if (!defender.isAlive && attacker.isAlive && attacker.ability === 'Moxie') {
       this.applyBoost(attacker, 'atk', 1, events);
@@ -1306,7 +1323,9 @@ export class Battle {
           // Screens/Tailwind/Aurora Veil go on the user's side; entry hazards go on opponent's
           const selfSideHazards = ['reflect', 'lightscreen', 'tailwind', 'auroraveil', 'safeguard', 'mist', 'quickguard', 'wideguard', 'craftyshield', 'matblock', 'luckychant'];
           const hazardSide = selfSideHazards.includes(effect.hazard as string) ? playerIndex : opponentIndex;
-          this.applyHazard(hazardSide, effect.hazard as string, events);
+          // Light Clay extends screen duration from 5 to 8
+          const screenDur = attacker.item === 'Light Clay' && selfSideHazards.includes(effect.hazard as string) ? 8 : 5;
+          this.applyHazard(hazardSide, effect.hazard as string, events, screenDur);
           break;
         }
 
@@ -1538,6 +1557,16 @@ export class Battle {
       status,
     });
 
+    // Lum Berry: immediately cures status (single use)
+    if (pokemon.item === 'Lum Berry' && !pokemon.itemConsumed) {
+      pokemon.status = null;
+      pokemon.itemConsumed = true;
+      pokemon.sleepTurns = 0;
+      pokemon.toxicCounter = 0;
+      this.addEvent(events, 'item_trigger', { pokemon: pokemon.species.name, item: 'Lum Berry' });
+      this.addEvent(events, 'status_cure', { pokemon: pokemon.species.name, status });
+    }
+
     return true;
   }
 
@@ -1612,7 +1641,7 @@ export class Battle {
 
   // --- Hazards ---
 
-  private applyHazard(sideIndex: number, hazard: string, events: BattleEvent[]): void {
+  private applyHazard(sideIndex: number, hazard: string, events: BattleEvent[], screenDuration: number = 5): void {
     const side = this.getSideEffects(sideIndex);
 
     switch (hazard) {
@@ -1632,11 +1661,11 @@ export class Battle {
         this.addEvent(events, 'hazard_set', { side: sideIndex, hazard: 'Toxic Spikes', layers: side.toxicSpikesLayers });
         break;
       case 'reflect':
-        side.reflect = 5;
+        side.reflect = screenDuration;
         this.addEvent(events, 'screen_set', { side: sideIndex, screen: 'Reflect' });
         break;
       case 'lightscreen':
-        side.lightScreen = 5;
+        side.lightScreen = screenDuration;
         this.addEvent(events, 'screen_set', { side: sideIndex, screen: 'Light Screen' });
         break;
       case 'stickyweb':
@@ -1653,7 +1682,7 @@ export class Battle {
           this.addEvent(events, 'move_fail', { pokemon: 'unknown', move: 'Aurora Veil', reason: 'no hail' });
           return;
         }
-        side.auroraVeil = 5;
+        side.auroraVeil = screenDuration;
         this.addEvent(events, 'screen_set', { side: sideIndex, screen: 'Aurora Veil' });
         break;
       }
@@ -1919,6 +1948,12 @@ export class Battle {
       this.addEvent(events, 'immune', { target: defender.species.name, move: move.name, reason: 'Bulletproof' });
       return true;
     }
+    // Safety Goggles: immune to powder/spore moves
+    const POWDER_MOVES = new Set(['Sleep Powder', 'Stun Spore', 'Poison Powder', 'Spore', 'Cotton Spore', 'Powder', 'Rage Powder']);
+    if (defender.item === 'Safety Goggles' && POWDER_MOVES.has(move.name)) {
+      this.addEvent(events, 'immune', { target: defender.species.name, move: move.name, reason: 'Safety Goggles' });
+      return true;
+    }
 
     return false;
   }
@@ -2094,6 +2129,14 @@ export class Battle {
     switch (defender.item) {
       case 'Assault Vest':
         if (move.category === 'Special') mods.defenseMod = (mods.defenseMod || 1) * 1.5;
+        break;
+      case 'Eviolite':
+        // 1.5x Def and SpD if not fully evolved — use tier 3/4 as proxy (competitive NFE mons)
+        // True NFE check would need evolution data; tier 3+ is a reasonable approximation
+        // since fully evolved competitive mons are tier 1-2
+        if (defender.species.tier >= 3) {
+          mods.defenseMod = (mods.defenseMod || 1) * 1.5;
+        }
         break;
     }
 
@@ -2474,6 +2517,9 @@ export class Battle {
   }
 
   private applyWeatherDamage(pokemon: BattlePokemon, playerIndex: number, events: BattleEvent[]): void {
+    // Safety Goggles: immune to weather damage
+    if (pokemon.item === 'Safety Goggles') return;
+
     const types = pokemon.species.types as PokemonType[];
 
     if (this.state.weather === 'sandstorm') {
