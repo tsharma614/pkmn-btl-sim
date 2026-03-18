@@ -68,7 +68,10 @@ interface BattleContextValue {
   advanceCampaign: () => void;
   beginCampaignBattle: () => void;
   startGymCareer: (playerName: string) => void;
-  gymCareerDraftComplete: (pickedIndices: number[], moveSelections: Record<number, string[]>) => void;
+  gymCareerDraftComplete: (picks: { speciesId: string; tier: number }[]) => void;
+  showGymMap: () => void;
+  challengeGym: (gymIndex: number) => void;
+  showE4Locks: () => void;
 }
 
 const BattleContext = createContext<BattleContextValue | null>(null);
@@ -403,6 +406,20 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // In gym career mode, save team and show gym map
+    if (currentState.campaignMode === 'gym_career') {
+      campaignPlayerTeamRef.current = rebuiltTeam;
+      // Auto-save
+      saveGymCareer({
+        currentStage: 0,
+        gymTypes: currentState.gymTypes,
+        team: rebuiltTeam.map(serializeOwnPokemon),
+        date: new Date().toISOString(),
+      });
+      dispatch({ type: 'SHOW_GYM_MAP' });
+      return;
+    }
+
     // Update local battle's team if CPU mode
     const local = localBattleRef.current;
     if (local) {
@@ -502,15 +519,46 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (currentState.campaignMode === 'gym_career') {
-      const nextStage = currentState.campaignStage + 1;
-      const total = currentState.campaignTotalStages;
-      const rng = campaignRngRef.current;
+      const stage = currentState.campaignStage;
 
-      if (nextStage >= total) {
+      if (stage < 8) {
+        // Gym beaten — mark it and return to gym map
+        dispatch({ type: 'GYM_BEATEN', gymIndex: stage });
+        const beatenCount = currentState.beatenGyms.filter(Boolean).length + 1;
+
+        saveGymCareer({
+          currentStage: beatenCount,
+          gymTypes: currentState.gymTypes,
+          team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+          date: new Date().toISOString(),
+        });
+
+        if (beatenCount >= 8) {
+          // All gyms beaten → show E4 locks
+          dispatch({ type: 'SHOW_E4_LOCKS' });
+        } else {
+          dispatch({ type: 'SHOW_GYM_MAP' });
+        }
+      } else if (stage < 12) {
+        // E4 member beaten — mark it and return to E4 locks
+        const memberIdx = stage - 8;
+        dispatch({ type: 'E4_MEMBER_BEATEN', memberIndex: memberIdx });
+        const e4BeatenCount = currentState.beatenE4.filter(Boolean).length + 1;
+
+        saveGymCareer({
+          currentStage: 8 + e4BeatenCount,
+          gymTypes: currentState.gymTypes,
+          team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+          date: new Date().toISOString(),
+        });
+
+        dispatch({ type: 'SHOW_E4_LOCKS' });
+      } else {
         // Champion defeated!
         saveCampaignRun({
           mode: 'gym_career',
           progress: 'Champion',
+          stageNum: 13,
           team: campaignPlayerTeamRef.current?.map(p => p.species.name) ?? [],
           result: 'win',
           date: new Date().toISOString(),
@@ -519,49 +567,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         cleanupAll();
         campaignPlayerTeamRef.current = null;
         dispatch({ type: 'RESET' });
-        return;
       }
-
-      // Determine opponent info for next stage
-      const gymTypes = currentState.gymTypes;
-      let opponentName: string;
-      let opponentTitle: string;
-
-      if (nextStage < 8) {
-        const type = gymTypes[nextStage];
-        opponentName = pickTrainerName(rng, campaignUsedNamesRef.current);
-        campaignUsedNamesRef.current.push(opponentName);
-        opponentTitle = getGymTagline(type, rng);
-      } else if (nextStage < 12) {
-        // E4 — use friend pool (TMNT names)
-        const e4Member = getEliteFourMember(nextStage - 8);
-        opponentName = `Elite Four ${e4Member?.name ?? 'Unknown'}`;
-        opponentTitle = getE4Tagline(rng);
-      } else {
-        // Champion — use friend pool name
-        opponentName = `Champion ${CHAMPION.name}`;
-        opponentTitle = getChampionTagline(rng);
-      }
-
-      const sprite = pickTrainerSprite(rng);
-
-      // Auto-save after each battle
-      saveGymCareer({
-        currentStage: nextStage,
-        gymTypes,
-        team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
-        date: new Date().toISOString(),
-      });
-
-      dispatch({
-        type: 'CAMPAIGN_INTRO',
-        stage: nextStage,
-        totalStages: total,
-        opponentName,
-        opponentTitle,
-        trainerSprite: sprite,
-        campaignMode: 'gym_career',
-      });
       return;
     }
   }, [cleanupAll]);
@@ -657,60 +663,57 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     const shuffled = [...MONOTYPE_TYPES].sort(() => rng.next() - 0.5);
     const gymTypes = shuffled.slice(0, 8);
 
-    // Generate draft pool (reuse E4 draft flow)
-    const pool = generateDraftPool(rng, {
-      maxGen: null,
-      legendaryMode: false,
-      megaMode: true,
-      targetPoolSize: 21,
-      monotype: null,
-    });
-
+    // Budget draft screen handles pool generation — just dispatch start
     dispatch({ type: 'GYM_CAREER_START', playerName, gymTypes });
-    dispatch({ type: 'E4_DRAFT_START', pool, playerName });
   }, [cleanupAll]);
 
-  const gymCareerDraftComplete = useCallback((pickedIndices: number[], moveSelections: Record<number, string[]>) => {
-    const currentState = stateRef.current;
-    const pool = currentState.draftPool;
+  /** Called from BudgetDraftScreen with picked species IDs. Goes to move selection. */
+  const gymCareerDraftComplete = useCallback((picks: { speciesId: string; tier: number }[]) => {
     const rng = campaignRngRef.current;
-
-    const playerTeam = pickedIndices.map((poolIdx, pickIdx) => {
-      const species = pool[poolIdx].species;
+    const playerTeam = picks.map(pick => {
+      const species = fullSpeciesById[pick.speciesId];
+      if (!species) throw new Error(`Species not found: ${pick.speciesId}`);
       const baseSet = pickSet(species, rng, 'competitive');
-      const customMoves = moveSelections[pickIdx];
-      if (customMoves && customMoves.length === 4) {
-        baseSet.moves = customMoves;
-      }
       return createBattlePokemon(species, baseSet, 100, null);
     });
     campaignPlayerTeamRef.current = playerTeam;
 
-    // Show intro for first gym with type-specific trash talk
-    const gymTypes = currentState.gymTypes;
-    const type = gymTypes[0];
+    // Go to move selection phase
+    dispatch({
+      type: 'DRAFT_COMPLETE',
+      yourTeam: playerTeam.map(serializeOwnPokemon),
+    });
+  }, []);
+
+  /** Show the gym map screen. */
+  const showGymMap = useCallback(() => {
+    dispatch({ type: 'SHOW_GYM_MAP' });
+  }, []);
+
+  /** Challenge a specific gym. */
+  const challengeGym = useCallback((gymIndex: number) => {
+    const currentState = stateRef.current;
+    const type = currentState.gymTypes[gymIndex];
+    const rng = campaignRngRef.current;
     const opponentName = pickTrainerName(rng, campaignUsedNamesRef.current);
     campaignUsedNamesRef.current.push(opponentName);
     const sprite = pickTrainerSprite(rng);
     const tagline = getGymTagline(type, rng);
 
-    // Auto-save initial state
-    saveGymCareer({
-      currentStage: 0,
-      gymTypes,
-      team: playerTeam.map(serializeOwnPokemon),
-      date: new Date().toISOString(),
-    });
-
     dispatch({
       type: 'CAMPAIGN_INTRO',
-      stage: 0,
+      stage: gymIndex,
       totalStages: 13,
       opponentName,
       opponentTitle: tagline,
       trainerSprite: sprite,
       campaignMode: 'gym_career',
     });
+  }, []);
+
+  /** Show E4 lock screen. */
+  const showE4Locks = useCallback(() => {
+    dispatch({ type: 'SHOW_E4_LOCKS' });
   }, []);
 
   return (
@@ -739,6 +742,9 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         beginCampaignBattle,
         startGymCareer,
         gymCareerDraftComplete,
+        showGymMap,
+        challengeGym,
+        showE4Locks,
       }}
     >
       {children}

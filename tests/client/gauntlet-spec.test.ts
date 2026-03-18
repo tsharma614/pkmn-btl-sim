@@ -85,11 +85,21 @@ describe('Gym Career — spec requirements', () => {
 
   it('E4 uses friend pool names (TMNT from elite-four.ts)', () => {
     expect(contextSource).toContain('getEliteFourMember');
-    expect(contextSource).toContain("Elite Four");
+    // E4 names used in BattleScreen E4LockScreen or battle-context
+    const battleScreenSource = fs.readFileSync(
+      path.resolve(__dirname, '../../src/client/components/BattleScreen.tsx'),
+      'utf-8',
+    );
+    expect(battleScreenSource).toContain('Leonardo');
+    expect(battleScreenSource).toContain('Donatello');
   });
 
   it('champion uses friend pool name', () => {
-    expect(contextSource).toContain('CHAMPION.name');
+    const battleScreenSource = fs.readFileSync(
+      path.resolve(__dirname, '../../src/client/components/BattleScreen.tsx'),
+      'utf-8',
+    );
+    expect(battleScreenSource).toContain('Professor Oak');
   });
 
   it('uses type-specific trash talk for gyms', () => {

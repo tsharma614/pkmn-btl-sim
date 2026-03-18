@@ -200,9 +200,11 @@ describe('Phase 5 — Campaign mode', () => {
         playerName: 'Red',
         gymTypes: ['Fire', 'Water', 'Grass', 'Electric', 'Ice', 'Dragon', 'Dark', 'Steel'],
       });
-      expect(state.phase).toBe('elite_four_draft');
+      expect(state.phase).toBe('budget_draft');
       expect(state.campaignMode).toBe('gym_career');
       expect(state.gymTypes).toHaveLength(8);
+      expect(state.beatenGyms).toHaveLength(8);
+      expect(state.beatenE4).toHaveLength(4);
       expect(state.campaignTotalStages).toBe(13);
     });
   });

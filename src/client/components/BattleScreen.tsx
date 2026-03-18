@@ -29,6 +29,9 @@ import { MoveSelectionScreen } from './MoveSelectionScreen';
 import { GauntletStarterScreen } from './GauntletStarterScreen';
 import { GauntletStealScreen } from './GauntletStealScreen';
 import { CampaignIntroScreen } from './CampaignIntroScreen';
+import { BudgetDraftScreen } from './BudgetDraftScreen';
+import { GymMapScreen } from './GymMapScreen';
+import { E4LockScreen } from './E4LockScreen';
 import { colors, spacing } from '../theme';
 import { getGymLeader } from '../../data/gym-leaders';
 import { getEliteFourMember } from '../../data/elite-four';
@@ -66,7 +69,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete, showGymMap, challengeGym, showE4Locks } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -140,6 +143,79 @@ export function BattleScreen() {
       }).start();
     }
   }, [screenFlash?.key]);
+
+  // --- Budget Draft (Gym Career) ---
+  if (state.phase === 'budget_draft') {
+    return (
+      <SafeAreaView style={styles.full}>
+        <BudgetDraftScreen
+          roleOptions={[]} // TODO: generate role options from pokedex
+          onComplete={gymCareerDraftComplete}
+          onBack={returnToMenu}
+          playerName={state.playerName}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // --- Gym Map ---
+  if (state.phase === 'gym_map') {
+    return (
+      <SafeAreaView style={styles.full}>
+        <GymMapScreen
+          gymTypes={state.gymTypes}
+          beatenGyms={state.beatenGyms}
+          onChallenge={challengeGym}
+          onEliteFour={showE4Locks}
+          onBack={returnToMenu}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // --- E4 Locks ---
+  if (state.phase === 'e4_locks') {
+    return (
+      <SafeAreaView style={styles.full}>
+        <E4LockScreen
+          members={[
+            { name: 'Leonardo', title: 'Elite Four', sprite: 'acetrainer-gen4', tagline: '' },
+            { name: 'Donatello', title: 'Elite Four', sprite: 'scientist', tagline: '' },
+            { name: 'Raphael', title: 'Elite Four', sprite: 'blackbelt-gen4', tagline: '' },
+            { name: 'Michelangelo', title: 'Elite Four', sprite: 'pokefan', tagline: '' },
+          ]}
+          champion={{ name: 'Professor Oak', title: 'Champion', sprite: 'gentleman', tagline: '' }}
+          beatenMembers={state.beatenE4}
+          championBeaten={false}
+          onChallenge={(idx) => {
+            const rng = { next: () => Math.random() };
+            const member = getEliteFourMember(idx);
+            dispatch({
+              type: 'CAMPAIGN_INTRO',
+              stage: 8 + idx,
+              totalStages: 13,
+              opponentName: `Elite Four ${member?.name ?? 'Unknown'}`,
+              opponentTitle: member?.title ?? '',
+              trainerSprite: ['acetrainer-gen4', 'scientist', 'blackbelt-gen4', 'pokefan'][idx],
+              campaignMode: 'gym_career',
+            });
+          }}
+          onChallengeChampion={() => {
+            dispatch({
+              type: 'CAMPAIGN_INTRO',
+              stage: 12,
+              totalStages: 13,
+              opponentName: 'Champion Professor Oak',
+              opponentTitle: 'The Pokemon Professor',
+              trainerSprite: 'gentleman',
+              campaignMode: 'gym_career',
+            });
+          }}
+          onBack={returnToMenu}
+        />
+      </SafeAreaView>
+    );
+  }
 
   // --- Gauntlet Starter Pick ---
   if (state.phase === 'gauntlet_starter') {

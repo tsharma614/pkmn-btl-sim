@@ -35,7 +35,11 @@ export type BattlePhase =
   | 'elite_four_intro'
   | 'gauntlet_starter'
   | 'gauntlet_steal'
-  | 'campaign_intro';
+  | 'campaign_intro'
+  | 'budget_draft'
+  | 'item_select'
+  | 'gym_map'
+  | 'e4_locks';
 
 export type GameMode = 'cpu' | 'online';
 
@@ -141,6 +145,10 @@ export interface BattleState {
   campaignStage: number;
   /** Gym Career: randomized gym types */
   gymTypes: string[];
+  /** Gym Career: which gyms have been beaten */
+  beatenGyms: boolean[];
+  /** Gym Career: which E4 members have been beaten */
+  beatenE4: boolean[];
 }
 
 function emptyStats(): BattleStats {
@@ -221,6 +229,8 @@ export const initialState: BattleState = {
   campaignTotalStages: 0,
   campaignStage: 0,
   gymTypes: [],
+  beatenGyms: [],
+  beatenE4: [],
 };
 
 export type BattleAction =
@@ -253,6 +263,10 @@ export type BattleAction =
   | { type: 'GAUNTLET_STEAL'; opponentTeam: OwnPokemon[]; trainerName: string; trainerSprite: string }
   | { type: 'CAMPAIGN_INTRO'; stage: number; totalStages: number; opponentName: string; opponentTitle: string; trainerSprite: string; campaignMode: 'gauntlet' | 'gym_career' }
   | { type: 'GYM_CAREER_START'; playerName: string; gymTypes: string[] }
+  | { type: 'SHOW_GYM_MAP' }
+  | { type: 'SHOW_E4_LOCKS' }
+  | { type: 'GYM_BEATEN'; gymIndex: number }
+  | { type: 'E4_MEMBER_BEATEN'; memberIndex: number }
   | { type: 'RESET' };
 
 const EMPTY_SIDE: SideEffects = {
@@ -969,17 +983,57 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
     case 'GYM_CAREER_START':
       return {
         ...initialState,
-        phase: 'elite_four_draft', // reuse E4 draft screen for gym career too
+        phase: 'budget_draft',
         gameMode: 'cpu',
         playerName: action.playerName,
         itemMode: 'competitive',
         difficulty: 'hard',
         campaignMode: 'gym_career',
         gymTypes: action.gymTypes,
+        beatenGyms: new Array(8).fill(false),
+        beatenE4: new Array(4).fill(false),
         campaignStage: 0,
-        campaignTotalStages: 13, // 8 gyms + 4 E4 + 1 champion
+        campaignTotalStages: 13,
         battleStats: emptyStats(),
       };
+
+    case 'SHOW_GYM_MAP':
+      return {
+        ...state,
+        phase: 'gym_map',
+        battleEndData: null,
+        pendingEvents: [],
+        queuedPendingEvents: [],
+        yourState: null,
+        opponentVisible: null,
+        weather: 'none',
+        turn: 0,
+      };
+
+    case 'SHOW_E4_LOCKS':
+      return {
+        ...state,
+        phase: 'e4_locks',
+        battleEndData: null,
+        pendingEvents: [],
+        queuedPendingEvents: [],
+        yourState: null,
+        opponentVisible: null,
+        weather: 'none',
+        turn: 0,
+      };
+
+    case 'GYM_BEATEN': {
+      const newBeaten = [...state.beatenGyms];
+      newBeaten[action.gymIndex] = true;
+      return { ...state, beatenGyms: newBeaten };
+    }
+
+    case 'E4_MEMBER_BEATEN': {
+      const newBeaten = [...state.beatenE4];
+      newBeaten[action.memberIndex] = true;
+      return { ...state, beatenE4: newBeaten };
+    }
 
     case 'RESET':
       return {

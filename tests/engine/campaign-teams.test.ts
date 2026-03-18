@@ -89,14 +89,19 @@ describe('Gym team generation', () => {
   });
 
   it('has correct tier composition: 1 Mega + 1 T1 + 2 T2 + 2 T3', () => {
-    // Test with a type that has good representation across tiers
+    // Water has good mega/tier representation
     const team = generateGymTeam(new SeededRNG(42), 'Water');
-    const megaCount = team.filter(p => p.species.name.includes('Mega') || p.species.id.includes('mega')).length;
-    const t1Count = team.filter(p => p.species.tier === 1 && !p.species.name.includes('Mega')).length;
-    const t2Count = team.filter(p => p.species.tier === 2).length;
-    const t3Count = team.filter(p => p.species.tier === 3).length;
-    // May not always be exact due to pool limitations, but should be close
-    expect(megaCount).toBeGreaterThanOrEqual(0); // might not have a mega for all types
+    const isMega = (p: any) => p.species.name.includes('Mega') || p.species.id.includes('mega');
+    const megaCount = team.filter(isMega).length;
+    const nonMega = team.filter(p => !isMega(p));
+    const t1Count = nonMega.filter(p => p.species.tier === 1).length;
+    const t2Count = nonMega.filter(p => p.species.tier === 2).length;
+    const t3Count = nonMega.filter(p => p.species.tier === 3 || p.species.tier === 4).length;
+
+    expect(megaCount).toBe(1);
+    expect(t1Count).toBe(1);
+    expect(t2Count).toBe(2);
+    expect(t3Count).toBe(2);
     expect(team.length).toBe(6);
   });
 
