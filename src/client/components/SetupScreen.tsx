@@ -16,8 +16,9 @@ import type { PoolSize, DraftType } from '../../engine/draft-pool';
 import { StatsScreen } from './StatsScreen';
 import { CampaignScreen } from './CampaignScreen';
 import type { GymCareerSave } from './CampaignScreen';
+import { getProfile, saveProfile } from '../utils/stats-storage';
 
-const NAME_KEY = '@pbs_trainer_name';
+const OLD_NAME_KEY = '@pbs_trainer_name';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -26,7 +27,6 @@ export type Difficulty = 'easy' | 'normal' | 'hard';
 interface Props {
   onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, poolSize?: number, megaMode?: boolean, moveSelection?: boolean) => void;
   onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, megaMode?: boolean, moveSelection?: boolean) => void;
-  onStartEliteFour?: (playerName: string) => void;
   onStartGauntlet?: (playerName: string) => void;
   onStartGymCareer?: (playerName: string) => void;
 }
@@ -73,7 +73,7 @@ function PokeballLogo({ size = 100 }: { size?: number }) {
 
 type Screen = 'main' | 'cpu_setup' | 'online_setup' | 'stats' | 'campaign';
 
-export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour, onStartGauntlet, onStartGymCareer }: Props) {
+export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGymCareer }: Props) {
   const [screen, setScreen] = useState<Screen>('main');
   const [name, setName] = useState('');
   const [itemMode, setItemMode] = useState<'competitive' | 'casual'>('competitive');
@@ -88,8 +88,19 @@ export function SetupScreen({ onStart, onPlayOnline, onStartEliteFour, onStartGa
   const [moveSelection, setMoveSelection] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(NAME_KEY).then(saved => {
-      if (saved) setName(saved);
+    // Read from unified profile storage; migrate old key on first load
+    getProfile().then(async (profile) => {
+      if (profile.trainerName && profile.trainerName !== 'Player') {
+        setName(profile.trainerName);
+      } else {
+        // Migrate old @pbs_trainer_name key
+        const oldName = await AsyncStorage.getItem(OLD_NAME_KEY);
+        if (oldName) {
+          setName(oldName);
+          await saveProfile({ trainerName: oldName });
+          await AsyncStorage.removeItem(OLD_NAME_KEY);
+        }
+      }
     });
   }, []);
 

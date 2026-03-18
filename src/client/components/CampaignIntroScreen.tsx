@@ -51,23 +51,30 @@ export function CampaignIntroScreen({
         <Text style={styles.opponentName}>{opponentName}</Text>
         <Text style={styles.opponentTitle}>{opponentTitle}</Text>
 
-        {/* Progress dots */}
-        <View style={styles.dotsRow}>
-          {Array.from({ length: totalStages }).map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                i < currentStage && styles.dotCompleted,
-                i === currentStage && styles.dotCurrent,
-              ]}
-            />
-          ))}
-        </View>
-
-        <Text style={styles.remaining}>
-          Battle {currentStage + 1} of {totalStages}
-        </Text>
+        {/* Progress dots (only for finite campaigns) or battle number text */}
+        {totalStages <= 20 ? (
+          <>
+            <View style={styles.dotsRow}>
+              {Array.from({ length: totalStages }).map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.dot,
+                    i < currentStage && styles.dotCompleted,
+                    i === currentStage && styles.dotCurrent,
+                  ]}
+                />
+              ))}
+            </View>
+            <Text style={styles.remaining}>
+              Battle {currentStage + 1} of {totalStages}
+            </Text>
+          </>
+        ) : (
+          <Text style={styles.remaining}>
+            Battle #{currentStage + 1}
+          </Text>
+        )}
       </View>
 
       <View style={styles.footer}>

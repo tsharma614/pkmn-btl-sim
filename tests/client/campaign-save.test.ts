@@ -62,10 +62,17 @@ describe('Campaign — Abandoned run tracking', () => {
     expect(contextSource).toContain("clearGymCareerSave()");
   });
 
-  it('saves gauntlet win progress in advanceCampaign', () => {
-    // Gauntlet should save progress after each win
-    expect(contextSource).toContain("mode: 'gauntlet'");
-    expect(contextSource).toContain("mode: 'gym_career'");
+  it('gauntlet run saved on loss (not per-win)', () => {
+    // Gauntlet should NOT save per-win in advanceCampaign, only on loss via BattleEndOverlay
+    const implStart = contextSource.indexOf('const advanceCampaign = useCallback');
+    const implEnd = contextSource.indexOf('}, [cleanupAll])', implStart);
+    const advanceImpl = contextSource.slice(implStart, implEnd);
+    // Within the gauntlet branch (before gym_career check), no saveCampaignRun
+    const gauntletBranch = advanceImpl.slice(
+      advanceImpl.indexOf("campaignMode === 'gauntlet'"),
+      advanceImpl.indexOf("campaignMode === 'gym_career'"),
+    );
+    expect(gauntletBranch).not.toContain("saveCampaignRun");
   });
 });
 

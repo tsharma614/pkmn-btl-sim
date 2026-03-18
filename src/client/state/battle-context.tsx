@@ -21,11 +21,11 @@ import { createBattlePokemon } from '../../engine/pokemon-factory';
 import pokedexData from '../../data/pokedex.json';
 import megaPokedexData from '../../data/mega-pokemon.json';
 import type { PokemonSpecies } from '../../types';
-import { getEliteFourMember, TOTAL_E4_STAGES, CHAMPION } from '../../data/elite-four';
+import { getEliteFourMember, CHAMPION } from '../../data/elite-four';
 import { SeededRNG } from '../../utils/rng';
 import { BattlePokemon } from '../../types';
 import { serializeOwnPokemon } from '../../server/state-sanitizer';
-import { saveEliteFourProgress, getEliteFourProgress } from '../utils/badge-tracker';
+// badge-tracker E4 progress no longer used — campaign mode handles this
 import { pickTrainerName, pickTrainerSprite } from '../../data/trainer-names';
 import { MONOTYPE_TYPES } from '../../engine/draft-pool';
 import type { OwnPokemon } from '../../server/types';
@@ -62,10 +62,6 @@ interface BattleContextValue {
   requestRematchOnline: () => void;
   returnToMenu: () => void;
   moveSelectionComplete: (moveSelections: Record<number, string[]>) => void;
-  startEliteFour: (playerName: string) => void;
-  e4DraftComplete: (pickedIndices: number[], moveSelections: Record<number, string[]>) => void;
-  advanceEliteFour: () => void;
-  beginE4Battle: () => void;
   startGauntlet: (playerName: string) => void;
   gauntletStarterPicked: (speciesId: string) => void;
   gauntletStealComplete: (stealIndex: number, dropIndex: number | null) => void;
@@ -91,9 +87,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   /** Guard against double-tap: set true on action submit, cleared when turn result arrives */
   const actionPendingRef = useRef(false);
 
-  // Elite Four state preserved across battles
-  const e4PlayerTeamRef = useRef<BattlePokemon[] | null>(null);
-  const e4PlayerNameRef = useRef<string>('Player');
+  // (Old E4 refs removed — campaign mode handles this now)
 
   // Campaign state preserved across battles
   const campaignPlayerTeamRef = useRef<BattlePokemon[] | null>(null);
@@ -361,7 +355,6 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     }
 
     cleanupAll();
-    e4PlayerTeamRef.current = null;
     campaignPlayerTeamRef.current = null;
     dispatch({ type: 'RESET' });
   }, [cleanupAll]);
@@ -392,23 +385,11 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       return createBattlePokemon(fullSpecies, baseSet, 100, null);
     });
 
-    // Update local battle's team if CPU mode
-    const local = localBattleRef.current;
-    if (local) {
-      local.updateHumanTeam(rebuiltTeam);
-    }
-
-    // For online mode, send move selections to server
-    const conn = connectionRef.current;
-    if (conn) {
-      conn.humanSocket.emit('moves_selected' as any, { moveSelections });
-    }
-
     // In gauntlet mode, update campaign team and show first battle intro
     if (currentState.campaignMode === 'gauntlet') {
       campaignPlayerTeamRef.current = rebuiltTeam;
-      const rng = campaignRngRef.current;
-      const sprite = pickTrainerSprite(rng);
+      const campaignRng = campaignRngRef.current;
+      const sprite = pickTrainerSprite(campaignRng);
       const tagline = getGauntletTagline(0);
       dispatch({
         type: 'CAMPAIGN_INTRO',
@@ -440,150 +421,6 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       yourTeam: rebuiltTeam.map(serializeOwnPokemon),
     });
   }, []);
-
-  // --- Elite Four ---
-
-  const startEliteFour = useCallback((playerName: string) => {
-    console.log('[battle-context] startEliteFour');
-    cleanupAll();
-    e4PlayerNameRef.current = playerName;
-    e4PlayerTeamRef.current = null;
-
-    // Generate a standard mega draft pool (21 Pokemon)
-    const rng = new SeededRNG();
-    const pool = generateDraftPool(rng, {
-      maxGen: null,
-      legendaryMode: false,
-      megaMode: true,
-      targetPoolSize: 21,
-      monotype: null,
-    });
-
-    dispatch({ type: 'E4_DRAFT_START', pool, playerName });
-  }, [cleanupAll]);
-
-  /** Called when player finishes picking 6 from the E4 draft pool + moves. */
-  const e4DraftComplete = useCallback((pickedIndices: number[], moveSelections: Record<number, string[]>) => {
-    const currentState = stateRef.current;
-    const pool = currentState.draftPool;
-    const rng = new SeededRNG();
-
-    // Build player team from picks with custom moves
-    const playerTeam = pickedIndices.map((poolIdx, pickIdx) => {
-      const species = pool[poolIdx].species;
-      const baseSet = pickSet(species, rng, 'competitive');
-      const customMoves = moveSelections[pickIdx];
-      if (customMoves && customMoves.length === 4) {
-        baseSet.moves = customMoves;
-      }
-      return createBattlePokemon(species, baseSet, 100, null);
-    });
-    e4PlayerTeamRef.current = playerTeam;
-
-    // Show intro for first E4 battle
-    const member = getEliteFourMember(0)!;
-    dispatch({ type: 'E4_ADVANCE', stage: 0, opponentName: member.name });
-  }, []);
-
-  /** Start an E4/Champion battle at the given stage. */
-  const startE4Battle = useCallback((stage: number) => {
-    cleanupAll();
-    const playerName = e4PlayerNameRef.current;
-    const playerTeam = e4PlayerTeamRef.current;
-    if (!playerTeam) return;
-
-    // Heal player team to full — reset all battle state fields
-    const healedTeam = playerTeam.map(p => ({
-      ...p,
-      currentHp: p.stats.hp,
-      isAlive: true,
-      status: null,
-      volatileStatuses: new Set<string>(),
-      boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 },
-      lastMoveUsed: null,
-      choiceLocked: null,
-      substituteHp: 0,
-      hasMovedThisTurn: false,
-      tookDamageThisTurn: false,
-      protectedLastTurn: false,
-      timesHit: 0,
-      lastDamageTaken: null,
-      toxicCounter: 0,
-      sleepTurns: 0,
-      confusionTurns: 0,
-      encoreTurns: 0,
-      encoreMove: null,
-      moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp, disabled: false })),
-    }));
-    e4PlayerTeamRef.current = healedTeam;
-
-    const member = getEliteFourMember(stage)!;
-
-    const local = createLocalBattle({
-      playerName,
-      itemMode: 'competitive',
-      maxGen: null,
-      difficulty: 'hard',
-      legendaryMode: false,
-      draftMode: false,
-      draftType: 'snake',
-      monotype: null,
-      poolSize: 21,
-      megaMode: false,
-      dispatch,
-      // E4 options
-      eliteFourStage: stage,
-      eliteFourPlayerTeam: healedTeam,
-      eliteFourOpponentName: member.name,
-    });
-
-    activeLocalBattle = local;
-    localBattleRef.current = local;
-    local.start();
-  }, [cleanupAll]);
-
-  /** Called after winning an E4 battle to advance to the next one. */
-  const advanceEliteFour = useCallback(() => {
-    const currentStage = stateRef.current.eliteFourStage;
-    if (currentStage === null) return;
-
-    const nextStage = currentStage + 1;
-
-    if (nextStage >= TOTAL_E4_STAGES) {
-      // Champion defeated! Save progress and return to menu
-      console.log('[battle-context] Champion defeated!');
-      getEliteFourProgress().then(progress => {
-        progress.championDefeated = true;
-        progress.completedDate = new Date().toISOString();
-        if (!progress.clearedStages.includes(currentStage)) {
-          progress.clearedStages.push(currentStage);
-        }
-        saveEliteFourProgress(progress);
-      });
-      cleanupAll();
-      e4PlayerTeamRef.current = null;
-      dispatch({ type: 'RESET' });
-      return;
-    }
-
-    // Save stage progress
-    getEliteFourProgress().then(progress => {
-      if (!progress.clearedStages.includes(currentStage)) {
-        progress.clearedStages.push(currentStage);
-      }
-      saveEliteFourProgress(progress);
-    });
-
-    const member = getEliteFourMember(nextStage)!;
-    dispatch({ type: 'E4_ADVANCE', stage: nextStage, opponentName: member.name });
-  }, [cleanupAll, startE4Battle]);
-
-  /** Called from intro screen BATTLE button to start the current E4 stage. */
-  const beginE4Battle = useCallback(() => {
-    const stage = stateRef.current.eliteFourStage;
-    if (stage === null) return;
-    startE4Battle(stage);
-  }, [startE4Battle]);
 
   // --- Gauntlet ---
 
@@ -650,20 +487,9 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     const currentState = stateRef.current;
 
     if (currentState.campaignMode === 'gauntlet') {
-      // Generate opponent team for steal screen using proper scaling
-      const battleNum = currentState.campaignStage;
-      const rng = campaignRngRef.current;
-      const oppTeam = generateGauntletTeam(rng, battleNum, 'competitive');
-      gauntletOpponentBPRef.current = oppTeam;
-
-      // Save gauntlet run progress
-      saveCampaignRun({
-        mode: 'gauntlet',
-        progress: `Battle ${battleNum + 1}`,
-        team: campaignPlayerTeamRef.current?.map(p => p.species.name) ?? [],
-        result: 'win',
-        date: new Date().toISOString(),
-      });
+      // Use the actual opponent team from the battle (stored in beginCampaignBattle)
+      const oppTeam = gauntletOpponentBPRef.current;
+      if (!oppTeam) return;
 
       const serialized = oppTeam.map(serializeOwnPokemon);
       dispatch({
@@ -906,10 +732,6 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         requestRematchOnline,
         returnToMenu,
         moveSelectionComplete,
-        startEliteFour,
-        e4DraftComplete,
-        advanceEliteFour,
-        beginE4Battle,
         startGauntlet,
         gauntletStarterPicked,
         gauntletStealComplete,

@@ -97,11 +97,11 @@ export function StatsScreen({ onBack }: Props) {
   const gauntletRuns = campaignRuns.filter(r => r.mode === 'gauntlet');
   const gymRuns = campaignRuns.filter(r => r.mode === 'gym_career');
   const gauntletBestStreak = gauntletRuns.reduce((best, r) => {
-    const num = parseInt(r.progress.replace(/\D/g, ''), 10) || 0;
+    const num = r.stageNum ?? (parseInt(r.progress.match(/\d+/)?.[0] ?? '0', 10) || 0);
     return num > best ? num : best;
   }, 0);
   const gymBestRun = gymRuns.reduce((best, r) => {
-    const num = parseInt(r.progress.replace(/\D/g, ''), 10) || 0;
+    const num = r.stageNum ?? (parseInt(r.progress.match(/\d+/)?.[0] ?? '0', 10) || 0);
     return num > best ? num : best;
   }, 0);
 

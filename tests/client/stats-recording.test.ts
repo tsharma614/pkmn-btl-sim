@@ -9,7 +9,8 @@ describe('Phase 4 — Stats recording wiring', () => {
   );
 
   it('BattleEndOverlay imports recordBattleResult from stats-storage', () => {
-    expect(overlaySource).toContain("import { recordBattleResult, recordBattlePokemonStats } from '../utils/stats-storage'");
+    expect(overlaySource).toContain("recordBattleResult, recordBattlePokemonStats");
+    expect(overlaySource).toContain("from '../utils/stats-storage'");
   });
 
   it('BattleEndOverlay calls recordBattleResult on battle end', () => {

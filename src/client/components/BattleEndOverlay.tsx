@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share } from 'react-native';
 import { saveBattleResult } from '../utils/battle-history';
 import { earnBadge } from '../utils/badge-tracker';
-import { recordBattleResult, recordBattlePokemonStats } from '../utils/stats-storage';
+import { recordBattleResult, recordBattlePokemonStats, saveCampaignRun } from '../utils/stats-storage';
 import { colors, spacing } from '../theme';
 import { HpBar } from './HpBar';
 import { PokemonSprite } from './PokemonSprite';
@@ -29,6 +29,7 @@ interface Props {
   onAdvanceEliteFour?: () => void;
   /** Campaign mode */
   campaignMode?: 'gauntlet' | 'gym_career' | null;
+  campaignStage?: number;
   onAdvanceCampaign?: () => void;
 }
 
@@ -246,7 +247,7 @@ function buildBattleLogText(
   return sections.join('\n\n');
 }
 
-export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp, eliteFourStage, onAdvanceEliteFour, campaignMode, onAdvanceCampaign }: Props) {
+export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp, eliteFourStage, onAdvanceEliteFour, campaignMode, campaignStage, onAdvanceCampaign }: Props) {
   const isWinner = data.winner === playerName;
   const savedRef = useRef(false);
   const [newBadge, setNewBadge] = React.useState<string | null>(null);
@@ -285,12 +286,13 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
     if (pokemonEntries.length > 0) {
       recordBattlePokemonStats(pokemonEntries);
     }
-    // Campaign loss tracking
+    // Campaign loss tracking — one run entry per campaign
     if (!isWinner && campaignMode) {
-      const { saveCampaignRun } = require('../utils/stats-storage');
+      const stage = campaignStage ?? 0;
       saveCampaignRun({
         mode: campaignMode,
-        progress: campaignMode === 'gauntlet' ? `Battle ${(eliteFourStage ?? 0) + 1}` : `Stage ${(eliteFourStage ?? 0) + 1}`,
+        progress: campaignMode === 'gauntlet' ? `Battle ${stage + 1}` : `Stage ${stage + 1}/13`,
+        stageNum: stage,
         team: data.finalState.yourTeam.map((p: OwnPokemon) => p.species.name),
         result: 'loss' as const,
         date: new Date().toISOString(),

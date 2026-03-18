@@ -70,6 +70,8 @@ export interface CampaignRun {
   mode: 'gauntlet' | 'gym_career';
   /** How far the player got (e.g. "Battle 5" or "Gym 3") */
   progress: string;
+  /** Numeric stage reached (for stats parsing) */
+  stageNum?: number;
   /** Team species names used */
   team: string[];
   /** 'win' | 'loss' | 'abandoned' */

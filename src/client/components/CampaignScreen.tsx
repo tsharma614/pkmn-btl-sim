@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, spacing } from '../theme';
+import { saveCampaignRun } from '../utils/stats-storage';
 
 const GYM_SAVE_KEY = '@pbs_gym_career_save';
 
@@ -34,6 +35,17 @@ export function CampaignScreen({ onBack, onStartGauntlet, onStartGymCareer }: Pr
   }, []);
 
   const handleRestart = () => {
+    // Abandoned run counts as a loss in stats
+    if (save) {
+      saveCampaignRun({
+        mode: 'gym_career',
+        progress: `Stage ${save.currentStage + 1}/13`,
+        stageNum: save.currentStage,
+        team: save.team.map((p: any) => p.species?.name ?? 'Unknown'),
+        result: 'abandoned',
+        date: new Date().toISOString(),
+      });
+    }
     AsyncStorage.removeItem(GYM_SAVE_KEY);
     setSave(null);
     onStartGymCareer();

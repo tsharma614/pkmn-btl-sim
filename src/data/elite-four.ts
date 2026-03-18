@@ -1,6 +1,6 @@
 /**
  * Elite Four & Champion data.
- * Unlocked as an easter egg after earning all 18 gym badges.
+ * Used in Gym Career campaign mode.
  * Elite Four members named after Teenage Mutant Ninja Turtles.
  */
 

@@ -16,6 +16,8 @@ export const GAUNTLET_STARTERS = [
   'decidueye', 'incineroar', 'primarina',
   // Gen 8
   'rillaboom', 'cinderace', 'inteleon',
+  // Gen 9
+  'meowscarada', 'skeledirge', 'quaquaval',
 ] as const;
 
 export type GauntletStarter = typeof GAUNTLET_STARTERS[number];

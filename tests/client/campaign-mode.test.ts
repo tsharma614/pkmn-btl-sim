@@ -16,9 +16,9 @@ vi.mock('@react-native-async-storage/async-storage', () => {
 
 describe('Phase 5 — Campaign mode', () => {
   describe('Starters data', () => {
-    it('has 24 final evolution starters', async () => {
+    it('has 27 final evolution starters (Gen 1-9)', async () => {
       const { GAUNTLET_STARTERS } = await import('../../src/data/starters');
-      expect(GAUNTLET_STARTERS).toHaveLength(24);
+      expect(GAUNTLET_STARTERS).toHaveLength(27);
       // Check some known starters
       expect(GAUNTLET_STARTERS).toContain('charizard');
       expect(GAUNTLET_STARTERS).toContain('greninja');
@@ -261,7 +261,7 @@ describe('Phase 5 — Campaign mode', () => {
     });
 
     it('routes gym career draft to gymCareerDraftComplete', () => {
-      expect(source).toContain("state.campaignMode === 'gym_career' ? gymCareerDraftComplete");
+      expect(source).toContain("gymCareerDraftComplete");
     });
   });
 });

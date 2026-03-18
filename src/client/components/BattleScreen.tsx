@@ -66,7 +66,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, startEliteFour, e4DraftComplete, advanceEliteFour, beginE4Battle, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -217,25 +217,9 @@ export function BattleScreen() {
       <SafeAreaView style={styles.full}>
         <EliteFourDraftScreen
           pool={state.draftPool}
-          onComplete={state.campaignMode === 'gym_career' ? gymCareerDraftComplete : e4DraftComplete}
+          onComplete={gymCareerDraftComplete}
           onBack={returnToMenu}
           playerName={state.playerName}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  // --- Elite Four Intro (between battles) ---
-  if (state.phase === 'elite_four_intro') {
-    const member = state.eliteFourStage !== null ? getEliteFourMember(state.eliteFourStage) : null;
-    return (
-      <SafeAreaView style={styles.full}>
-        <EliteFourIntroScreen
-          stage={state.eliteFourStage ?? 0}
-          memberName={member?.name ?? 'Unknown'}
-          memberTitle={member?.title ?? ''}
-          onBack={returnToMenu}
-          onBeginBattle={beginE4Battle}
         />
       </SafeAreaView>
     );
@@ -245,7 +229,7 @@ export function BattleScreen() {
   if (state.phase === 'setup') {
     return (
       <SafeAreaView style={styles.full}>
-        <SetupScreen onStart={startGame} onPlayOnline={startOnline} onStartEliteFour={startEliteFour} onStartGauntlet={startGauntlet} onStartGymCareer={startGymCareer} />
+        <SetupScreen onStart={startGame} onPlayOnline={startOnline} onStartGauntlet={startGauntlet} onStartGymCareer={startGymCareer} />
       </SafeAreaView>
     );
   }
@@ -534,6 +518,7 @@ export function BattleScreen() {
           eliteFourStage={state.eliteFourStage}
           onAdvanceEliteFour={state.eliteFourStage !== null ? advanceEliteFour : undefined}
           campaignMode={state.campaignMode}
+          campaignStage={state.campaignStage}
           onAdvanceCampaign={state.campaignMode !== null ? advanceCampaign : undefined}
         />
       )}
