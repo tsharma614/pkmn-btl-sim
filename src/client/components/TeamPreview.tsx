@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
+import { PokemonDetailModal } from './PokemonDetailModal';
 import { TypeBadge } from './TypeBadge';
 import { colors, spacing } from '../theme';
 import type { OwnPokemon } from '../../server/types';
@@ -21,6 +22,7 @@ interface Props {
 export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
   const [selected, setSelected] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [detailSpecies, setDetailSpecies] = useState<any>(null);
 
   const p = team[selected];
 
@@ -76,6 +78,7 @@ export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
             key={i}
             style={[styles.teamSlot, i === selected && styles.teamSlotSelected, submitted && { opacity: 0.5 }]}
             onPress={() => setSelected(i)}
+            onLongPress={() => setDetailSpecies(mon.species)}
             activeOpacity={0.7}
           >
             <PokemonSprite speciesId={mon.species.id} facing="front" size={50} />
@@ -123,6 +126,7 @@ export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
           )}
         </>
       )}
+      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} onClose={() => setDetailSpecies(null)} />
     </View>
   );
 }
