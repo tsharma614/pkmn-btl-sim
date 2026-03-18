@@ -69,6 +69,7 @@ interface BattleContextValue {
   beginCampaignBattle: () => void;
   startGymCareer: (playerName: string) => void;
   gymCareerDraftComplete: (picks: { speciesId: string; tier: number }[]) => void;
+  itemSelectComplete: (itemSelections: Record<number, string>) => void;
   showGymMap: () => void;
   challengeGym: (gymIndex: number) => void;
   showE4Locks: () => void;
@@ -406,17 +407,13 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // In gym career mode, save team and show gym map
+    // In gym career mode, go to item selection next
     if (currentState.campaignMode === 'gym_career') {
       campaignPlayerTeamRef.current = rebuiltTeam;
-      // Auto-save
-      saveGymCareer({
-        currentStage: 0,
-        gymTypes: currentState.gymTypes,
-        team: rebuiltTeam.map(serializeOwnPokemon),
-        date: new Date().toISOString(),
+      dispatch({
+        type: 'SHOW_ITEM_SELECT',
+        yourTeam: rebuiltTeam.map(serializeOwnPokemon),
       });
-      dispatch({ type: 'SHOW_GYM_MAP' });
       return;
     }
 
@@ -686,6 +683,26 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /** Show the gym map screen. */
+  /** Called after item selection in gym career. Saves and shows gym map. */
+  const itemSelectComplete = useCallback((itemSelections: Record<number, string>) => {
+    const team = campaignPlayerTeamRef.current;
+    if (team) {
+      // Apply items to team
+      for (const [idx, item] of Object.entries(itemSelections)) {
+        const i = parseInt(idx, 10);
+        if (team[i]) team[i].item = item;
+      }
+    }
+    const currentState = stateRef.current;
+    saveGymCareer({
+      currentStage: 0,
+      gymTypes: currentState.gymTypes,
+      team: team?.map(serializeOwnPokemon) ?? [],
+      date: new Date().toISOString(),
+    });
+    dispatch({ type: 'SHOW_GYM_MAP' });
+  }, []);
+
   const showGymMap = useCallback(() => {
     dispatch({ type: 'SHOW_GYM_MAP' });
   }, []);
@@ -742,6 +759,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         beginCampaignBattle,
         startGymCareer,
         gymCareerDraftComplete,
+        itemSelectComplete,
         showGymMap,
         challengeGym,
         showE4Locks,

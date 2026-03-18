@@ -1230,76 +1230,7 @@ describe('battleReducer', () => {
     });
   });
 
-  // ========== Elite Four ==========
-  describe('Elite Four reducer actions', () => {
-    it('E4_DRAFT_START sets elite_four_draft phase', () => {
-      const result = battleReducer(initialState, {
-        type: 'E4_DRAFT_START',
-        pool: [] as any,
-        playerName: 'Tanmay',
-      });
-      expect(result.phase).toBe('elite_four_draft');
-      expect(result.eliteFourStage).toBe(0);
-      expect(result.playerName).toBe('Tanmay');
-      expect(result.difficulty).toBe('hard');
-      expect(result.gameMode).toBe('cpu');
-    });
-
-    it('E4_ADVANCE sets elite_four_intro phase with stage and opponent', () => {
-      const state: BattleState = {
-        ...initialState,
-        phase: 'elite_four_draft',
-        eliteFourStage: 0,
-      };
-      const result = battleReducer(state, {
-        type: 'E4_ADVANCE',
-        stage: 1,
-        opponentName: 'Donatello',
-      });
-      expect(result.phase).toBe('elite_four_intro');
-      expect(result.eliteFourStage).toBe(1);
-      expect(result.botName).toBe('Donatello');
-      // Should clear battle state
-      expect(result.yourState).toBeNull();
-      expect(result.opponentVisible).toBeNull();
-      expect(result.battleEndData).toBeNull();
-    });
-
-    it('E4 stage persists through TEAM_PREVIEW and BATTLE_START', () => {
-      let state: BattleState = {
-        ...initialState,
-        phase: 'elite_four_intro',
-        eliteFourStage: 2,
-        gameMode: 'cpu',
-      };
-
-      state = battleReducer(state, { type: 'ROOM_CREATED', code: 'LOCAL', botName: 'Raphael' });
-      expect(state.eliteFourStage).toBe(2);
-
-      state = battleReducer(state, {
-        type: 'TEAM_PREVIEW',
-        payload: { yourTeam: makeTeam(), yourPlayerIndex: 0 },
-      });
-      expect(state.eliteFourStage).toBe(2);
-      expect(state.phase).toBe('team_preview');
-
-      state = battleReducer(state, {
-        type: 'BATTLE_START',
-        payload: makeBattleStartPayload(),
-      });
-      expect(state.eliteFourStage).toBe(2);
-      expect(state.phase).toBe('battling');
-    });
-
-    it('RESET clears eliteFourStage', () => {
-      const state: BattleState = {
-        ...initialState,
-        eliteFourStage: 3,
-      };
-      const result = battleReducer(state, { type: 'RESET' });
-      expect(result.eliteFourStage).toBeNull();
-    });
-  });
+  // (Old E4 reducer tests removed — E4 now goes through campaign system)
 
   describe('Move Selection Phase', () => {
     it('START_GAME stores moveSelection flag', () => {

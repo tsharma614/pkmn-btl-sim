@@ -31,8 +31,6 @@ export type BattlePhase =
   | 'battle_end'
   | 'disconnected'
   | 'move_selection'
-  | 'elite_four_draft'
-  | 'elite_four_intro'
   | 'gauntlet_starter'
   | 'gauntlet_steal'
   | 'campaign_intro'
@@ -257,12 +255,11 @@ export type BattleAction =
   | { type: 'DRAFT_PICK'; playerIndex: 0 | 1; poolIndex: number }
   | { type: 'DRAFT_COMPLETE'; yourTeam: OwnPokemon[] }
   | { type: 'MOVE_SELECTION_COMPLETE'; yourTeam: OwnPokemon[] }
-  | { type: 'E4_DRAFT_START'; pool: DraftPoolEntry[]; playerName: string }
-  | { type: 'E4_ADVANCE'; stage: number; opponentName: string }
   | { type: 'GAUNTLET_START'; playerName: string }
   | { type: 'GAUNTLET_STEAL'; opponentTeam: OwnPokemon[]; trainerName: string; trainerSprite: string }
   | { type: 'CAMPAIGN_INTRO'; stage: number; totalStages: number; opponentName: string; opponentTitle: string; trainerSprite: string; campaignMode: 'gauntlet' | 'gym_career' }
   | { type: 'GYM_CAREER_START'; playerName: string; gymTypes: string[] }
+  | { type: 'SHOW_ITEM_SELECT'; yourTeam: OwnPokemon[] }
   | { type: 'SHOW_GYM_MAP' }
   | { type: 'SHOW_E4_LOCKS' }
   | { type: 'GYM_BEATEN'; gymIndex: number }
@@ -892,40 +889,6 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         yourTeam: action.yourTeam,
       };
 
-    case 'E4_DRAFT_START':
-      return {
-        ...initialState,
-        phase: 'elite_four_draft',
-        gameMode: 'cpu',
-        playerName: action.playerName,
-        itemMode: 'competitive',
-        difficulty: 'hard',
-        draftPool: action.pool,
-        eliteFourStage: 0,
-        battleStats: emptyStats(),
-      };
-
-    case 'E4_ADVANCE':
-      return {
-        ...state,
-        phase: 'elite_four_intro',
-        eliteFourStage: action.stage,
-        botName: action.opponentName,
-        // Clear battle state for next fight
-        yourState: null,
-        opponentVisible: null,
-        pendingEvents: [],
-        queuedPendingEvents: [],
-        queuedYourState: null,
-        queuedOpponentVisible: null,
-        queuedSwitch: null,
-        queuedEnd: null,
-        battleEndData: null,
-        weather: 'none',
-        turn: 0,
-        battleStats: emptyStats(),
-        battleLog: [],
-      };
 
     case 'GAUNTLET_START':
       return {
@@ -989,12 +952,20 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         itemMode: 'competitive',
         difficulty: 'hard',
         campaignMode: 'gym_career',
+        moveSelection: true, // budget draft → move select → item select → gym map
         gymTypes: action.gymTypes,
         beatenGyms: new Array(8).fill(false),
         beatenE4: new Array(4).fill(false),
         campaignStage: 0,
         campaignTotalStages: 13,
         battleStats: emptyStats(),
+      };
+
+    case 'SHOW_ITEM_SELECT':
+      return {
+        ...state,
+        phase: 'item_select',
+        yourTeam: action.yourTeam,
       };
 
     case 'SHOW_GYM_MAP':

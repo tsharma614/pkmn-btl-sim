@@ -24,9 +24,6 @@ interface Props {
   /** Gym leader info for gym badge display */
   gymLeaderName?: string | null;
   badgeName?: string | null;
-  /** Elite Four mode */
-  eliteFourStage?: number | null;
-  onAdvanceEliteFour?: () => void;
   /** Campaign mode */
   campaignMode?: 'gauntlet' | 'gym_career' | null;
   campaignStage?: number;
@@ -247,7 +244,7 @@ function buildBattleLogText(
   return sections.join('\n\n');
 }
 
-export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp, eliteFourStage, onAdvanceEliteFour, campaignMode, campaignStage, onAdvanceCampaign }: Props) {
+export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp, campaignMode, campaignStage, onAdvanceCampaign }: Props) {
   const isWinner = data.winner === playerName;
   const savedRef = useRef(false);
   const [newBadge, setNewBadge] = React.useState<string | null>(null);
@@ -490,18 +487,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
             </TouchableOpacity>
           </View>
 
-          {isWinner && eliteFourStage !== null && eliteFourStage !== undefined && onAdvanceEliteFour ? (
-            <>
-              <TouchableOpacity style={styles.btn} onPress={onAdvanceEliteFour} activeOpacity={0.7}>
-                <Text style={styles.btnText}>
-                  {eliteFourStage < 3 ? 'Next Battle' : eliteFourStage === 3 ? 'Face the Champion' : 'Victory!'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
-                <Text style={styles.exitBtnText}>Forfeit Run</Text>
-              </TouchableOpacity>
-            </>
-          ) : isWinner && campaignMode && onAdvanceCampaign ? (
+          {isWinner && campaignMode && onAdvanceCampaign ? (
             <>
               <TouchableOpacity style={styles.btn} onPress={onAdvanceCampaign} activeOpacity={0.7}>
                 <Text style={styles.btnText}>Continue</Text>
