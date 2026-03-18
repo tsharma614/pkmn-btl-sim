@@ -31,13 +31,12 @@ describe('Gauntlet — spec requirements', () => {
     expect(starterImpl).toContain("'DRAFT_COMPLETE'");
   });
 
-  it('moveSelectionComplete handles gauntlet mode — shows campaign intro', () => {
-    // Find the moveSelectionComplete implementation
+  it('moveSelectionComplete handles gauntlet mode — goes to item select', () => {
     const implStart = contextSource.indexOf('const moveSelectionComplete = useCallback');
     const implEnd = contextSource.indexOf('}, [])', implStart);
     const moveSelImpl = contextSource.slice(implStart, implEnd);
     expect(moveSelImpl).toContain("campaignMode === 'gauntlet'");
-    expect(moveSelImpl).toContain("'CAMPAIGN_INTRO'");
+    expect(moveSelImpl).toContain("'SHOW_ITEM_SELECT'");
   });
 
   it('uses proper difficulty scaling via generateGauntletTeam', () => {

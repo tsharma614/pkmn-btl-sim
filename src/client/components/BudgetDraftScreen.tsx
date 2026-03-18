@@ -25,7 +25,7 @@ const TIER_BADGE_COLORS: Record<number, string> = {
   0: '#606070',
 };
 
-const TOTAL_BUDGET = 15;
+const TOTAL_BUDGET = 14;
 const NUM_TIERS = 4;
 const CARD_GAP = 8;
 

@@ -342,8 +342,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     console.log('[battle-context] returnToMenu — cleaning up');
     const currentState = stateRef.current;
 
-    // Campaign forfeit = abandoned run counts as loss
-    if (currentState.campaignMode && currentState.campaignStage > 0) {
+    // Campaign forfeit = abandoned run (but NOT if battle already ended — that's already recorded as a loss)
+    if (currentState.campaignMode && currentState.campaignStage > 0 && currentState.phase !== 'battle_end') {
       saveCampaignRun({
         mode: currentState.campaignMode,
         progress: currentState.campaignMode === 'gauntlet'
@@ -353,9 +353,9 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         result: 'abandoned',
         date: new Date().toISOString(),
       });
-      if (currentState.campaignMode === 'gym_career') {
-        clearGymCareerSave();
-      }
+    }
+    if (currentState.campaignMode === 'gym_career') {
+      clearGymCareerSave();
     }
 
     cleanupAll();
@@ -389,20 +389,12 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       return createBattlePokemon(fullSpecies, baseSet, 100, null);
     });
 
-    // In gauntlet mode, update campaign team and show first battle intro
+    // In gauntlet mode, go to item select for starter
     if (currentState.campaignMode === 'gauntlet') {
       campaignPlayerTeamRef.current = rebuiltTeam;
-      const campaignRng = campaignRngRef.current;
-      const sprite = pickTrainerSprite(campaignRng);
-      const tagline = getGauntletTagline(0);
       dispatch({
-        type: 'CAMPAIGN_INTRO',
-        stage: 0,
-        totalStages: 999,
-        opponentName: 'Opponent #1',
-        opponentTitle: tagline,
-        trainerSprite: sprite,
-        campaignMode: 'gauntlet',
+        type: 'SHOW_ITEM_SELECT',
+        yourTeam: rebuiltTeam.map(serializeOwnPokemon),
       });
       return;
     }
@@ -688,13 +680,31 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   const itemSelectComplete = useCallback((itemSelections: Record<number, string>) => {
     const team = campaignPlayerTeamRef.current;
     if (team) {
-      // Apply items to team
       for (const [idx, item] of Object.entries(itemSelections)) {
         const i = parseInt(idx, 10);
         if (team[i]) team[i].item = item;
       }
     }
     const currentState = stateRef.current;
+
+    // Gauntlet: after item select on starter, show first battle intro
+    if (currentState.campaignMode === 'gauntlet') {
+      const campaignRng = campaignRngRef.current;
+      const sprite = pickTrainerSprite(campaignRng);
+      const tagline = getGauntletTagline(0);
+      dispatch({
+        type: 'CAMPAIGN_INTRO',
+        stage: 0,
+        totalStages: 999,
+        opponentName: 'Opponent #1',
+        opponentTitle: tagline,
+        trainerSprite: sprite,
+        campaignMode: 'gauntlet',
+      });
+      return;
+    }
+
+    // Gym career: save and show gym map
     saveGymCareer({
       currentStage: 0,
       gymTypes: currentState.gymTypes,

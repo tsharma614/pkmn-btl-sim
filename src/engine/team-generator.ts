@@ -431,12 +431,30 @@ export function generateGauntletTeam(
     });
   }
 
-  // Mid game: T2/T1 mix
-  if (battleNum >= 4) {
+  // Mid game (5-7): T2/T1 mix
+  if (battleNum >= 5) {
     return generateTeam(rng, {
       itemMode,
       legendaryMode: true,
       teamSize,
+    });
+  }
+
+  // Early game (0-4): T3/T4 only — pick directly from low tiers
+  if (battleNum <= 4) {
+    const pool = [...TIERS[3], ...TIERS[4]];
+    rng.shuffle(pool);
+    const team: PokemonSpecies[] = [];
+    const usedIds = new Set<string>();
+    for (const s of pool) {
+      if (team.length >= teamSize) break;
+      if (usedIds.has(s.id)) continue;
+      usedIds.add(s.id);
+      team.push(s);
+    }
+    return team.map(species => {
+      const set = pickSet(species, rng, itemMode);
+      return createBattlePokemon(species, set, 100, null);
     });
   }
 
@@ -455,17 +473,25 @@ export function generateGymTeam(
   gymType: string,
   itemMode: 'competitive' | 'casual' = 'competitive',
 ): BattlePokemon[] {
+  if (!gymType) {
+    console.warn('[generateGymTeam] No gymType provided, falling back to random team');
+    return generateTeam(rng, { itemMode });
+  }
+
+  // ALL pools filtered by gym type
   const megas = Object.values(megaPokedex).filter(
     s => s.types.includes(gymType) && !NO_SPRITE.has(s.id)
   );
   const t1 = TIERS[1].filter(s => s.types.includes(gymType));
   const t2 = TIERS[2].filter(s => s.types.includes(gymType));
   const t3 = TIERS[3].filter(s => s.types.includes(gymType));
+  const t4 = TIERS[4].filter(s => s.types.includes(gymType));
 
   rng.shuffle(megas);
   rng.shuffle(t1);
   rng.shuffle(t2);
   rng.shuffle(t3);
+  rng.shuffle(t4);
 
   const team: PokemonSpecies[] = [];
   const usedIds = new Set<string>();
@@ -481,17 +507,23 @@ export function generateGymTeam(
     }
   }
 
+  // Target: 1 Mega + 1 T1 + 2 T2 + 2 T3
   pick(megas, 1);
   pick(t1, 1);
   pick(t2, 2);
   pick(t3, 2);
 
-  // Fallback: fill from any matching type if not enough
+  // Fill remaining from ANY tier that matches the type (min 4/6 must match)
   if (team.length < 6) {
-    const all = [...TIERS[1], ...TIERS[2], ...TIERS[3], ...TIERS[4]]
-      .filter(s => s.types.includes(gymType));
-    rng.shuffle(all);
-    pick(all, 6 - team.length);
+    const allMatching = [...megas, ...t1, ...t2, ...t3, ...t4];
+    rng.shuffle(allMatching);
+    pick(allMatching, 6 - team.length);
+  }
+
+  // Verify: every Pokemon on the team matches the gym type
+  const validTeam = team.filter(s => s.types.includes(gymType));
+  if (validTeam.length < team.length) {
+    console.warn(`[generateGymTeam] ${team.length - validTeam.length} Pokemon don't match ${gymType} — this shouldn't happen`);
   }
 
   return team.map(species => {

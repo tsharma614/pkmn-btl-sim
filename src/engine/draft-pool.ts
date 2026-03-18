@@ -833,7 +833,7 @@ export const BUDGET_COSTS: Record<string, number> = {
   '4': 0,
 };
 
-export const BUDGET_TOTAL = 15;
+export const BUDGET_TOTAL = 14;
 
 export interface BudgetOption {
   species: PokemonSpecies;

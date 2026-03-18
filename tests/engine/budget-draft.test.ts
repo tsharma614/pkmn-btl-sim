@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 /** Budget draft point system — behavioral tests */
 describe('Budget Draft — Point System', () => {
   const COSTS = { mega: 4, t1: 3, t2: 2, t3: 0 } as const;
-  const BUDGET = 15;
+  const BUDGET = 14;
 
   function totalCost(picks: (keyof typeof COSTS)[]): number {
     return picks.reduce((sum, tier) => sum + COSTS[tier], 0);
@@ -29,8 +29,8 @@ describe('Budget Draft — Point System', () => {
     expect(COSTS.mega).toBe(4);
   });
 
-  it('total budget is 15', () => {
-    expect(BUDGET).toBe(15);
+  it('total budget is 14', () => {
+    expect(BUDGET).toBe(14);
   });
 
   it('6x T3 = 0 points (valid, all free)', () => {
@@ -45,22 +45,28 @@ describe('Budget Draft — Point System', () => {
     expect(isValidDraft([...draft])).toBe(true);
   });
 
-  it('3 Mega + 1 T1 + 2 T3 = 15 points (valid, exactly at budget)', () => {
+  it('2 Mega + 1 T2 + 3 T3 = 10 points (valid)', () => {
+    const draft = ['mega', 'mega', 't2', 't3', 't3', 't3'] as const;
+    expect(totalCost([...draft])).toBe(10);
+    expect(isValidDraft([...draft])).toBe(true);
+  });
+
+  it('3 Mega + 1 T2 + 2 T3 = 14 points (valid, exactly at budget)', () => {
+    const draft = ['mega', 'mega', 'mega', 't2', 't3', 't3'] as const;
+    expect(totalCost([...draft])).toBe(14);
+    expect(isValidDraft([...draft])).toBe(true);
+  });
+
+  it('3 Mega + 1 T1 + 2 T3 = 15 points (INVALID, over budget)', () => {
     const draft = ['mega', 'mega', 'mega', 't1', 't3', 't3'] as const;
     expect(totalCost([...draft])).toBe(15);
-    expect(isValidDraft([...draft])).toBe(true);
+    expect(isValidDraft([...draft])).toBe(false);
   });
 
   it('4 Mega + 2 T3 = 16 points (INVALID, over budget)', () => {
     const draft = ['mega', 'mega', 'mega', 'mega', 't3', 't3'] as const;
     expect(totalCost([...draft])).toBe(16);
     expect(isValidDraft([...draft])).toBe(false);
-  });
-
-  it('5 T1 + 1 T3 = 15 points (valid)', () => {
-    const draft = ['t1', 't1', 't1', 't1', 't1', 't3'] as const;
-    expect(totalCost([...draft])).toBe(15);
-    expect(isValidDraft([...draft])).toBe(true);
   });
 
   it('6 T1 = 18 points (INVALID)', () => {
@@ -76,33 +82,33 @@ describe('Budget Draft — Point System', () => {
     // Pick 1: Mega (4pts)
     remaining -= COSTS.mega;
     picks.push('mega');
-    expect(remaining).toBe(11);
+    expect(remaining).toBe(10);
 
     // Pick 2: T1 (3pts)
     remaining -= COSTS.t1;
     picks.push('t1');
-    expect(remaining).toBe(8);
+    expect(remaining).toBe(7);
 
     // Pick 3: T2 (2pts)
     remaining -= COSTS.t2;
     picks.push('t2');
-    expect(remaining).toBe(6);
+    expect(remaining).toBe(5);
 
     // Pick 4: T2 (2pts)
     remaining -= COSTS.t2;
     picks.push('t2');
-    expect(remaining).toBe(4);
+    expect(remaining).toBe(3);
 
     // Pick 5: T1 (3pts)
     remaining -= COSTS.t1;
     picks.push('t1');
-    expect(remaining).toBe(1);
+    expect(remaining).toBe(0);
 
     // Pick 6: only T3 is affordable (0pts)
-    expect(remaining < COSTS.t2).toBe(true); // can't afford T2
+    expect(remaining < COSTS.t2).toBe(true);
     remaining -= COSTS.t3;
     picks.push('t3');
-    expect(remaining).toBe(1);
+    expect(remaining).toBe(0);
     expect(isValidDraft(picks)).toBe(true);
   });
 

@@ -65,8 +65,8 @@ describe('Hotfix Bug 1: Budget Draft gets proper roleOptions', () => {
     expect(source).toContain('generateBudgetDraftOptions');
   });
 
-  it('budget total is 15', () => {
-    expect(BUDGET_TOTAL).toBe(15);
+  it('budget total is 14', () => {
+    expect(BUDGET_TOTAL).toBe(14);
   });
 
   it('has 6 roles', () => {

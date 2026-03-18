@@ -179,27 +179,21 @@ export function ItemSelectScreen({ team, onComplete, onBack, playerName }: Props
       <ScrollView style={styles.gridScroll} contentContainerStyle={styles.gridContainer}>
         {HELD_ITEMS.map(itemName => {
           const isSelected = currentItem === itemName;
-          // Check if another Pokemon already has this item
-          const takenByOther = Object.entries(itemSelections).some(
-            ([idx, name]) => name === itemName && Number(idx) !== currentIdx,
-          );
           return (
             <TouchableOpacity
               key={itemName}
               style={[
                 styles.itemBtn,
                 isSelected && styles.itemBtnSelected,
-                takenByOther && styles.itemBtnTaken,
               ]}
-              onPress={() => !takenByOther && selectItem(itemName)}
+              onPress={() => selectItem(itemName)}
               onLongPress={() => setDetailItem(itemName)}
-              activeOpacity={takenByOther ? 0.4 : 0.7}
+              activeOpacity={0.7}
             >
               <Text
                 style={[
                   styles.itemText,
                   isSelected && styles.itemTextSelected,
-                  takenByOther && styles.itemTextTaken,
                 ]}
                 numberOfLines={2}
               >
