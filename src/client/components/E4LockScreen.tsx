@@ -30,6 +30,7 @@ interface Props {
   onChallenge: (memberIndex: number) => void;
   onChallengeChampion: () => void;
   onBack: () => void;
+  onSaveQuit?: () => void;
 }
 
 const SPRITE_BASE = 'https://play.pokemonshowdown.com/sprites/trainers/';
@@ -46,6 +47,7 @@ export function E4LockScreen({
   onChallenge,
   onChallengeChampion,
   onBack,
+  onSaveQuit,
 }: Props) {
   // Track which cards have been "revealed" (tapped once to show trainer, second tap starts battle)
   const [revealed, setRevealed] = useState<boolean[]>(members.map(() => false));
@@ -133,9 +135,16 @@ export function E4LockScreen({
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={styles.backBtn}>
-          <Text style={styles.backText}>{'< Forfeit Run'}</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={styles.backBtn}>
+            <Text style={styles.backText}>{'< Forfeit Run'}</Text>
+          </TouchableOpacity>
+          {onSaveQuit && (
+            <TouchableOpacity onPress={onSaveQuit} activeOpacity={0.7} style={styles.backBtn}>
+              <Text style={[styles.backText, { color: colors.textSecondary }]}>Save & Quit</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <Text style={styles.title}>ELITE FOUR</Text>
         <Text style={styles.progress}>{beatenCount}/4 Defeated</Text>
       </View>

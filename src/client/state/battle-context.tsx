@@ -74,6 +74,7 @@ interface BattleContextValue {
   shopSwapItem: (pokemonIdx: number, newItem: string) => void;
   shopBuyPokemon: (species: PokemonSpecies, cost: number, replaceIdx: number) => void;
   shopDone: () => void;
+  saveAndQuit: () => void;
   showGymMap: () => void;
   challengeGym: (gymIndex: number) => void;
   showE4Locks: () => void;
@@ -782,6 +783,23 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SHOP_DONE' });
   }, []);
 
+  /** Save & Quit: save progress and return to menu without recording a loss */
+  const saveAndQuit = useCallback(() => {
+    const currentState = stateRef.current;
+    if (currentState.campaignMode === 'gym_career') {
+      saveGymCareer({
+        currentStage: currentState.beatenGyms.filter(Boolean).length + currentState.beatenE4.filter(Boolean).length,
+        gymTypes: currentState.gymTypes,
+        team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+        date: new Date().toISOString(),
+        shopBalance: currentState.shopBalance,
+      });
+    }
+    cleanupAll();
+    campaignPlayerTeamRef.current = null;
+    dispatch({ type: 'RESET' });
+  }, [cleanupAll]);
+
   const showGymMap = useCallback(() => {
     dispatch({ type: 'SHOW_GYM_MAP' });
   }, []);
@@ -843,6 +861,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         shopSwapItem,
         shopBuyPokemon,
         shopDone,
+        saveAndQuit,
         showGymMap,
         challengeGym,
         showE4Locks,

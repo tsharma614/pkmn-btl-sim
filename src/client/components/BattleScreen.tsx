@@ -73,7 +73,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete, itemSelectComplete, shopSwapMove, shopSwapItem, shopBuyPokemon, shopDone, showGymMap, challengeGym, showE4Locks } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete, itemSelectComplete, shopSwapMove, shopSwapItem, shopBuyPokemon, shopDone, saveAndQuit, showGymMap, challengeGym, showE4Locks } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -224,6 +224,7 @@ export function BattleScreen() {
           onChallenge={challengeGym}
           onEliteFour={showE4Locks}
           onBack={returnToMenu}
+          onSaveQuit={saveAndQuit}
         />
       </SafeAreaView>
     );
@@ -268,6 +269,7 @@ export function BattleScreen() {
             });
           }}
           onBack={returnToMenu}
+          onSaveQuit={saveAndQuit}
         />
       </SafeAreaView>
     );

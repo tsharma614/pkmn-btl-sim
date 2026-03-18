@@ -14,11 +14,13 @@ interface Props {
   onChallenge: (gymIndex: number) => void;
   onEliteFour: () => void;
   onBack: () => void;
+  onSaveQuit?: () => void;
 }
 
 export function GymMapScreen({
   gymTypes,
   beatenGyms,
+  onSaveQuit,
   onChallenge,
   onEliteFour,
   onBack,
@@ -30,9 +32,16 @@ export function GymMapScreen({
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backText}>{'< Forfeit Run'}</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <Text style={styles.backText}>{'< Forfeit Run'}</Text>
+          </TouchableOpacity>
+          {onSaveQuit && (
+            <TouchableOpacity onPress={onSaveQuit} style={styles.backButton}>
+              <Text style={[styles.backText, { color: colors.textSecondary }]}>Save & Quit</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <Text style={styles.title}>GYM MAP</Text>
         <Text style={styles.progress}>{beatenCount}/8 Beaten</Text>
       </View>
