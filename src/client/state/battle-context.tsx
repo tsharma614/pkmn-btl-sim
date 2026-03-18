@@ -598,6 +598,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       confusionTurns: 0,
       encoreTurns: 0,
       encoreMove: null,
+      flashFireActive: false,
       moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp, disabled: false })),
     }));
     campaignPlayerTeamRef.current = healedTeam;

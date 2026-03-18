@@ -55,6 +55,9 @@ export class Battle {
       players: [player1, player2],
       weather: 'none',
       weatherTurnsRemaining: 0,
+      terrain: 'none',
+      terrainTurnsRemaining: 0,
+      trickRoom: 0,
       fieldEffects: {
         player1Side: createEmptySideEffects(),
         player2Side: createEmptySideEffects(),
@@ -322,12 +325,14 @@ export class Battle {
       }
     }
 
-    // Same priority bracket — compare speed
+    // Same priority bracket — compare speed (Trick Room reverses order)
     const speed1 = this.getEffectiveSpeed(0);
     const speed2 = this.getEffectiveSpeed(1);
+    const trickRoomActive = this.state.trickRoom > 0;
 
     if (speed1 !== speed2) {
-      if (speed1 > speed2) {
+      const fasterGoesFirst = trickRoomActive ? speed1 < speed2 : speed1 > speed2;
+      if (fasterGoesFirst) {
         return [
           { action: action1, playerIndex: 0, opponentIndex: 1 },
           { action: action2, playerIndex: 1, opponentIndex: 0 },
@@ -467,6 +472,12 @@ export class Battle {
     if (attacker.mustRecharge) {
       attacker.mustRecharge = false;
       this.addEvent(events, 'cant_move', { pokemon: attacker.species.name, reason: 'recharge' });
+      return;
+    }
+
+    // Taunt: blocks status moves
+    if (attacker.volatileStatuses.has('taunt') && move.category === 'Status') {
+      this.addEvent(events, 'cant_move', { pokemon: attacker.species.name, reason: 'taunt', move: move.name });
       return;
     }
 
@@ -1221,6 +1232,32 @@ export class Battle {
       return;
     }
 
+    // Trick Room: toggles on/off for 5 turns, reverses speed priority
+    if (move.name === 'Trick Room') {
+      if (this.state.trickRoom > 0) {
+        this.state.trickRoom = 0;
+        this.addEvent(events, 'field_end', { field: 'Trick Room' });
+      } else {
+        this.state.trickRoom = 5;
+        this.addEvent(events, 'field_start', { field: 'Trick Room' });
+      }
+      return;
+    }
+
+    // Terrain moves
+    const terrainMap: Record<string, Terrain> = {
+      'Grassy Terrain': 'grassy',
+      'Electric Terrain': 'electric',
+      'Psychic Terrain': 'psychic',
+      'Misty Terrain': 'misty',
+    };
+    if (terrainMap[move.name]) {
+      this.state.terrain = terrainMap[move.name];
+      this.state.terrainTurnsRemaining = 5;
+      this.addEvent(events, 'field_start', { field: move.name });
+      return;
+    }
+
     this.applyMoveEffects(attacker, defender, move, playerIndex, opponentIndex, events);
   }
 
@@ -1824,8 +1861,9 @@ export class Battle {
       this.addEvent(events, 'immune', { target: defender.species.name, move: move.name, reason: 'Air Balloon' });
       return true;
     }
-    // Flash Fire
+    // Flash Fire: immune to Fire, boosts own Fire moves by 1.5x
     if (defender.ability === 'Flash Fire' && moveType === 'Fire') {
+      defender.flashFireActive = true;
       this.addEvent(events, 'ability_trigger', { pokemon: defender.species.name, ability: 'Flash Fire' });
       return true;
     }
@@ -1967,6 +2005,10 @@ export class Battle {
         if (move.type === 'Water' && attacker.currentHp <= Math.floor(attacker.maxHp / 3))
           mods.powerMod = (mods.powerMod || 1) * 1.5;
         break;
+      case 'Flash Fire':
+        if (move.type === 'Fire' && attacker.flashFireActive)
+          mods.powerMod = (mods.powerMod || 1) * 1.5;
+        break;
       case 'Swarm':
         if (move.type === 'Bug' && attacker.currentHp <= Math.floor(attacker.maxHp / 3))
           mods.powerMod = (mods.powerMod || 1) * 1.5;
@@ -1976,6 +2018,14 @@ export class Battle {
           mods.powerMod = (mods.powerMod || 1) * 1.3;
         break;
     }
+
+    // Terrain power boosts (1.3x for grounded Pokemon)
+    const terrain = this.state.terrain;
+    if (terrain === 'grassy' && move.type === 'Grass') mods.powerMod = (mods.powerMod || 1) * 1.3;
+    if (terrain === 'electric' && move.type === 'Electric') mods.powerMod = (mods.powerMod || 1) * 1.3;
+    if (terrain === 'psychic' && move.type === 'Psychic') mods.powerMod = (mods.powerMod || 1) * 1.3;
+    // Misty Terrain: halves Dragon-type damage
+    if (terrain === 'misty' && move.type === 'Dragon') mods.finalMod = (mods.finalMod || 1) * 0.5;
 
     // Slow Start: halve attack and speed for first 5 turns on field
     if (attacker.ability === 'Slow Start' && attacker.turnsOnField <= 5) {
@@ -2133,6 +2183,38 @@ export class Battle {
           if (!pokemon.isAlive) continue;
           this.applyWeatherDamage(pokemon, i, events);
         }
+      }
+    }
+
+    // Trick Room countdown
+    if (this.state.trickRoom > 0) {
+      this.state.trickRoom--;
+      if (this.state.trickRoom <= 0) {
+        this.addEvent(events, 'field_end', { field: 'Trick Room' });
+      }
+    }
+
+    // Terrain countdown + effects
+    if (this.state.terrain !== 'none') {
+      // Grassy Terrain: heal 1/16 max HP per turn for grounded Pokemon
+      if (this.state.terrain === 'grassy') {
+        for (let i = 0; i < 2; i++) {
+          const pokemon = this.getActivePokemon(i);
+          if (pokemon.isAlive && pokemon.currentHp < pokemon.maxHp) {
+            const isFlying = (pokemon.species.types as string[]).includes('Flying') || pokemon.ability === 'Levitate';
+            if (!isFlying) {
+              const heal = Math.max(1, Math.floor(pokemon.maxHp / 16));
+              const actualHeal = Math.min(heal, pokemon.maxHp - pokemon.currentHp);
+              pokemon.currentHp = clampHp(pokemon.currentHp + heal, pokemon.maxHp);
+              this.addEvent(events, 'heal', { pokemon: pokemon.species.name, amount: actualHeal, source: 'Grassy Terrain' });
+            }
+          }
+        }
+      }
+      this.state.terrainTurnsRemaining--;
+      if (this.state.terrainTurnsRemaining <= 0) {
+        this.addEvent(events, 'field_end', { field: this.state.terrain });
+        this.state.terrain = 'none';
       }
     }
 

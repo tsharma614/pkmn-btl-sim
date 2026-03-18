@@ -9,7 +9,7 @@ export type StatusCondition = 'burn' | 'paralysis' | 'sleep' | 'poison' | 'toxic
 export type VolatileStatus = 'confusion' | 'flinch' | 'leech-seed' | 'trapped' | 'substitute' | 'encore' | 'taunt' | 'torment' | 'disable' | 'protect';
 
 export type Weather = 'sun' | 'rain' | 'sandstorm' | 'hail' | 'none';
-export type Terrain = 'none';
+export type Terrain = 'grassy' | 'electric' | 'psychic' | 'misty' | 'none';
 
 export type StatName = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe';
 export type BoostableStat = 'atk' | 'def' | 'spa' | 'spd' | 'spe' | 'accuracy' | 'evasion';
@@ -142,6 +142,7 @@ export interface BattlePokemon {
   mustRecharge: boolean;    // Recharge: must skip next turn (Hyper Beam etc.)
   turnsOnField: number;     // Turns since entering battle (for Fake Out, etc.)
   itemConsumed: boolean;    // True if held item was consumed (Focus Sash, Weakness Policy, etc.)
+  flashFireActive: boolean; // True if Flash Fire has been activated (1.5x Fire moves)
 }
 
 export interface BattleMove {
@@ -187,6 +188,9 @@ export interface BattleState {
   players: [Player, Player];
   weather: Weather;
   weatherTurnsRemaining: number;
+  terrain: Terrain;
+  terrainTurnsRemaining: number;
+  trickRoom: number; // turns remaining (0 = inactive)
   fieldEffects: {
     player1Side: SideEffects;
     player2Side: SideEffects;
