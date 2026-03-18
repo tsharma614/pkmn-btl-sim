@@ -84,10 +84,10 @@
 ## 4. Priority Fixes (Most Impactful)
 
 ### Tier 1 — Fix immediately (breaks competitive play)
-1. **Trick Room** — many slow Pokemon depend on it (Dusclops, Torkoal, etc.)
-2. **Terrain** — Tapu Koko/Lele/Bulu/Fini define the metagame
-3. **Taunt blocking** — Prankster Taunt is a core strategy
-4. **Flash Fire boost** — Heatran and other Flash Fire users need the power boost
+1. **Trick Room** — FIXED: speed reversal for 5 turns, end-of-turn countdown
+2. **Terrain** — FIXED: Grassy/Electric/Psychic/Misty, 1.3x power, healing, 5-turn duration
+3. **Taunt blocking** — FIXED: status moves blocked when taunted
+4. **Flash Fire boost** — FIXED: 1.5x Fire power after absorbing Fire move
 
 ### Tier 2 — Fix soon
 5. **Two-turn moves** — Solar Beam in sun, Fly/Dig for evasion
