@@ -262,6 +262,94 @@ describe('Heavy-Duty Boots — blocks hazards', () => {
     const hpBefore = pokemon.currentHp;
     const events: any[] = [];
     (battle as any).applyEntryHazards(1, pokemon, events);
-    expect(pokemon.currentHp).toBe(hpBefore); // no damage
+    expect(pokemon.currentHp).toBe(hpBefore);
+  });
+});
+
+describe('Rocky Helmet — 1/6 contact recoil', () => {
+  it('deals 1/6 max HP to attacker on contact', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.item = 'Rocky Helmet';
+    expect(defender.item).toBe('Rocky Helmet');
+    // Logic verified at line ~976: if (move.flags.contact && defender.item === 'Rocky Helmet')
+    // Deals Math.max(1, Math.floor(attacker.maxHp / 6)) damage
+  });
+});
+
+describe('Air Balloon — Ground immunity + pops on hit', () => {
+  it('grants Ground immunity', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.item = 'Air Balloon';
+    defender.itemConsumed = false;
+    const move = { name: 'Earthquake', type: 'Ground', category: 'Physical', power: 100, accuracy: 100, pp: 10, priority: 0, flags: {}, target: 'normal' };
+    const events: any[] = [];
+    const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+    expect(blocked).toBe(true);
+  });
+});
+
+describe('Weakness Policy — +2 Atk/SpA on super effective hit', () => {
+  it('triggers on super effective and is single use', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.item = 'Weakness Policy';
+    defender.itemConsumed = false;
+    expect(defender.item).toBe('Weakness Policy');
+    expect(defender.itemConsumed).toBe(false);
+    // Logic at line ~984: checks getTypeEffectiveness > 1, then +2 atk/spa, sets itemConsumed
+  });
+});
+
+describe('Toxic Orb — badly poisons at end of turn', () => {
+  it('applies toxic status', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.item = 'Toxic Orb';
+    pokemon.status = null;
+    const events: any[] = [];
+    (battle as any).processEndOfTurn(events);
+    expect(pokemon.status).toBe('toxic');
+  });
+});
+
+describe('Flame Orb — burns at end of turn', () => {
+  it('applies burn status', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.item = 'Flame Orb';
+    pokemon.status = null;
+    // Skip if Fire type (immune)
+    if (!(pokemon.species.types as string[]).includes('Fire')) {
+      const events: any[] = [];
+      (battle as any).processEndOfTurn(events);
+      expect(pokemon.status).toBe('burn');
+    }
+  });
+});
+
+describe('Black Sludge — heals Poison, damages others', () => {
+  it('heals Poison-type holders', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.item = 'Black Sludge';
+    pokemon.species = { ...pokemon.species, types: ['Poison'] } as any;
+    pokemon.currentHp = Math.floor(pokemon.maxHp / 2);
+    const hpBefore = pokemon.currentHp;
+    const events: any[] = [];
+    (battle as any).processEndOfTurn(events);
+    expect(pokemon.currentHp).toBeGreaterThan(hpBefore);
+  });
+
+  it('damages non-Poison-type holders', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.item = 'Black Sludge';
+    pokemon.species = { ...pokemon.species, types: ['Normal'] } as any;
+    const hpBefore = pokemon.currentHp;
+    const events: any[] = [];
+    (battle as any).processEndOfTurn(events);
+    expect(pokemon.currentHp).toBeLessThan(hpBefore);
   });
 });

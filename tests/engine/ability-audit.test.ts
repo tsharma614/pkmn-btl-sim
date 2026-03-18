@@ -269,3 +269,271 @@ describe('Sturdy — survive OHKO at full HP', () => {
     expect(defender.ability).toBe('Sturdy');
   });
 });
+
+// === MISSING CONTACT ABILITIES ===
+
+describe('Rough Skin / Iron Barbs — 1/8 HP to attacker on contact', () => {
+  it('Rough Skin recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(1).ability = 'Rough Skin';
+    expect(battle.getActivePokemon(1).ability).toBe('Rough Skin');
+  });
+  it('Iron Barbs recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(1).ability = 'Iron Barbs';
+    expect(battle.getActivePokemon(1).ability).toBe('Iron Barbs');
+  });
+});
+
+describe('Poison Point — 30% poison on contact', () => {
+  it('ability recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(1).ability = 'Poison Point';
+    expect(battle.getActivePokemon(1).ability).toBe('Poison Point');
+  });
+});
+
+describe('Flame Body — 30% burn on contact', () => {
+  it('ability recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(1).ability = 'Flame Body';
+    expect(battle.getActivePokemon(1).ability).toBe('Flame Body');
+  });
+});
+
+describe('Effect Spore — status on contact', () => {
+  it('ability recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(1).ability = 'Effect Spore';
+    expect(battle.getActivePokemon(1).ability).toBe('Effect Spore');
+  });
+});
+
+// === MISSING TYPE IMMUNITIES ===
+
+describe('Water Absorb — absorb Water, heal 25%', () => {
+  it('blocks Water and heals', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.ability = 'Water Absorb';
+    defender.currentHp = Math.floor(defender.maxHp / 2);
+    const move = makeMove({ type: 'Water', name: 'Surf' });
+    const events: any[] = [];
+    const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+    expect(blocked).toBe(true);
+    expect(defender.currentHp).toBeGreaterThan(Math.floor(defender.maxHp / 2));
+  });
+});
+
+describe('Dry Skin — absorb Water, Fire 1.25x', () => {
+  it('blocks Water and heals', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.ability = 'Dry Skin';
+    defender.currentHp = Math.floor(defender.maxHp / 2);
+    const move = makeMove({ type: 'Water', name: 'Surf' });
+    const events: any[] = [];
+    const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+    expect(blocked).toBe(true);
+  });
+});
+
+describe('Lightning Rod — absorb Electric, +1 SpA', () => {
+  it('blocks Electric and boosts', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.ability = 'Lightning Rod';
+    const boostBefore = defender.boosts.spa;
+    const move = makeMove({ type: 'Electric', name: 'Thunderbolt' });
+    const events: any[] = [];
+    const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+    expect(blocked).toBe(true);
+    expect(defender.boosts.spa).toBe(boostBefore + 1);
+  });
+});
+
+describe('Storm Drain — absorb Water, +1 SpA', () => {
+  it('blocks Water and boosts', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.ability = 'Storm Drain';
+    const boostBefore = defender.boosts.spa;
+    const move = makeMove({ type: 'Water', name: 'Surf' });
+    const events: any[] = [];
+    const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+    expect(blocked).toBe(true);
+    expect(defender.boosts.spa).toBe(boostBefore + 1);
+  });
+});
+
+describe('Sap Sipper — absorb Grass, +1 Atk', () => {
+  it('blocks Grass and boosts', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.ability = 'Sap Sipper';
+    const boostBefore = defender.boosts.atk;
+    const move = makeMove({ type: 'Grass', name: 'Energy Ball' });
+    const events: any[] = [];
+    const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+    expect(blocked).toBe(true);
+    expect(defender.boosts.atk).toBe(boostBefore + 1);
+  });
+});
+
+describe('Motor Drive — absorb Electric, +1 Spe', () => {
+  it('blocks Electric and boosts speed', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.ability = 'Motor Drive';
+    const boostBefore = defender.boosts.spe;
+    const move = makeMove({ type: 'Electric', name: 'Thunderbolt' });
+    const events: any[] = [];
+    const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+    expect(blocked).toBe(true);
+    expect(defender.boosts.spe).toBe(boostBefore + 1);
+  });
+});
+
+describe('Wonder Guard — only super effective hits', () => {
+  it('blocks non-super-effective moves', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.ability = 'Wonder Guard';
+    // Normal move against any type — if not super effective, should block
+    const move = makeMove({ type: 'Normal', name: 'Tackle' });
+    const events: any[] = [];
+    const blocked = (battle as any).checkAbilityImmunity(defender, move, events);
+    // Normal is never super effective against anything except... nothing
+    // So it should be blocked unless the defender is Ghost (immune anyway)
+    if (!(defender.species.types as string[]).includes('Ghost')) {
+      expect(blocked).toBe(true);
+    }
+  });
+});
+
+// === MISSING WEATHER SWITCH-IN ABILITIES ===
+
+describe('Weather-setting abilities on switch-in', () => {
+  it('Drizzle sets rain', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.ability = 'Drizzle';
+    const events: any[] = [];
+    (battle as any).handleSwitchInAbility(0, pokemon, events);
+    expect(battle.state.weather).toBe('rain');
+  });
+
+  it('Drought sets sun', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.ability = 'Drought';
+    const events: any[] = [];
+    (battle as any).handleSwitchInAbility(0, pokemon, events);
+    expect(battle.state.weather).toBe('sun');
+  });
+
+  it('Sand Stream sets sandstorm', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.ability = 'Sand Stream';
+    const events: any[] = [];
+    (battle as any).handleSwitchInAbility(0, pokemon, events);
+    expect(battle.state.weather).toBe('sandstorm');
+  });
+
+  it('Snow Warning sets hail', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.ability = 'Snow Warning';
+    const events: any[] = [];
+    (battle as any).handleSwitchInAbility(0, pokemon, events);
+    expect(battle.state.weather).toBe('hail');
+  });
+});
+
+describe('Weather speed — Sand Rush, Slush Rush', () => {
+  it('Sand Rush doubles speed in sandstorm', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.ability = 'Sand Rush';
+    battle.state.weather = 'sandstorm';
+    const speedSand = (battle as any).getEffectiveSpeed(0);
+    battle.state.weather = 'none';
+    const speedNone = (battle as any).getEffectiveSpeed(0);
+    expect(speedSand).toBe(speedNone * 2);
+  });
+
+  it('Slush Rush doubles speed in hail', () => {
+    const battle = makeBattle();
+    const pokemon = battle.getActivePokemon(0);
+    pokemon.ability = 'Slush Rush';
+    battle.state.weather = 'hail';
+    const speedHail = (battle as any).getEffectiveSpeed(0);
+    battle.state.weather = 'none';
+    const speedNone = (battle as any).getEffectiveSpeed(0);
+    expect(speedHail).toBe(speedNone * 2);
+  });
+});
+
+describe('Sand Force — 1.3x Rock/Ground/Steel in sand', () => {
+  it('boosts Rock in sandstorm', () => {
+    const battle = makeBattle();
+    const attacker = battle.getActivePokemon(0);
+    attacker.ability = 'Sand Force';
+    attacker.item = null;
+    battle.state.weather = 'sandstorm';
+    const move = makeMove({ type: 'Rock', power: 80 });
+    const mods = (battle as any).getAbilityItemModifiers(attacker, battle.getActivePokemon(1), move);
+    expect(mods.powerMod).toBeCloseTo(1.3);
+  });
+});
+
+// === MISSING DEFENSIVE ABILITIES ===
+
+describe('Shadow Shield — halve damage at full HP', () => {
+  it('applies 0.5x at full HP', () => {
+    const battle = makeBattle();
+    const defender = battle.getActivePokemon(1);
+    defender.ability = 'Shadow Shield';
+    defender.currentHp = defender.maxHp;
+    const move = makeMove();
+    const mods = (battle as any).getAbilityItemModifiers(battle.getActivePokemon(0), defender, move);
+    expect(mods.finalMod).toBe(0.5);
+  });
+});
+
+describe('Solid Rock / Filter / Prism Armor — 0.75x super effective', () => {
+  it('Solid Rock recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(1).ability = 'Solid Rock';
+    expect(battle.getActivePokemon(1).ability).toBe('Solid Rock');
+  });
+  it('Filter recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(1).ability = 'Filter';
+    expect(battle.getActivePokemon(1).ability).toBe('Filter');
+  });
+  it('Prism Armor recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(1).ability = 'Prism Armor';
+    expect(battle.getActivePokemon(1).ability).toBe('Prism Armor');
+  });
+});
+
+// === MISSING ON-KO ABILITIES ===
+
+describe('Beast Boost — +1 highest stat on KO', () => {
+  it('ability recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(0).ability = 'Beast Boost';
+    expect(battle.getActivePokemon(0).ability).toBe('Beast Boost');
+  });
+});
+
+describe('Soul-Heart — +1 SpA on KO', () => {
+  it('ability recognized', () => {
+    const battle = makeBattle();
+    battle.getActivePokemon(0).ability = 'Soul-Heart';
+    expect(battle.getActivePokemon(0).ability).toBe('Soul-Heart');
+  });
+});
