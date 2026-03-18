@@ -5,8 +5,34 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { colors, spacing, typeColors } from '../theme';
+
+const { width: SCREEN_W } = Dimensions.get('window');
+const CARD_W = (SCREEN_W - spacing.lg * 2 - spacing.md) / 2;
+
+/** Type-themed emoji icons */
+const TYPE_ICONS: Record<string, string> = {
+  Fire: '🔥',
+  Water: '💧',
+  Grass: '🍃',
+  Electric: '⚡',
+  Ice: '❄️',
+  Psychic: '🔮',
+  Dark: '🌙',
+  Poison: '☠️',
+  Fighting: '👊',
+  Ghost: '👻',
+  Dragon: '🐉',
+  Rock: '🪨',
+  Ground: '⛰️',
+  Steel: '🛡️',
+  Bug: '🐛',
+  Flying: '🪶',
+  Fairy: '✨',
+  Normal: '⚪',
+};
 
 interface Props {
   gymTypes: string[];
@@ -32,111 +58,91 @@ export function GymMapScreen({
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <TouchableOpacity onPress={onBack} style={styles.backButton}>
-            <Text style={styles.backText}>{'< Forfeit Run'}</Text>
-          </TouchableOpacity>
-          {onSaveQuit && (
-            <TouchableOpacity onPress={onSaveQuit} style={styles.backButton}>
-              <Text style={[styles.backText, { color: colors.textSecondary }]}>Save & Quit</Text>
-            </TouchableOpacity>
-          )}
-        </View>
         <Text style={styles.title}>GYM MAP</Text>
-        <Text style={styles.progress}>{beatenCount}/8 Beaten</Text>
+
+        {/* Badge row — 8 slots */}
+        <View style={styles.badgeRow}>
+          {gymTypes.map((type, i) => {
+            const beaten = beatenGyms[i];
+            const color = typeColors[type] ?? colors.textDim;
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.badgeSlot,
+                  beaten && { backgroundColor: color, borderColor: color },
+                ]}
+              >
+                {beaten && <Text style={styles.badgeCheck}>✓</Text>}
+              </View>
+            );
+          })}
+        </View>
+        <Text style={styles.progressText}>{beatenCount}/8 Beaten</Text>
       </View>
 
       {/* Gym Grid */}
-      <ScrollView
-        style={styles.scrollArea}
-        contentContainerStyle={styles.gridContainer}
-      >
+      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.gridContainer}>
         {gymTypes.map((type, index) => {
           const beaten = beatenGyms[index];
           const color = typeColors[type] ?? colors.textSecondary;
+          const icon = TYPE_ICONS[type] ?? '⚪';
 
           return (
             <TouchableOpacity
               key={index}
-              style={[styles.card, beaten && styles.cardBeaten]}
+              style={[styles.card]}
               activeOpacity={beaten ? 1 : 0.7}
-              onPress={() => {
-                if (!beaten) onChallenge(index);
-              }}
+              onPress={() => !beaten && onChallenge(index)}
               disabled={beaten}
             >
-              {/* Type-colored top bar */}
-              <View
-                style={[
-                  styles.typeBar,
-                  { backgroundColor: beaten ? colors.textDim : color },
-                ]}
-              />
-
-              {/* Gym building icon */}
-              <View style={styles.buildingContainer}>
-                {/* Peaked roof */}
-                <View
-                  style={[
-                    styles.roof,
-                    {
-                      borderBottomColor: beaten ? '#5a5a5a' : '#6B3410',
-                    },
-                  ]}
-                />
-                {/* Building body */}
-                <View
-                  style={[
-                    styles.building,
-                    {
-                      backgroundColor: beaten ? '#5a5a5a' : '#8B4513',
-                    },
-                  ]}
-                >
-                  {/* Door */}
-                  <View
-                    style={[
-                      styles.door,
-                      {
-                        backgroundColor: beaten ? '#3a3a3a' : '#5a2d0c',
-                      },
-                    ]}
-                  />
-                </View>
+              {/* Gradient-like background: type color at top fading to dark */}
+              <View style={[styles.cardBg, { backgroundColor: beaten ? colors.surface : color }]}>
+                <View style={styles.cardBgOverlay} />
               </View>
 
-              {/* Type name */}
-              <Text
-                style={[
-                  styles.typeName,
-                  beaten && styles.typeNameBeaten,
-                  !beaten && { color },
-                ]}
-              >
-                {type}
-              </Text>
+              {/* Content */}
+              <View style={styles.cardContent}>
+                <Text style={styles.gymIcon}>{icon}</Text>
+                <Text style={[styles.typeName, beaten && styles.typeNameBeaten]}>
+                  {type}
+                </Text>
+                <Text style={styles.gymLabel}>Gym {index + 1}</Text>
 
-              {/* Challenge button or checkmark */}
-              {beaten ? (
-                <View style={styles.checkmarkContainer}>
-                  <Text style={styles.checkmark}>✓</Text>
-                </View>
-              ) : (
-                <View style={[styles.challengeButton, { backgroundColor: color }]}>
-                  <Text style={styles.challengeText}>CHALLENGE</Text>
-                </View>
-              )}
+                {beaten ? (
+                  <View style={styles.beatenBadge}>
+                    <Text style={styles.beatenText}>CLEARED ✓</Text>
+                  </View>
+                ) : (
+                  <View style={[styles.challengeBtn, { backgroundColor: color }]}>
+                    <Text style={styles.challengeText}>CHALLENGE</Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           );
         })}
       </ScrollView>
 
-      {/* Elite Four button */}
-      {allBeaten && (
-        <TouchableOpacity style={styles.eliteFourButton} onPress={onEliteFour}>
-          <Text style={styles.eliteFourText}>CHALLENGE ELITE FOUR</Text>
-        </TouchableOpacity>
-      )}
+      {/* Bottom Action Bar */}
+      <View style={styles.bottomBar}>
+        {allBeaten ? (
+          <TouchableOpacity style={styles.e4Btn} onPress={onEliteFour} activeOpacity={0.7}>
+            <Text style={styles.e4Text}>CHALLENGE ELITE FOUR</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.forfeitBtn} onPress={onBack} activeOpacity={0.7}>
+              <Text style={styles.forfeitText}>Forfeit Run</Text>
+            </TouchableOpacity>
+            {onSaveQuit && (
+              <TouchableOpacity style={styles.saveBtn} onPress={onSaveQuit} activeOpacity={0.7}>
+                <Text style={styles.saveText}>Save & Quit</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -147,150 +153,177 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
-  /* ── Header ── */
+  // Header
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  backButton: {
-    paddingVertical: spacing.xs,
-    paddingRight: spacing.sm,
-  },
-  backText: {
-    color: colors.accent,
-    fontSize: 14,
-    fontWeight: '600',
   },
   title: {
+    fontSize: 28,
+    fontWeight: '900',
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 2,
+    letterSpacing: 4,
   },
-  progress: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: spacing.md,
+  },
+  badgeSlot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeCheck: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  progressText: {
+    color: colors.textDim,
+    fontSize: 12,
+    marginTop: spacing.xs,
   },
 
-  /* ── Grid ── */
+  // Grid
   scrollArea: {
     flex: 1,
   },
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: spacing.md,
-    justifyContent: 'space-between',
+    padding: spacing.lg,
+    gap: spacing.md,
   },
 
-  /* ── Card ── */
+  // Card
   card: {
-    width: '47%',
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-    alignItems: 'center',
+    width: CARD_W,
+    height: 160,
+    borderRadius: 14,
     overflow: 'hidden',
-    paddingBottom: spacing.md,
   },
-  cardBeaten: {
-    opacity: 0.45,
+  cardBg: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.25,
   },
-  typeBar: {
-    width: '100%',
-    height: 6,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+  cardBgOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.background,
+    opacity: 0.6,
   },
-
-  /* ── Building icon ── */
-  buildingContainer: {
+  cardContent: {
+    flex: 1,
     alignItems: 'center',
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
+    justifyContent: 'center',
+    padding: spacing.sm,
   },
-  roof: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 28,
-    borderRightWidth: 28,
-    borderBottomWidth: 18,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
+  gymIcon: {
+    fontSize: 36,
+    marginBottom: spacing.xs,
   },
-  building: {
-    width: 44,
-    height: 32,
-    borderRadius: 2,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  door: {
-    width: 14,
-    height: 18,
-    borderTopLeftRadius: 7,
-    borderTopRightRadius: 7,
-    marginBottom: 0,
-  },
-
-  /* ── Labels ── */
   typeName: {
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.text,
     letterSpacing: 1,
   },
   typeNameBeaten: {
     color: colors.textDim,
   },
-
-  /* ── Challenge / Checkmark ── */
-  challengeButton: {
+  gymLabel: {
+    fontSize: 10,
+    color: colors.textDim,
+    marginTop: 2,
+    marginBottom: spacing.sm,
+  },
+  challengeBtn: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: 6,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   challengeText: {
-    color: colors.text,
+    color: '#fff',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1,
   },
-  checkmarkContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#3a7d44',
-    alignItems: 'center',
-    justifyContent: 'center',
+  beatenBadge: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: 'rgba(76,175,80,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(76,175,80,0.4)',
   },
-  checkmark: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '700',
+  beatenText: {
+    color: '#4caf50',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
 
-  /* ── Elite Four button ── */
-  eliteFourButton: {
-    backgroundColor: colors.accent,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
-    paddingVertical: spacing.md + 2,
-    borderRadius: 8,
+  // Bottom bar
+  bottomBar: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  forfeitBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(244,67,54,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(244,67,54,0.3)',
     alignItems: 'center',
   },
-  eliteFourText: {
-    color: colors.text,
-    fontSize: 16,
+  forfeitText: {
+    color: '#f44336',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  saveBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  saveText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  e4Btn: {
+    backgroundColor: colors.accent,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  e4Text: {
+    color: '#fff',
+    fontSize: 18,
     fontWeight: '800',
     letterSpacing: 2,
   },
