@@ -513,17 +513,22 @@ export function generateGymTeam(
   pick(t2, 2);
   pick(t3, 2);
 
-  // Fill remaining from ANY tier that matches the type (min 4/6 must match)
+  // Fill remaining from ANY tier that matches the type
   if (team.length < 6) {
     const allMatching = [...megas, ...t1, ...t2, ...t3, ...t4];
     rng.shuffle(allMatching);
     pick(allMatching, 6 - team.length);
   }
 
-  // Verify: every Pokemon on the team matches the gym type
-  const validTeam = team.filter(s => s.types.includes(gymType));
-  if (validTeam.length < team.length) {
-    console.warn(`[generateGymTeam] ${team.length - validTeam.length} Pokemon don't match ${gymType} — this shouldn't happen`);
+  const typeMatchCount = team.length;
+
+  // If type pool is too sparse (< 6), fill remaining from unfiltered pool
+  // Guarantee: at least 4/6 match the gym type
+  if (team.length < 6) {
+    console.warn(`[generateGymTeam] ${gymType} pool only has ${typeMatchCount} matching Pokemon, filling ${6 - team.length} from unfiltered`);
+    const unfiltered = [...TIERS[2], ...TIERS[3], ...TIERS[4]];
+    rng.shuffle(unfiltered);
+    pick(unfiltered, 6 - team.length);
   }
 
   return team.map(species => {

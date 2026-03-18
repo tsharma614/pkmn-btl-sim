@@ -100,6 +100,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   const campaignUsedNamesRef = useRef<string[]>([]);
   /** For gauntlet: the last opponent's BattlePokemon team (so we can steal) */
   const gauntletOpponentBPRef = useRef<BattlePokemon[] | null>(null);
+  /** Prevents double-saving campaign run (loss + abandon race condition) */
+  const campaignRunSavedRef = useRef(false);
 
   const cleanupAll = useCallback(() => {
     if (activeConnection) {
@@ -342,8 +344,10 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     console.log('[battle-context] returnToMenu — cleaning up');
     const currentState = stateRef.current;
 
-    // Campaign forfeit = abandoned run (but NOT if battle already ended — that's already recorded as a loss)
-    if (currentState.campaignMode && currentState.campaignStage > 0 && currentState.phase !== 'battle_end') {
+    // Campaign forfeit = abandoned run — but only if battle_end hasn't already saved
+    // (BattleEndOverlay saves loss on mount, so if phase is battle_end, it's already saved)
+    const alreadySaved = currentState.phase === 'battle_end' || campaignRunSavedRef.current;
+    if (currentState.campaignMode && currentState.campaignStage > 0 && !alreadySaved) {
       saveCampaignRun({
         mode: currentState.campaignMode,
         progress: currentState.campaignMode === 'gauntlet'
@@ -358,6 +362,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       clearGymCareerSave();
     }
 
+    campaignRunSavedRef.current = false;
     cleanupAll();
     campaignPlayerTeamRef.current = null;
     dispatch({ type: 'RESET' });
@@ -564,6 +569,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   /** Start the current campaign battle. */
   const beginCampaignBattle = useCallback(() => {
     cleanupAll();
+    campaignRunSavedRef.current = false; // Reset for new battle
     const currentState = stateRef.current;
     const playerName = campaignPlayerNameRef.current;
     const playerTeam = campaignPlayerTeamRef.current;
