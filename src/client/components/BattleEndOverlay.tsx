@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share } from 'react-native';
 import { saveBattleResult } from '../utils/battle-history';
 import { earnBadge } from '../utils/badge-tracker';
+import { recordBattleResult, recordBattlePokemonStats } from '../utils/stats-storage';
 import { colors, spacing } from '../theme';
 import { HpBar } from './HpBar';
 import { PokemonSprite } from './PokemonSprite';
@@ -254,12 +255,47 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
     if (savedRef.current) return;
     savedRef.current = true;
     const pokemonLeft = data.finalState.yourTeam.filter(p => p.isAlive).length;
+    // Old win/loss tracking (backward compat)
     saveBattleResult({
       date: new Date().toISOString(),
       opponent: opponentName,
       result: isWinner ? 'win' : 'loss',
       pokemonLeft,
     });
+    // New overall stats tracking
+    recordBattleResult(isWinner, stats.turnsPlayed * 30);
+    // Per-Pokemon KO and damage stats
+    const pokemonEntries = Object.entries(stats.pokemonKOs).map(([name, kos]) => ({
+      speciesId: name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      name,
+      kos,
+      damageDealt: stats.pokemonDamage[name] ?? 0,
+    }));
+    // Also record Pokemon that dealt damage but got no KOs
+    for (const [name, dmg] of Object.entries(stats.pokemonDamage)) {
+      if (!stats.pokemonKOs[name]) {
+        pokemonEntries.push({
+          speciesId: name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          name,
+          kos: 0,
+          damageDealt: dmg,
+        });
+      }
+    }
+    if (pokemonEntries.length > 0) {
+      recordBattlePokemonStats(pokemonEntries);
+    }
+    // Campaign loss tracking
+    if (!isWinner && campaignMode) {
+      const { saveCampaignRun } = require('../utils/stats-storage');
+      saveCampaignRun({
+        mode: campaignMode,
+        progress: campaignMode === 'gauntlet' ? `Battle ${(eliteFourStage ?? 0) + 1}` : `Stage ${(eliteFourStage ?? 0) + 1}`,
+        team: data.finalState.yourTeam.map((p: OwnPokemon) => p.species.name),
+        result: 'loss' as const,
+        date: new Date().toISOString(),
+      });
+    }
     // Award badge for beating Hard CPU in monotype draft (gym leader challenge)
     if (isWinner && badgeType) {
       earnBadge(badgeType, gymLeaderName ?? undefined, badgeNameProp ?? undefined).then(earned => {
