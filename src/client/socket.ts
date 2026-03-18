@@ -40,7 +40,7 @@ const BOT_NAMES = [
 const SOCKET_OPTS = {
   transports: ['websocket'] as string[],  // skip polling — polling upgrade breaks in RN
   reconnection: true,
-  reconnectionAttempts: Infinity,
+  reconnectionAttempts: 10,
   reconnectionDelay: 2000,
   reconnectionDelayMax: 10000,
   timeout: 20000,
@@ -433,6 +433,13 @@ function wireHumanEvents(
 
   humanSocket.on('error', (payload) => {
     console.warn('[human socket error]', payload.message);
+    // Show error to user instead of silently logging
+    dispatch({ type: 'DISCONNECTED' });
+  });
+
+  humanSocket.on('room_error', (payload: { message: string }) => {
+    console.warn('[room error]', payload.message);
+    dispatch({ type: 'DISCONNECTED' });
   });
 
   humanSocket.on('opponent_disconnected', () => {
@@ -713,7 +720,7 @@ export function createOnlineConnection(
   };
 
   conn.startJoinRoom = (code: string, im: 'competitive' | 'casual') => {
-    flags.setHasCreated();
+    // Don't set hasCreated here — only set it when room_created/joined event comes back
     conn.roomCode = code;
     humanSocket.emit('join_room', { code, playerName, itemMode: im });
   };
