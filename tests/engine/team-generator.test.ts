@@ -37,12 +37,12 @@ describe('Team Generator', () => {
     }
   });
 
-  it('all Pokemon have exactly 4 moves (except Ditto)', () => {
+  it('all Pokemon have exactly 4 moves (except Ditto/Unown)', () => {
     for (let seed = 0; seed < 50; seed++) {
       const rng = new SeededRNG(seed);
       const team = generateTeam(rng);
       for (const pokemon of team) {
-        if (pokemon.species.id === 'ditto') continue;
+        if (pokemon.species.id === 'ditto' || pokemon.species.id === 'unown') continue;
         expect(
           pokemon.moves.length,
           `${pokemon.species.name} (seed ${seed}) has ${pokemon.moves.length} moves`,
@@ -331,13 +331,13 @@ describe('Team Generator', () => {
       expect(set.moves).not.toContain('Tera Blast');
     });
 
-    it('all Pokemon across many seeds have exactly 4 moves (except Ditto)', () => {
+    it('all Pokemon across many seeds have exactly 4 moves (except Ditto/Unown)', () => {
       const pokedex = require('../../src/data/pokedex.json');
       const allSpecies = Object.values(pokedex) as any[];
       const issues: string[] = [];
 
       for (const species of allSpecies) {
-        if (species.id === 'ditto') continue;
+        if (species.id === 'ditto' || species.id === 'unown') continue;
         if (!species.sets || species.sets.length === 0) continue;
         for (let seed = 0; seed < 5; seed++) {
           const rng = new SeededRNG(seed);

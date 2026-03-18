@@ -40,19 +40,21 @@ describe('Hazard KO on force switch', () => {
 
     // Check if opponent needs force switch (their Pokemon fainted)
     if (room.pendingForceSwitch[1]) {
-      // Set the next switch-in to low HP so spikes KO it
       const available = battle.getAvailableSwitches(1);
-      if (available.length > 0) {
-        const switchTarget = available[0];
+      // Find a non-Flying switch target so Spikes actually apply
+      const switchTarget = available.find(idx => {
+        const types = oppTeam[idx].species.types as string[];
+        return !types.includes('Flying') && oppTeam[idx].ability !== 'Levitate' && oppTeam[idx].item !== 'Heavy-Duty Boots';
+      });
+      if (switchTarget !== undefined) {
         oppTeam[switchTarget].currentHp = 1; // will die to spikes
 
         const result = room.processForceSwitch(1, switchTarget);
         expect(result.events.length).toBeGreaterThan(0);
 
-        // Should have hazard_damage event
+        // Should have hazard_damage event (Stealth Rock or Spikes — SR applies first)
         const hazardEvent = result.events.find(e => e.type === 'hazard_damage');
         expect(hazardEvent).toBeDefined();
-        expect(hazardEvent?.data.hazard).toBe('Spikes');
 
         // Should have faint event for the hazard KO
         const faintEvent = result.events.find(e => e.type === 'faint');
