@@ -32,6 +32,8 @@ import { CampaignIntroScreen } from './CampaignIntroScreen';
 import { BudgetDraftScreen } from './BudgetDraftScreen';
 import { GymMapScreen } from './GymMapScreen';
 import { E4LockScreen } from './E4LockScreen';
+import { generateBudgetDraftOptions } from '../../engine/draft-pool';
+import { SeededRNG } from '../../utils/rng';
 import { colors, spacing } from '../theme';
 import { getGymLeader } from '../../data/gym-leaders';
 import { getEliteFourMember } from '../../data/elite-four';
@@ -146,10 +148,11 @@ export function BattleScreen() {
 
   // --- Budget Draft (Gym Career) ---
   if (state.phase === 'budget_draft') {
+    const budgetOptions = generateBudgetDraftOptions(new SeededRNG());
     return (
       <SafeAreaView style={styles.full}>
         <BudgetDraftScreen
-          roleOptions={[]} // TODO: generate role options from pokedex
+          roleOptions={budgetOptions}
           onComplete={gymCareerDraftComplete}
           onBack={returnToMenu}
           playerName={state.playerName}
@@ -591,8 +594,7 @@ export function BattleScreen() {
           badgeType={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? state.monotype : null}
           gymLeaderName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? getGymLeader(state.monotype)?.name ?? null : null}
           badgeName={state.gameMode === 'cpu' && state.difficulty === 'hard' && state.legendaryMode && state.draftMode && state.draftType !== 'role' && state.monotype ? getGymLeader(state.monotype)?.badgeName ?? null : null}
-          eliteFourStage={state.eliteFourStage}
-          onAdvanceEliteFour={state.eliteFourStage !== null ? advanceEliteFour : undefined}
+          eliteFourStage={null}
           campaignMode={state.campaignMode}
           campaignStage={state.campaignStage}
           onAdvanceCampaign={state.campaignMode !== null ? advanceCampaign : undefined}

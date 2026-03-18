@@ -16,7 +16,7 @@ interface Props {
   onBack: () => void;
 }
 
-export default function GymMapScreen({
+export function GymMapScreen({
   gymTypes,
   beatenGyms,
   onChallenge,

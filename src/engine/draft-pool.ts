@@ -811,3 +811,144 @@ export function buildTeamFromDraftPicks(
     return createBattlePokemon(species, set, 100, maxGen);
   });
 }
+
+// ── Budget Draft ─────────────────────────────────────────────────────────
+
+export const BUDGET_ROLES = [
+  'Physical Sweeper',
+  'Special Sweeper',
+  'Tank',
+  'Support',
+  'Pivot',
+  'Wildcard',
+] as const;
+
+export type BudgetRole = typeof BUDGET_ROLES[number];
+
+export const BUDGET_COSTS: Record<string, number> = {
+  mega: 4,
+  '1': 3,
+  '2': 2,
+  '3': 0,
+  '4': 0,
+};
+
+export const BUDGET_TOTAL = 15;
+
+export interface BudgetOption {
+  species: PokemonSpecies;
+  tier: number;
+  cost: number;
+}
+
+export interface BudgetRoleSection {
+  role: string;
+  options: BudgetOption[];
+}
+
+/** Classify a Pokemon into a budget draft role. */
+function classifyBudgetRole(species: PokemonSpecies): BudgetRole {
+  const { atk, def, spa, spd, spe, hp } = species.baseStats;
+  const supportCount = species.movePool.filter(m => SUPPORT_MOVES.has(m)).length;
+
+  // Support: utility movepool
+  if (supportCount >= 3 && spe <= 100) return 'Support';
+
+  // Physical Sweeper
+  if (atk >= 90 && spe >= 80 && atk >= spa) return 'Physical Sweeper';
+
+  // Special Sweeper
+  if (spa >= 90 && spe >= 80 && spa > atk) return 'Special Sweeper';
+
+  // Tank: bulk on both sides
+  if (hp + def >= 160 && hp + spd >= 160) return 'Tank';
+
+  // Pivot: moderate speed + bulk + utility
+  if (spe >= 70 && spe <= 110 && (supportCount >= 1 || hp + def >= 150)) return 'Pivot';
+
+  // Fallbacks
+  if (supportCount >= 2) return 'Support';
+  if (def >= 80 || spd >= 80) return 'Tank';
+  if (spe >= 80) return atk >= spa ? 'Physical Sweeper' : 'Special Sweeper';
+  return 'Wildcard';
+}
+
+/**
+ * Generate budget draft options: for each of 6 roles, one Pokemon from
+ * each tier (Mega, T1, T2, T3). Ensures reasonable type diversity.
+ */
+export function generateBudgetDraftOptions(rng: SeededRNG): BudgetRoleSection[] {
+  const usedTypes = new Set<string>();
+  const usedIds = new Set<string>();
+
+  function pickFromPool(pool: PokemonSpecies[], role: BudgetRole): PokemonSpecies | null {
+    // Prefer Pokemon that add type diversity
+    const shuffled = [...pool];
+    rng.shuffle(shuffled);
+
+    // First pass: find one with a new type
+    for (const s of shuffled) {
+      if (usedIds.has(s.id)) continue;
+      const classified = classifyBudgetRole(s);
+      if (classified !== role && role !== 'Wildcard') continue;
+      const hasNewType = s.types.some(t => !usedTypes.has(t));
+      if (hasNewType) {
+        usedIds.add(s.id);
+        s.types.forEach(t => usedTypes.add(t));
+        return s;
+      }
+    }
+
+    // Second pass: any match
+    for (const s of shuffled) {
+      if (usedIds.has(s.id)) continue;
+      const classified = classifyBudgetRole(s);
+      if (classified !== role && role !== 'Wildcard') continue;
+      usedIds.add(s.id);
+      s.types.forEach(t => usedTypes.add(t));
+      return s;
+    }
+
+    // Fallback: any Pokemon from pool
+    for (const s of shuffled) {
+      if (usedIds.has(s.id)) continue;
+      usedIds.add(s.id);
+      return s;
+    }
+    return null;
+  }
+
+  const sections: BudgetRoleSection[] = [];
+
+  for (const role of BUDGET_ROLES) {
+    const options: BudgetOption[] = [];
+
+    // Mega option (cost 4)
+    const megaPick = pickFromPool(MEGA_POOL, role);
+    if (megaPick) {
+      options.push({ species: megaPick, tier: 0, cost: 4 });
+    }
+
+    // T1 option (cost 3)
+    const t1Pick = pickFromPool(TIERS[1], role);
+    if (t1Pick) {
+      options.push({ species: t1Pick, tier: 1, cost: 3 });
+    }
+
+    // T2 option (cost 2)
+    const t2Pick = pickFromPool(TIERS[2], role);
+    if (t2Pick) {
+      options.push({ species: t2Pick, tier: 2, cost: 2 });
+    }
+
+    // T3 option (cost 0 — free)
+    const t3Pick = pickFromPool(TIERS[3], role);
+    if (t3Pick) {
+      options.push({ species: t3Pick, tier: 3, cost: 0 });
+    }
+
+    sections.push({ role, options });
+  }
+
+  return sections;
+}
