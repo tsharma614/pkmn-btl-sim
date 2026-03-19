@@ -668,7 +668,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      { "type": "boost", "stat": "atk", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "def", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "spa", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "spd", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "spe", "stages": 1, "chance": 10, "target": "self" }
+    ],
     "description": "10% chance to raise all stats by 1 (not acc/eva).",
     "critRatio": 1,
     "willCrit": false,
@@ -8715,7 +8721,9 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      { "type": "boost", "stat": "spa", "stages": 1, "chance": 50, "target": "self" }
+    ],
     "description": "50% chance to raise the user's Sp. Atk by 1.",
     "critRatio": 1,
     "willCrit": false,
@@ -9293,7 +9301,15 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "boost",
+        "stat": "spe",
+        "stages": 1,
+        "chance": 100,
+        "target": "self"
+      }
+    ],
     "description": "100% chance to raise the user's Speed by 1.",
     "critRatio": 1,
     "willCrit": false,
@@ -18415,7 +18431,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      { "type": "boost", "stat": "atk", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "def", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "spa", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "spd", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "spe", "stages": 1, "chance": 10, "target": "self" }
+    ],
     "description": "10% chance to raise all stats by 1 (not acc/eva).",
     "critRatio": 1,
     "willCrit": false,
@@ -19909,7 +19931,9 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      { "type": "boost", "stat": "atk", "stages": 1, "chance": 100, "target": "self" }
+    ],
     "description": "100% chance to raise the user's Attack by 1.",
     "critRatio": 1,
     "willCrit": false,
@@ -21162,7 +21186,9 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      { "type": "boost", "stat": "spe", "stages": 1, "chance": 100, "target": "self" }
+    ],
     "description": "Free user from hazards/bind/Leech Seed; +1 Spe.",
     "critRatio": 1,
     "willCrit": false,
@@ -24031,7 +24057,13 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      { "type": "boost", "stat": "atk", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "def", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "spa", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "spd", "stages": 1, "chance": 10, "target": "self" },
+      { "type": "boost", "stat": "spe", "stages": 1, "chance": 10, "target": "self" }
+    ],
     "description": "10% chance to raise all stats by 1 (not acc/eva).",
     "critRatio": 1,
     "willCrit": false,
@@ -29291,7 +29323,15 @@
       "defrost": false,
       "charge": false
     },
-    "effects": [],
+    "effects": [
+      {
+        "type": "boost",
+        "stat": "spe",
+        "stages": 1,
+        "chance": 100,
+        "target": "self"
+      }
+    ],
     "description": "100% chance to raise the user's Speed by 1.",
     "critRatio": 1,
     "willCrit": false,

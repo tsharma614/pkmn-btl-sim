@@ -522,34 +522,48 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
 
       if (stage < 8) {
         // Gym beaten — mark it, save, show shop (+1 pt)
+        const newBeatenGyms = currentState.beatenGyms.length === 8
+          ? [...currentState.beatenGyms]
+          : new Array(8).fill(false);
+        newBeatenGyms[stage] = true;
+        const beatenCount = newBeatenGyms.filter(Boolean).length;
+
         dispatch({ type: 'GYM_BEATEN', gymIndex: stage });
-        const beatenCount = currentState.beatenGyms.filter(Boolean).length + 1;
 
         saveGymCareer({
           currentStage: beatenCount,
           gymTypes: currentState.gymTypes,
           team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
           date: new Date().toISOString(),
-          shopBalance: currentState.shopBalance + 1,
-          beatenGyms: [...currentState.beatenGyms],
-          beatenE4: [...currentState.beatenE4],
+          shopBalance: (currentState.shopBalance ?? 0) + 1,
+          beatenGyms: newBeatenGyms,
+          beatenE4: currentState.beatenE4.length === 4
+            ? [...currentState.beatenE4]
+            : new Array(4).fill(false),
         });
 
         dispatch({ type: 'SHOW_SHOP', payout: 1 });
       } else if (stage < 12) {
         // E4 member beaten — mark it, save, show shop (+2 pts)
         const memberIdx = stage - 8;
+        const newBeatenE4 = currentState.beatenE4.length === 4
+          ? [...currentState.beatenE4]
+          : new Array(4).fill(false);
+        newBeatenE4[memberIdx] = true;
+        const e4BeatenCount = newBeatenE4.filter(Boolean).length;
+
         dispatch({ type: 'E4_MEMBER_BEATEN', memberIndex: memberIdx });
-        const e4BeatenCount = currentState.beatenE4.filter(Boolean).length + 1;
 
         saveGymCareer({
           currentStage: 8 + e4BeatenCount,
           gymTypes: currentState.gymTypes,
           team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
           date: new Date().toISOString(),
-          shopBalance: currentState.shopBalance + 2,
-          beatenGyms: [...currentState.beatenGyms],
-          beatenE4: [...currentState.beatenE4],
+          shopBalance: (currentState.shopBalance ?? 0) + 2,
+          beatenGyms: currentState.beatenGyms.length === 8
+            ? [...currentState.beatenGyms]
+            : new Array(8).fill(false),
+          beatenE4: newBeatenE4,
         });
 
         dispatch({ type: 'SHOW_SHOP', payout: 2 });

@@ -929,3 +929,59 @@ describe('Assault Vest', () => {
     expect(dmgWith).toBeLessThan(dmgWithout);
   });
 });
+
+// ========================
+// SELF-BOOST MOVE EFFECTS
+// ========================
+
+describe('Moves with self-boost effects', () => {
+  let battle: Battle;
+
+  beforeEach(() => {
+    const p1 = createTestPlayer('p1', 'Alice');
+    const p2 = createTestPlayer('p2', 'Bob');
+    battle = new Battle(p1, p2);
+  });
+
+  it('Trailblaze boosts Speed by 1 after dealing damage', () => {
+    const attacker = battle.getActivePokemon(0);
+    attacker.moves[0] = {
+      data: makeMoveData({
+        name: 'Trailblaze', type: 'Grass', power: 50,
+        effects: [{ type: 'boost', stat: 'spe', stages: 1, chance: 100, target: 'self' }],
+      }),
+      currentPp: 20, maxPp: 20, disabled: false,
+    };
+    expect(attacker.boosts.spe).toBe(0);
+    battle.processTurn({ type: 'move', moveIndex: 0 }, { type: 'move', moveIndex: 0 });
+    expect(attacker.boosts.spe).toBe(1);
+  });
+
+  it('Power-Up Punch boosts Attack by 1 after dealing damage', () => {
+    const attacker = battle.getActivePokemon(0);
+    attacker.moves[0] = {
+      data: makeMoveData({
+        name: 'Power-Up Punch', type: 'Fighting', power: 40,
+        effects: [{ type: 'boost', stat: 'atk', stages: 1, chance: 100, target: 'self' }],
+      }),
+      currentPp: 20, maxPp: 20, disabled: false,
+    };
+    expect(attacker.boosts.atk).toBe(0);
+    battle.processTurn({ type: 'move', moveIndex: 0 }, { type: 'move', moveIndex: 0 });
+    expect(attacker.boosts.atk).toBe(1);
+  });
+
+  it('Flame Charge boosts Speed by 1 after dealing damage', () => {
+    const attacker = battle.getActivePokemon(0);
+    attacker.moves[0] = {
+      data: makeMoveData({
+        name: 'Flame Charge', type: 'Fire', power: 50,
+        effects: [{ type: 'boost', stat: 'spe', stages: 1, chance: 100, target: 'self' }],
+      }),
+      currentPp: 20, maxPp: 20, disabled: false,
+    };
+    expect(attacker.boosts.spe).toBe(0);
+    battle.processTurn({ type: 'move', moveIndex: 0 }, { type: 'move', moveIndex: 0 });
+    expect(attacker.boosts.spe).toBe(1);
+  });
+});
