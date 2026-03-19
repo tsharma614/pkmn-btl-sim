@@ -4,6 +4,7 @@ import { createBattlePokemon } from '../../src/engine/pokemon-factory';
 import { rollAccuracy } from '../../src/engine/damage';
 import { Player, PokemonSpecies, PokemonSet, BattlePokemon, PokemonType, Nature, MoveData, StatusCondition } from '../../src/types';
 import { SeededRNG } from '../../src/utils/rng';
+import { chooseBotAction } from '../../src/engine/bot';
 
 // --- Test helpers ---
 
@@ -983,5 +984,125 @@ describe('Moves with self-boost effects', () => {
     expect(attacker.boosts.spe).toBe(0);
     battle.processTurn({ type: 'move', moveIndex: 0 }, { type: 'move', moveIndex: 0 });
     expect(attacker.boosts.spe).toBe(1);
+  });
+});
+
+// ========================
+// CALM MIND STACKING
+// ========================
+
+describe('Calm Mind stat boost stacking', () => {
+  let battle: Battle;
+
+  beforeEach(() => {
+    const p1 = createTestPlayer('p1', 'Alice');
+    const p2 = createTestPlayer('p2', 'Bob');
+    battle = new Battle(p1, p2);
+  });
+
+  it('Calm Mind stacks +1 SpA and +1 SpD per use', () => {
+    const attacker = battle.getActivePokemon(0);
+    const defender = battle.getActivePokemon(1);
+
+    // Give attacker Calm Mind (status move: +1 spa, +1 spd)
+    attacker.moves[0] = {
+      data: makeMoveData({
+        name: 'Calm Mind', category: 'Status', power: null as any, accuracy: null as any,
+        effects: [
+          { type: 'boost', stat: 'spa', stages: 1, chance: 100, target: 'self' },
+          { type: 'boost', stat: 'spd', stages: 1, chance: 100, target: 'self' },
+        ],
+        target: 'self',
+      }),
+      currentPp: 20, maxPp: 20, disabled: false,
+    };
+
+    // Defender uses Splash (does nothing)
+    defender.moves[0] = {
+      data: makeMoveData({ name: 'Splash', category: 'Status', power: null as any, accuracy: null as any, target: 'self', effects: [] }),
+      currentPp: 20, maxPp: 20, disabled: false,
+    };
+
+    // Use Calm Mind 3 times
+    for (let i = 0; i < 3; i++) {
+      battle.processTurn({ type: 'move', moveIndex: 0 }, { type: 'move', moveIndex: 0 });
+    }
+
+    expect(attacker.boosts.spa).toBe(3);
+    expect(attacker.boosts.spd).toBe(3);
+  });
+
+  it('damage increases proportionally with stacked boosts', () => {
+    const attacker = battle.getActivePokemon(0);
+    const defender = battle.getActivePokemon(1);
+
+    // Set up a special attack
+    attacker.moves[1] = {
+      data: makeMoveData({ name: 'Psychic', type: 'Psychic', category: 'Special', power: 90 }),
+      currentPp: 20, maxPp: 20, disabled: false,
+    };
+
+    // Measure unboosted damage
+    const hp1 = defender.currentHp;
+    battle.processTurn({ type: 'move', moveIndex: 1 }, { type: 'move', moveIndex: 0 });
+    const unboostedDmg = hp1 - defender.currentHp;
+
+    // Reset HP
+    defender.currentHp = defender.maxHp;
+
+    // Apply +3 SpA manually
+    attacker.boosts.spa = 3; // 2.5x multiplier
+
+    const hp2 = defender.currentHp;
+    battle.processTurn({ type: 'move', moveIndex: 1 }, { type: 'move', moveIndex: 0 });
+    const boostedDmg = hp2 - defender.currentHp;
+
+    // Boosted damage should be roughly 2.5x unboosted (with some variance)
+    expect(boostedDmg).toBeGreaterThan(unboostedDmg * 2);
+    expect(boostedDmg).toBeLessThan(unboostedDmg * 3.5);
+  });
+});
+
+// ========================
+// AI AVOIDS IMMUNE MOVES
+// ========================
+
+describe('AI move selection avoids immune moves', () => {
+  it('picks Flamethrower over Earthquake against Levitate', () => {
+    const p1 = createTestPlayer('p1', 'Alice', [
+      { species: { types: ['Fire', 'Ground'] as any }, set: { moves: ['Earthquake', 'Flamethrower', 'Tackle', 'Rock Slide'] } }
+    ]);
+    const p2 = createTestPlayer('p2', 'Bob', [
+      { species: { types: ['Psychic'] as any, abilities: ['Levitate'], bestAbility: 'Levitate' }, set: { ability: 'Levitate' } }
+    ]);
+    const battle = new Battle(p1, p2);
+    const rng = new SeededRNG(42);
+
+    // Run 20 times — AI should NEVER pick Earthquake (index 0)
+    for (let i = 0; i < 20; i++) {
+      const action = chooseBotAction(battle, 0, rng);
+      if (action.type === 'move') {
+        expect((action as any).moveIndex).not.toBe(0); // Earthquake is move 0
+      }
+    }
+  });
+
+  it('picks Electric move over Water move against Water Absorb', () => {
+    const p1 = createTestPlayer('p1', 'Alice', [
+      { species: { types: ['Water', 'Electric'] as any }, set: { moves: ['Surf', 'Thunderbolt', 'Ice Beam', 'Tackle'] } }
+    ]);
+    const p2 = createTestPlayer('p2', 'Bob', [
+      { species: { types: ['Water'] as any, abilities: ['Water Absorb'], bestAbility: 'Water Absorb' }, set: { ability: 'Water Absorb' } }
+    ]);
+    const battle = new Battle(p1, p2);
+    const rng = new SeededRNG(42);
+
+    // Run 20 times — should never pick Surf (index 0)
+    for (let i = 0; i < 20; i++) {
+      const action = chooseBotAction(battle, 0, rng);
+      if (action.type === 'move') {
+        expect((action as any).moveIndex).not.toBe(0);
+      }
+    }
   });
 });

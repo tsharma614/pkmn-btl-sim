@@ -71,6 +71,24 @@ export function chooseBotAction(
   return { type: 'move', playerId, moveIndex: bestMove };
 }
 
+/** Check if an ability grants immunity to a move type (lightweight version for AI). */
+function isAbilityImmune(moveType: PokemonType, opponentAbility: string, moveFlags?: any): boolean {
+  switch (opponentAbility) {
+    case 'Levitate': return moveType === 'Ground';
+    case 'Flash Fire': return moveType === 'Fire';
+    case 'Volt Absorb':
+    case 'Lightning Rod':
+    case 'Motor Drive': return moveType === 'Electric';
+    case 'Water Absorb':
+    case 'Storm Drain':
+    case 'Dry Skin': return moveType === 'Water';
+    case 'Sap Sipper': return moveType === 'Grass';
+    case 'Soundproof': return !!moveFlags?.sound;
+    case 'Bulletproof': return !!moveFlags?.bullet;
+    default: return false;
+  }
+}
+
 function pickBestMove(
   pokemon: BattlePokemon,
   opponent: BattlePokemon,
@@ -98,12 +116,24 @@ function pickBestMove(
         opponent.species.types as PokemonType[]
       );
 
-      score = power * stab * effectiveness;
+      // Check ability-based immunity
+      if (isAbilityImmune(move.data.type as PokemonType, opponent.ability, move.data.flags)) {
+        score = -1;
+      } else if (effectiveness === 0) {
+        score = -1;
+      } else {
+        score = power * stab * effectiveness;
 
-      // Bonus for super effective
-      if (effectiveness > 1) score *= 1.2;
-      // Penalty for not very effective
-      if (effectiveness < 1) score *= 0.8;
+        // Bonus for super effective
+        if (effectiveness > 1) score *= 1.2;
+        // Penalty for not very effective
+        if (effectiveness < 1) score *= 0.8;
+      }
+
+      // Wonder Guard: only SE moves work
+      if (opponent.ability === 'Wonder Guard' && effectiveness <= 1) {
+        score = -1;
+      }
     }
 
     return { index: idx, score };
@@ -113,8 +143,10 @@ function pickBestMove(
   scored.sort((a, b) => b.score - a.score);
 
   // Usually pick the best, but sometimes pick randomly for variety
+  // Never randomly pick immune moves
   if (rng.chance(15)) {
-    return rng.pick(scored).index;
+    const nonImmune = scored.filter(s => s.score > 0);
+    if (nonImmune.length > 0) return rng.pick(nonImmune).index;
   }
 
   return scored[0].index;
