@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
 import { PokemonDetailModal } from './PokemonDetailModal';
@@ -16,7 +16,12 @@ interface Props {
 
 export function GauntletStarterScreen({ onPick, onBack }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
-  const [detailSpecies, setDetailSpecies] = useState<PokemonSpecies | null>(null);
+  const [detailIdx, setDetailIdx] = useState(-1);
+  const starterSpecies = useMemo(() =>
+    GAUNTLET_STARTERS.map(id => Object.values(pokedex).find(p => p.id === id) ?? null),
+    []
+  );
+  const detailSpecies = detailIdx >= 0 ? starterSpecies[detailIdx] : null;
 
   return (
     <View style={styles.container}>
@@ -34,7 +39,7 @@ export function GauntletStarterScreen({ onPick, onBack }: Props) {
             key={id}
             style={[styles.card, selected === id && styles.cardSelected]}
             onPress={() => setSelected(id)}
-            onLongPress={() => { const s = Object.values(pokedex).find(p => p.id === id); if (s) setDetailSpecies(s); }}
+            onLongPress={() => setDetailIdx(GAUNTLET_STARTERS.indexOf(id))}
             activeOpacity={0.7}
           >
             <PokemonSprite speciesId={id} facing="front" size={64} />
@@ -55,7 +60,15 @@ export function GauntletStarterScreen({ onPick, onBack }: Props) {
           <Text style={styles.confirmBtnText}>CONFIRM</Text>
         </TouchableOpacity>
       </View>
-      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} onClose={() => setDetailSpecies(null)} />
+      <PokemonDetailModal
+        visible={detailSpecies !== null}
+        species={detailSpecies}
+        onClose={() => setDetailIdx(-1)}
+        onPrev={() => setDetailIdx(i => (i - 1 + GAUNTLET_STARTERS.length) % GAUNTLET_STARTERS.length)}
+        onNext={() => setDetailIdx(i => (i + 1) % GAUNTLET_STARTERS.length)}
+        currentIndex={detailIdx + 1}
+        totalCount={GAUNTLET_STARTERS.length}
+      />
     </View>
   );
 }

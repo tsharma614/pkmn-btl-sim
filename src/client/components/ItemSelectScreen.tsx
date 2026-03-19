@@ -12,8 +12,9 @@ import {
   Modal,
 } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
-import { colors, spacing } from '../theme';
+import { colors, spacing, typeColors } from '../theme';
 import type { OwnPokemon } from '../../server/types';
+import abilitiesData from '../../data/abilities.json';
 
 const HELD_ITEMS = [
   'Leftovers',
@@ -125,11 +126,27 @@ export function ItemSelectScreen({ team, onComplete, onBack, playerName }: Props
           <PokemonSprite speciesId={pokemon.species.id} facing="front" size={56} />
           <View style={styles.pokemonInfo}>
             <Text style={styles.pokemonName}>{pokemon.species.name}</Text>
+            <Text style={styles.abilityText}>
+              {pokemon.ability}
+              {(() => {
+                const aid = pokemon.ability.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const desc = (abilitiesData as Record<string, any>)[aid]?.shortDesc;
+                return desc ? ` — ${desc}` : '';
+              })()}
+            </Text>
             <Text style={styles.itemLabel}>
               {currentItem ? currentItem : 'No item selected'}
             </Text>
           </View>
           <Text style={styles.idxLabel}>{currentIdx + 1}/{team.length}</Text>
+        </View>
+        <View style={styles.movesList}>
+          {pokemon.moves.map((m, i) => (
+            <View key={i} style={styles.moveChip}>
+              <View style={[styles.moveTypeDot, { backgroundColor: typeColors[m.type] || '#666' }]} />
+              <Text style={styles.moveChipText} numberOfLines={1}>{m.name}</Text>
+            </View>
+          ))}
         </View>
       </View>
 
@@ -263,8 +280,17 @@ const styles = StyleSheet.create({
   },
   pokemonInfo: { flex: 1 },
   pokemonName: { fontSize: 16, fontWeight: '800', color: colors.text },
+  abilityText: { fontSize: 10, color: colors.textDim, marginTop: 2 },
   itemLabel: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   idxLabel: { fontSize: 18, fontWeight: '900', color: '#4fc3f7' },
+  movesList: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: spacing.xs },
+  moveChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: colors.surface, paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 4, borderWidth: 1, borderColor: colors.border,
+  },
+  moveTypeDot: { width: 6, height: 6, borderRadius: 3 },
+  moveChipText: { fontSize: 10, color: colors.text, fontWeight: '600' },
 
   navRow: {
     flexDirection: 'row',

@@ -31,7 +31,8 @@ export function GauntletStealScreen({
 }: Props) {
   const [stealIndex, setStealIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
-  const [detailSpecies, setDetailSpecies] = useState<PokemonSpecies | null>(null);
+  const [detailIdx, setDetailIdx] = useState(-1);
+  const detailSpecies = detailIdx >= 0 ? (opponentTeam[detailIdx]?.species as any) ?? null : null;
 
   const canConfirm = stealIndex !== null && (!mustDrop || dropIndex !== null);
 
@@ -59,7 +60,7 @@ export function GauntletStealScreen({
               key={`steal-${i}`}
               style={[styles.card, stealIndex === i && styles.cardSelected]}
               onPress={() => setStealIndex(i)}
-              onLongPress={() => setDetailSpecies(p.species as any)}
+              onLongPress={() => setDetailIdx(i)}
               activeOpacity={0.7}
             >
               <PokemonSprite speciesId={p.species.id} facing="front" size={52} />
@@ -104,7 +105,15 @@ export function GauntletStealScreen({
           <Text style={styles.confirmBtnText}>CONFIRM</Text>
         </TouchableOpacity>
       </View>
-      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} onClose={() => setDetailSpecies(null)} />
+      <PokemonDetailModal
+        visible={detailSpecies !== null}
+        species={detailSpecies}
+        onClose={() => setDetailIdx(-1)}
+        onPrev={() => setDetailIdx(i => (i - 1 + opponentTeam.length) % opponentTeam.length)}
+        onNext={() => setDetailIdx(i => (i + 1) % opponentTeam.length)}
+        currentIndex={detailIdx + 1}
+        totalCount={opponentTeam.length}
+      />
     </View>
   );
 }

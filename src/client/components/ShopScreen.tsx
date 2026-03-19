@@ -129,7 +129,14 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
   const [buyStep, setBuyStep] = useState<BuyStep>({ phase: 'pickBuy' });
 
   // Detail modals
-  const [detailSpecies, setDetailSpecies] = useState<PokemonSpecies | null>(null);
+  const [detailIdx, setDetailIdx] = useState(-1);
+  const [detailSource, setDetailSource] = useState<'team' | 'buy'>('team');
+  const detailList = detailSource === 'buy'
+    ? buyPool.map(b => b.species)
+    : team.map(p => ({ id: p.species.id, name: p.species.name, types: p.species.types, baseStats: p.species.baseStats, abilities: [p.ability] } as PokemonSpecies));
+  const detailSpecies = detailIdx >= 0 ? detailList[detailIdx] ?? null : null;
+  const openTeamDetail = (i: number) => { setDetailSource('team'); setDetailIdx(i); };
+  const openBuyDetail = (i: number) => { setDetailSource('buy'); setDetailIdx(i); };
   const [detailMove, setDetailMove] = useState<{ name: string; data: any } | null>(null);
   const [detailItem, setDetailItem] = useState<string | null>(null);
 
@@ -277,16 +284,7 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
               key={i}
               style={[styles.teamCard, disabled && styles.teamCardDisabled]}
               onPress={() => { if (!disabled) onPick(i); }}
-              onLongPress={() => {
-                // Build a partial PokemonSpecies for detail modal
-                setDetailSpecies({
-                  id: p.species.id,
-                  name: p.species.name,
-                  types: p.species.types as any,
-                  baseStats: p.species.baseStats as any,
-                  abilities: [p.ability],
-                } as PokemonSpecies);
-              }}
+              onLongPress={() => openTeamDetail(i)}
               disabled={disabled}
               activeOpacity={0.7}
             >
@@ -456,7 +454,7 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
                   key={i}
                   style={[styles.buyCard, !affordable && styles.buyCardDisabled]}
                   onPress={() => { if (affordable) setBuyStep({ phase: 'pickSlot', buyPoolIdx: i }); }}
-                  onLongPress={() => setDetailSpecies(entry.species)}
+                  onLongPress={() => openBuyDetail(i)}
                   disabled={!affordable}
                   activeOpacity={0.7}
                 >
@@ -599,7 +597,11 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
       <PokemonDetailModal
         visible={!!detailSpecies}
         species={detailSpecies}
-        onClose={() => setDetailSpecies(null)}
+        onClose={() => setDetailIdx(-1)}
+        onPrev={() => setDetailIdx(i => (i - 1 + detailList.length) % detailList.length)}
+        onNext={() => setDetailIdx(i => (i + 1) % detailList.length)}
+        currentIndex={detailIdx + 1}
+        totalCount={detailList.length}
       />
       {renderMoveDetailModal()}
       {renderItemDetailModal()}

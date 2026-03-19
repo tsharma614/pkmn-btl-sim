@@ -776,6 +776,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       gymTypes: currentState.gymTypes,
       team: team?.map(serializeOwnPokemon) ?? [],
       date: new Date().toISOString(),
+      shopBalance: currentState.shopBalance ?? 0,
       beatenGyms: [...currentState.beatenGyms],
       beatenE4: [...currentState.beatenE4],
     });

@@ -22,7 +22,8 @@ interface Props {
 export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
   const [selected, setSelected] = useState(0);
   const [submitted, setSubmitted] = useState(false);
-  const [detailSpecies, setDetailSpecies] = useState<any>(null);
+  const [detailIdx, setDetailIdx] = useState(-1);
+  const detailSpecies = detailIdx >= 0 ? team[detailIdx]?.species ?? null : null;
 
   const p = team[selected];
 
@@ -78,7 +79,7 @@ export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
             key={i}
             style={[styles.teamSlot, i === selected && styles.teamSlotSelected, submitted && { opacity: 0.5 }]}
             onPress={() => setSelected(i)}
-            onLongPress={() => setDetailSpecies(mon.species)}
+            onLongPress={() => setDetailIdx(i)}
             activeOpacity={0.7}
           >
             <PokemonSprite speciesId={mon.species.id} facing="front" size={50} />
@@ -126,7 +127,18 @@ export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
           )}
         </>
       )}
-      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} onClose={() => setDetailSpecies(null)} />
+      <PokemonDetailModal
+        visible={detailSpecies !== null}
+        species={detailSpecies}
+        moves={detailIdx >= 0 ? team[detailIdx]?.moves?.map((m: any) => ({ name: m.name, type: m.type, category: m.category, power: m.power, accuracy: m.accuracy })) : undefined}
+        item={detailIdx >= 0 ? team[detailIdx]?.item : undefined}
+        ability={detailIdx >= 0 ? team[detailIdx]?.ability : undefined}
+        onClose={() => setDetailIdx(-1)}
+        onPrev={() => setDetailIdx(i => (i - 1 + team.length) % team.length)}
+        onNext={() => setDetailIdx(i => (i + 1) % team.length)}
+        currentIndex={detailIdx + 1}
+        totalCount={team.length}
+      />
     </View>
   );
 }

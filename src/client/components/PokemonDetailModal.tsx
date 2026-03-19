@@ -29,9 +29,17 @@ interface Props {
   /** Optional: show specific ability (overrides species default) */
   ability?: string;
   onClose: () => void;
+  /** Cycling: navigate to previous Pokemon */
+  onPrev?: () => void;
+  /** Cycling: navigate to next Pokemon */
+  onNext?: () => void;
+  /** Cycling: current index (1-based display) */
+  currentIndex?: number;
+  /** Cycling: total count */
+  totalCount?: number;
 }
 
-export function PokemonDetailModal({ visible, species, moves, item, ability, onClose }: Props) {
+export function PokemonDetailModal({ visible, species, moves, item, ability, onClose, onPrev, onNext, currentIndex, totalCount }: Props) {
   if (!species) return null;
 
   const { baseStats, types, abilities } = species;
@@ -40,12 +48,26 @@ export function PokemonDetailModal({ visible, species, moves, item, ability, onC
   const displayAbility = ability ?? abilities?.[0] ?? 'Unknown';
   const abilityId = displayAbility.toLowerCase().replace(/[^a-z0-9]/g, '');
   const abilityDesc = (abilitiesData as Record<string, any>)[abilityId]?.shortDesc ?? '';
+  const hasCycling = onPrev && onNext && totalCount && totalCount > 1;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.modal} onStartShouldSetResponder={() => true}>
+            {/* Cycling nav */}
+            {hasCycling && (
+              <View style={styles.cycleRow}>
+                <TouchableOpacity onPress={onPrev} style={styles.cycleBtn} hitSlop={12}>
+                  <Text style={styles.cycleBtnText}>{'<'}</Text>
+                </TouchableOpacity>
+                <Text style={styles.cycleIndicator}>{currentIndex}/{totalCount}</Text>
+                <TouchableOpacity onPress={onNext} style={styles.cycleBtn} hitSlop={12}>
+                  <Text style={styles.cycleBtnText}>{'>'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Header: sprite + name + types + tier */}
             <View style={styles.header}>
               <PokemonSprite speciesId={species.id} facing="front" size={80} />
@@ -139,6 +161,26 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     borderWidth: 2,
     borderColor: colors.border,
+  },
+  cycleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  cycleBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  cycleBtnText: {
+    color: colors.accent,
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  cycleIndicator: {
+    color: colors.textDim,
+    fontSize: 12,
+    fontWeight: '700',
   },
   header: {
     flexDirection: 'row',

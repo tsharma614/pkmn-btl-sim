@@ -61,7 +61,13 @@ export function BudgetDraftScreen({
     (screenW - spacing.lg * 2 - CARD_GAP * (NUM_TIERS - 1)) / NUM_TIERS;
 
   const [selections, setSelections] = useState<Record<string, number>>({});
-  const [detailSpecies, setDetailSpecies] = useState<PokemonSpecies | null>(null);
+  const [detailIdx, setDetailIdx] = useState<number>(-1);
+
+  const allSpeciesList = useMemo(() =>
+    roleOptions.flatMap(r => r.options.map(o => o.species)),
+    [roleOptions]
+  );
+  const detailSpecies = detailIdx >= 0 ? allSpeciesList[detailIdx] ?? null : null;
 
   const detailMoves = useMemo(() => {
     if (!detailSpecies?.movePool) return undefined;
@@ -170,7 +176,7 @@ export function BudgetDraftScreen({
                         disabled && styles.cardDisabled,
                       ]}
                       onPress={() => !disabled && handleSelect(section.role, idx, opt.cost)}
-                      onLongPress={() => setDetailSpecies(opt.species)}
+                      onLongPress={() => setDetailIdx(allSpeciesList.indexOf(opt.species))}
                       activeOpacity={disabled ? 1 : 0.7}
                       disabled={disabled}
                     >
@@ -213,7 +219,16 @@ export function BudgetDraftScreen({
           </Text>
         </TouchableOpacity>
       </View>
-      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} moves={detailMoves} onClose={() => setDetailSpecies(null)} />
+      <PokemonDetailModal
+        visible={detailSpecies !== null}
+        species={detailSpecies}
+        moves={detailMoves}
+        onClose={() => setDetailIdx(-1)}
+        onPrev={() => setDetailIdx(i => (i - 1 + allSpeciesList.length) % allSpeciesList.length)}
+        onNext={() => setDetailIdx(i => (i + 1) % allSpeciesList.length)}
+        currentIndex={detailIdx + 1}
+        totalCount={allSpeciesList.length}
+      />
     </View>
   );
 }
