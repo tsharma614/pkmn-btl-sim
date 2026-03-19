@@ -28,7 +28,7 @@ interface Props {
   onStart: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, difficulty?: Difficulty, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, poolSize?: number, megaMode?: boolean, moveSelection?: boolean) => void;
   onPlayOnline: (playerName: string, itemMode: 'competitive' | 'casual', maxGen?: number | null, legendaryMode?: boolean, draftMode?: boolean, monotype?: string | null, draftType?: DraftType, megaMode?: boolean, moveSelection?: boolean) => void;
   onStartGauntlet?: (playerName: string) => void;
-  onStartGymCareer?: (playerName: string) => void;
+  onStartGymCareer?: (playerName: string, existingSave?: GymCareerSave) => void;
 }
 
 /** Background sprite positions — fewer, cleaner layout */
@@ -117,7 +117,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
       <CampaignScreen
         onBack={() => setScreen('main')}
         onStartGauntlet={() => onStartGauntlet?.(displayName)}
-        onStartGymCareer={() => onStartGymCareer?.(displayName)}
+        onStartGymCareer={(save) => onStartGymCareer?.(displayName, save)}
       />
     );
   }

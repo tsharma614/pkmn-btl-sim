@@ -11,6 +11,7 @@ import { PokemonSprite } from './PokemonSprite';
 import { PokemonDetailModal } from './PokemonDetailModal';
 import { colors, spacing } from '../theme';
 import type { PokemonSpecies } from '../../types';
+import movesData from '../../data/moves.json';
 
 const TIER_LABELS: Record<number, string> = {
   4: 'MEGA',
@@ -61,6 +62,21 @@ export function BudgetDraftScreen({
 
   const [selections, setSelections] = useState<Record<string, number>>({});
   const [detailSpecies, setDetailSpecies] = useState<PokemonSpecies | null>(null);
+
+  const detailMoves = useMemo(() => {
+    if (!detailSpecies?.movePool) return undefined;
+    const allMoves = (movesData as Record<string, any>);
+    return detailSpecies.movePool
+      .map(name => {
+        const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const m = allMoves[id];
+        if (!m) return null;
+        return { name: m.name, type: m.type, category: m.category, power: m.power, accuracy: m.accuracy };
+      })
+      .filter(Boolean)
+      .sort((a: any, b: any) => (b.power ?? 0) - (a.power ?? 0))
+      .slice(0, 10) as { name: string; type: string; category: string; power: number | null; accuracy: number | null }[];
+  }, [detailSpecies]);
 
   const spent = useMemo(() => {
     let total = 0;
@@ -197,7 +213,7 @@ export function BudgetDraftScreen({
           </Text>
         </TouchableOpacity>
       </View>
-      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} onClose={() => setDetailSpecies(null)} />
+      <PokemonDetailModal visible={detailSpecies !== null} species={detailSpecies} moves={detailMoves} onClose={() => setDetailSpecies(null)} />
     </View>
   );
 }

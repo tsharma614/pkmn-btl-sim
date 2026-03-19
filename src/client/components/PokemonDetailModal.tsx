@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'rea
 import { PokemonSprite } from './PokemonSprite';
 import { colors, spacing, typeColors } from '../theme';
 import type { PokemonSpecies } from '../../types';
+import abilitiesData from '../../data/abilities.json';
 
 const TIER_LABELS: Record<number, { label: string; color: string }> = {
   0: { label: 'MEGA', color: '#FF6B9D' },
@@ -37,6 +38,8 @@ export function PokemonDetailModal({ visible, species, moves, item, ability, onC
   const bst = baseStats.hp + baseStats.atk + baseStats.def + baseStats.spa + baseStats.spd + baseStats.spe;
   const tier = TIER_LABELS[species.tier] ?? TIER_LABELS[3];
   const displayAbility = ability ?? abilities?.[0] ?? 'Unknown';
+  const abilityId = displayAbility.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const abilityDesc = (abilitiesData as Record<string, any>)[abilityId]?.shortDesc ?? '';
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -61,6 +64,7 @@ export function PokemonDetailModal({ visible, species, moves, item, ability, onC
                   ))}
                 </View>
                 <Text style={styles.ability}>{displayAbility}</Text>
+                {abilityDesc ? <Text style={styles.abilityDesc}>{abilityDesc}</Text> : null}
                 {item && <Text style={styles.item}>Held: {item}</Text>}
               </View>
             </View>
@@ -185,6 +189,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  abilityDesc: {
+    fontSize: 10,
+    color: colors.textDim,
+    marginTop: 1,
+    fontStyle: 'italic',
   },
   item: {
     fontSize: 11,

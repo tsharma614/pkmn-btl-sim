@@ -271,6 +271,7 @@ export type BattleAction =
   | { type: 'SHOW_SHOP'; payout: number }
   | { type: 'SHOP_DONE' }
   | { type: 'SET_SHOP_BALANCE'; balance: number }
+  | { type: 'GYM_CAREER_RESUME'; playerName: string; gymTypes: string[]; beatenGyms: boolean[]; beatenE4: boolean[]; shopBalance: number; yourTeam: OwnPokemon[] }
   | { type: 'RESET' };
 
 const EMPTY_SIDE: SideEffects = {
@@ -967,6 +968,28 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         campaignTotalStages: 13,
         battleStats: emptyStats(),
       };
+
+    case 'GYM_CAREER_RESUME': {
+      const allGymsBeaten = action.beatenGyms.filter(Boolean).length >= 8;
+      return {
+        ...initialState,
+        phase: allGymsBeaten ? 'e4_locks' : 'gym_map',
+        gameMode: 'cpu',
+        playerName: action.playerName,
+        itemMode: 'competitive',
+        difficulty: 'hard',
+        campaignMode: 'gym_career',
+        moveSelection: true,
+        gymTypes: action.gymTypes,
+        beatenGyms: action.beatenGyms,
+        beatenE4: action.beatenE4,
+        shopBalance: action.shopBalance,
+        yourTeam: action.yourTeam,
+        campaignStage: action.beatenGyms.filter(Boolean).length + action.beatenE4.filter(Boolean).length,
+        campaignTotalStages: 13,
+        battleStats: emptyStats(),
+      };
+    }
 
     case 'SHOW_ITEM_SELECT':
       return {

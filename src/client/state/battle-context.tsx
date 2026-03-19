@@ -67,7 +67,7 @@ interface BattleContextValue {
   gauntletStealComplete: (stealIndex: number, dropIndex: number | null) => void;
   advanceCampaign: () => void;
   beginCampaignBattle: () => void;
-  startGymCareer: (playerName: string) => void;
+  startGymCareer: (playerName: string, existingSave?: import('../components/CampaignScreen').GymCareerSave) => void;
   gymCareerDraftComplete: (picks: { speciesId: string; tier: number }[]) => void;
   itemSelectComplete: (itemSelections: Record<number, string>) => void;
   shopSwapMove: (pokemonIdx: number, moveSlotIdx: number, newMoveName: string) => void;
@@ -531,6 +531,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
           team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
           date: new Date().toISOString(),
           shopBalance: currentState.shopBalance + 1,
+          beatenGyms: [...currentState.beatenGyms],
+          beatenE4: [...currentState.beatenE4],
         });
 
         dispatch({ type: 'SHOW_SHOP', payout: 1 });
@@ -546,6 +548,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
           team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
           date: new Date().toISOString(),
           shopBalance: currentState.shopBalance + 2,
+          beatenGyms: [...currentState.beatenGyms],
+          beatenE4: [...currentState.beatenE4],
         });
 
         dispatch({ type: 'SHOW_SHOP', payout: 2 });
@@ -650,12 +654,46 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
 
   // --- Gym Career ---
 
-  const startGymCareer = useCallback((playerName: string) => {
+  const startGymCareer = useCallback((playerName: string, existingSave?: import('../components/CampaignScreen').GymCareerSave) => {
     cleanupAll();
     campaignPlayerNameRef.current = playerName;
-    campaignPlayerTeamRef.current = null;
     campaignRngRef.current = new SeededRNG();
     campaignUsedNamesRef.current = [];
+
+    // Resume from save: rebuild team and restore progress
+    if (existingSave) {
+      const rebuiltTeam = existingSave.team.map((saved: any) => {
+        const fullSpecies = fullSpeciesById[saved.species.id];
+        if (!fullSpecies) return null;
+        const moveNames = saved.moves.map((m: any) => m.name);
+        const baseSet = pickSet(fullSpecies, campaignRngRef.current, 'competitive');
+        baseSet.moves = moveNames;
+        baseSet.item = saved.item;
+        baseSet.ability = saved.ability;
+        const mon = createBattlePokemon(fullSpecies, baseSet, 100, null);
+        mon.item = saved.item;
+        mon.ability = saved.ability;
+        return mon;
+      }).filter(Boolean) as BattlePokemon[];
+
+      campaignPlayerTeamRef.current = rebuiltTeam;
+
+      const beatenGyms = existingSave.beatenGyms ?? new Array(8).fill(false);
+      const beatenE4 = existingSave.beatenE4 ?? new Array(4).fill(false);
+
+      dispatch({
+        type: 'GYM_CAREER_RESUME',
+        playerName,
+        gymTypes: existingSave.gymTypes,
+        beatenGyms,
+        beatenE4,
+        shopBalance: existingSave.shopBalance ?? 0,
+        yourTeam: existingSave.team,
+      });
+      return;
+    }
+
+    campaignPlayerTeamRef.current = null;
 
     // Randomize 8 gym types from 18
     const rng = campaignRngRef.current;
@@ -724,6 +762,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       gymTypes: currentState.gymTypes,
       team: team?.map(serializeOwnPokemon) ?? [],
       date: new Date().toISOString(),
+      beatenGyms: [...currentState.beatenGyms],
+      beatenE4: [...currentState.beatenE4],
     });
     dispatch({ type: 'SHOW_GYM_MAP' });
   }, []);
@@ -779,6 +819,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
       date: new Date().toISOString(),
       shopBalance: currentState.shopBalance,
+      beatenGyms: [...currentState.beatenGyms],
+      beatenE4: [...currentState.beatenE4],
     });
     dispatch({ type: 'SHOP_DONE' });
   }, []);
@@ -793,6 +835,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
         date: new Date().toISOString(),
         shopBalance: currentState.shopBalance,
+        beatenGyms: [...currentState.beatenGyms],
+        beatenE4: [...currentState.beatenE4],
       });
     }
     cleanupAll();

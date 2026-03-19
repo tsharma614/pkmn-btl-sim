@@ -17,6 +17,10 @@ export interface GymCareerSave {
   date: string;
   /** Shop currency balance */
   shopBalance?: number;
+  /** Which gyms have been beaten (boolean[8]) */
+  beatenGyms?: boolean[];
+  /** Which E4 members have been beaten (boolean[4]) */
+  beatenE4?: boolean[];
 }
 
 interface Props {
