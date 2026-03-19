@@ -18,6 +18,7 @@ import { colors, spacing, typeColors } from '../theme';
 import type { OwnPokemon } from '../../server/types';
 import movesJsonData from '../../data/moves.json';
 import pokedexData from '../../data/pokedex.json';
+import abilitiesData from '../../data/abilities.json';
 import megaPokedexData from '../../data/mega-pokemon.json';
 
 const movesLookup = movesJsonData as Record<string, any>;
@@ -181,6 +182,9 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
               {pokemon.species.types.map(t => <TypeBadge key={t} type={t} small />)}
             </View>
             <Text style={styles.abilityText}>{pokemon.ability} · {pokemon.item || 'No item'}</Text>
+            <Text style={styles.abilityDesc}>
+              {(abilitiesData as Record<string, any>)[pokemon.ability.toLowerCase().replace(/[^a-z0-9]/g, '')]?.shortDesc ?? ''}
+            </Text>
           </View>
           <Text style={styles.pickCount}>{currentMoves.length}/4</Text>
         </View>
@@ -316,11 +320,8 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
                     <Text style={styles.modalStatValue}>{detailMove.data.priority ?? 0}</Text>
                   </View>
                 </View>
-                {detailMove.data.desc && (
-                  <Text style={styles.modalDesc}>{detailMove.data.desc}</Text>
-                )}
-                {detailMove.data.shortDesc && !detailMove.data.desc && (
-                  <Text style={styles.modalDesc}>{detailMove.data.shortDesc}</Text>
+                {(detailMove.data.description || detailMove.data.desc || detailMove.data.shortDesc) && (
+                  <Text style={styles.modalDesc}>{detailMove.data.description || detailMove.data.desc || detailMove.data.shortDesc}</Text>
                 )}
                 {detailMove.data.flags && (
                   <View style={styles.modalFlags}>
@@ -361,6 +362,7 @@ const styles = StyleSheet.create({
   pokemonName: { fontSize: 16, fontWeight: '800', color: colors.text },
   typesRow: { flexDirection: 'row', gap: 4, marginTop: 2 },
   abilityText: { fontSize: 10, color: colors.textDim, marginTop: 2 },
+  abilityDesc: { fontSize: 9, color: colors.textDim, fontStyle: 'italic', marginTop: 1 },
   pickCount: { fontSize: 18, fontWeight: '900', color: '#4fc3f7' },
   statsRow: { marginTop: spacing.xs, backgroundColor: colors.surface, borderRadius: 8, padding: spacing.xs, borderWidth: 1, borderColor: colors.border },
   statItem: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 1 },
