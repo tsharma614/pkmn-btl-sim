@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   statsGrid: {
-    gap: spacing.xs,
+    gap: 5,
   },
   statRow: {
     flexDirection: 'row',
@@ -261,25 +261,25 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     width: 32,
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.textDim,
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.textSecondary,
   },
   statBarBg: {
     flex: 1,
-    height: 6,
+    height: 10,
     backgroundColor: colors.surface,
-    borderRadius: 3,
+    borderRadius: 5,
     overflow: 'hidden',
   },
   statBar: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 5,
   },
   statValue: {
-    width: 28,
-    fontSize: 11,
-    fontWeight: '700',
+    width: 30,
+    fontSize: 12,
+    fontWeight: '800',
     color: colors.text,
     textAlign: 'right',
   },

@@ -32,10 +32,9 @@ describe('E2E: Gym Career full flow', () => {
     state = battleReducer(state, { type: 'SET_SHOP_BALANCE', balance: 4 });
     expect(state.shopBalance).toBe(4);
 
-    // Simulate 8 gym wins
+    // Simulate 8 gym wins (atomic dispatch)
     for (let i = 0; i < 8; i++) {
-      state = battleReducer(state, { type: 'GYM_BEATEN', gymIndex: i });
-      state = battleReducer(state, { type: 'SHOW_SHOP', payout: 1 });
+      state = battleReducer(state, { type: 'GYM_WIN_ADVANCE', gymIndex: i, payout: 1 });
       expect(state.phase).toBe('shop');
       expect(state.shopBalance).toBe(4 + (i + 1)); // +1 per gym
       state = battleReducer(state, { type: 'SHOP_DONE' });
@@ -46,10 +45,9 @@ describe('E2E: Gym Career full flow', () => {
     expect(state.beatenGyms.filter(Boolean).length).toBe(8);
     expect(state.shopBalance).toBe(12); // 4 + 8
 
-    // Simulate 4 E4 wins
+    // Simulate 4 E4 wins (atomic dispatch)
     for (let i = 0; i < 4; i++) {
-      state = battleReducer(state, { type: 'E4_MEMBER_BEATEN', memberIndex: i });
-      state = battleReducer(state, { type: 'SHOW_SHOP', payout: 2 });
+      state = battleReducer(state, { type: 'E4_WIN_ADVANCE', memberIndex: i, payout: 2 });
       expect(state.phase).toBe('shop');
       state = battleReducer(state, { type: 'SHOP_DONE' });
       expect(state.phase).toBe('e4_locks');
@@ -137,15 +135,12 @@ describe('E2E: Save & resume', () => {
     });
     state = battleReducer(state, { type: 'SET_SHOP_BALANCE', balance: 3 });
 
-    // Beat 3 gyms
-    state = battleReducer(state, { type: 'GYM_BEATEN', gymIndex: 0 });
-    state = battleReducer(state, { type: 'SHOW_SHOP', payout: 1 });
+    // Beat 3 gyms (atomic dispatch)
+    state = battleReducer(state, { type: 'GYM_WIN_ADVANCE', gymIndex: 0, payout: 1 });
     state = battleReducer(state, { type: 'SHOP_DONE' });
-    state = battleReducer(state, { type: 'GYM_BEATEN', gymIndex: 1 });
-    state = battleReducer(state, { type: 'SHOW_SHOP', payout: 1 });
+    state = battleReducer(state, { type: 'GYM_WIN_ADVANCE', gymIndex: 1, payout: 1 });
     state = battleReducer(state, { type: 'SHOP_DONE' });
-    state = battleReducer(state, { type: 'GYM_BEATEN', gymIndex: 2 });
-    state = battleReducer(state, { type: 'SHOW_SHOP', payout: 1 });
+    state = battleReducer(state, { type: 'GYM_WIN_ADVANCE', gymIndex: 2, payout: 1 });
     state = battleReducer(state, { type: 'SHOP_DONE' });
 
     expect(state.beatenGyms.filter(Boolean).length).toBe(3);
@@ -184,8 +179,7 @@ describe('E2E: Shop economy', () => {
       gymTypes: ['Fire', 'Water', 'Grass', 'Electric', 'Ice', 'Dragon', 'Dark', 'Steel'],
     });
     state = battleReducer(state, { type: 'SET_SHOP_BALANCE', balance: 4 });
-    state = battleReducer(state, { type: 'GYM_BEATEN', gymIndex: 0 });
-    state = battleReducer(state, { type: 'SHOW_SHOP', payout: 1 });
+    state = battleReducer(state, { type: 'GYM_WIN_ADVANCE', gymIndex: 0, payout: 1 });
     expect(state.shopBalance).toBe(5);
     // Simulate buying T2 Pokemon (2pts)
     state = battleReducer(state, { type: 'SET_SHOP_BALANCE', balance: 3 });

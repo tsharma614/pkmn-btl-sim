@@ -272,6 +272,8 @@ export type BattleAction =
   | { type: 'SHOP_DONE' }
   | { type: 'SET_SHOP_BALANCE'; balance: number }
   | { type: 'GYM_CAREER_RESUME'; playerName: string; gymTypes: string[]; beatenGyms: boolean[]; beatenE4: boolean[]; shopBalance: number; yourTeam: OwnPokemon[] }
+  | { type: 'GYM_WIN_ADVANCE'; gymIndex: number; payout: number }
+  | { type: 'E4_WIN_ADVANCE'; memberIndex: number; payout: number }
   | { type: 'RESET' };
 
 const EMPTY_SIDE: SideEffects = {
@@ -1034,6 +1036,42 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       const newBeaten = [...state.beatenE4];
       newBeaten[action.memberIndex] = true;
       return { ...state, beatenE4: newBeaten };
+    }
+
+    case 'GYM_WIN_ADVANCE': {
+      const gymBeaten = [...state.beatenGyms];
+      gymBeaten[action.gymIndex] = true;
+      return {
+        ...state,
+        phase: 'shop',
+        beatenGyms: gymBeaten,
+        shopBalance: state.shopBalance + action.payout,
+        battleEndData: null,
+        pendingEvents: [],
+        queuedPendingEvents: [],
+        yourState: null,
+        opponentVisible: null,
+        weather: 'none',
+        turn: 0,
+      };
+    }
+
+    case 'E4_WIN_ADVANCE': {
+      const e4Beaten = [...state.beatenE4];
+      e4Beaten[action.memberIndex] = true;
+      return {
+        ...state,
+        phase: 'shop',
+        beatenE4: e4Beaten,
+        shopBalance: state.shopBalance + action.payout,
+        battleEndData: null,
+        pendingEvents: [],
+        queuedPendingEvents: [],
+        yourState: null,
+        opponentVisible: null,
+        weather: 'none',
+        turn: 0,
+      };
     }
 
     case 'SHOW_SHOP':

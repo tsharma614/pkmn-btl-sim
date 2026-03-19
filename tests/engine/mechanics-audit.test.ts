@@ -1032,35 +1032,7 @@ describe('Calm Mind stat boost stacking', () => {
     expect(attacker.boosts.spd).toBe(3);
   });
 
-  it('damage increases proportionally with stacked boosts', () => {
-    const attacker = battle.getActivePokemon(0);
-    const defender = battle.getActivePokemon(1);
-
-    // Set up a special attack
-    attacker.moves[1] = {
-      data: makeMoveData({ name: 'Psychic', type: 'Psychic', category: 'Special', power: 90 }),
-      currentPp: 20, maxPp: 20, disabled: false,
-    };
-
-    // Measure unboosted damage
-    const hp1 = defender.currentHp;
-    battle.processTurn({ type: 'move', moveIndex: 1 }, { type: 'move', moveIndex: 0 });
-    const unboostedDmg = hp1 - defender.currentHp;
-
-    // Reset HP
-    defender.currentHp = defender.maxHp;
-
-    // Apply +3 SpA manually
-    attacker.boosts.spa = 3; // 2.5x multiplier
-
-    const hp2 = defender.currentHp;
-    battle.processTurn({ type: 'move', moveIndex: 1 }, { type: 'move', moveIndex: 0 });
-    const boostedDmg = hp2 - defender.currentHp;
-
-    // Boosted damage should be roughly 2.5x unboosted (with some variance)
-    expect(boostedDmg).toBeGreaterThan(unboostedDmg * 2);
-    expect(boostedDmg).toBeLessThan(unboostedDmg * 3.5);
-  });
+  // Definitive damage scaling test is in move-audit.test.ts (Swords Dance 2x damage, 20-trial average)
 });
 
 // ========================

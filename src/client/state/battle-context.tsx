@@ -521,15 +521,14 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       const stage = currentState.campaignStage;
 
       if (stage < 8) {
-        // Gym beaten — mark it, save, show shop (+1 pt)
+        // Gym beaten — single atomic dispatch: mark gym + transition to shop
         const newBeatenGyms = currentState.beatenGyms.length === 8
           ? [...currentState.beatenGyms]
           : new Array(8).fill(false);
         newBeatenGyms[stage] = true;
         const beatenCount = newBeatenGyms.filter(Boolean).length;
 
-        dispatch({ type: 'GYM_BEATEN', gymIndex: stage });
-
+        // Save BEFORE dispatch to avoid async race with render
         saveGymCareer({
           currentStage: beatenCount,
           gymTypes: currentState.gymTypes,
@@ -542,17 +541,16 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
             : new Array(4).fill(false),
         });
 
-        dispatch({ type: 'SHOW_SHOP', payout: 1 });
+        // Single dispatch — no intermediate render with inconsistent state
+        dispatch({ type: 'GYM_WIN_ADVANCE', gymIndex: stage, payout: 1 });
       } else if (stage < 12) {
-        // E4 member beaten — mark it, save, show shop (+2 pts)
+        // E4 member beaten — single atomic dispatch
         const memberIdx = stage - 8;
         const newBeatenE4 = currentState.beatenE4.length === 4
           ? [...currentState.beatenE4]
           : new Array(4).fill(false);
         newBeatenE4[memberIdx] = true;
         const e4BeatenCount = newBeatenE4.filter(Boolean).length;
-
-        dispatch({ type: 'E4_MEMBER_BEATEN', memberIndex: memberIdx });
 
         saveGymCareer({
           currentStage: 8 + e4BeatenCount,
@@ -566,7 +564,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
           beatenE4: newBeatenE4,
         });
 
-        dispatch({ type: 'SHOW_SHOP', payout: 2 });
+        // Single dispatch — no intermediate render with inconsistent state
+        dispatch({ type: 'E4_WIN_ADVANCE', memberIndex: memberIdx, payout: 2 });
       } else {
         // Champion defeated!
         saveCampaignRun({

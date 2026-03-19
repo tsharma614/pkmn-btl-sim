@@ -163,13 +163,13 @@ describe('Gym Career flow trace', () => {
     expect(contextSource).toContain('createLocalBattle');
   });
 
-  it('Battle → Back to Gym Map: advanceCampaign dispatches SHOW_GYM_MAP for gym wins', () => {
+  it('Battle → Back to Gym Map: advanceCampaign dispatches gym win advance', () => {
     expect(contextSource).toContain("'SHOW_GYM_MAP'");
-    expect(contextSource).toContain("'GYM_BEATEN'");
+    expect(contextSource).toContain("'GYM_WIN_ADVANCE'");
   });
 
   it('All 8 gyms → Shop → E4 Locks: shop appears after gym wins', () => {
-    expect(contextSource).toContain("'SHOW_SHOP'");
+    expect(contextSource).toContain("'GYM_WIN_ADVANCE'");
     expect(contextSource).toContain("'SHOP_DONE'");
   });
 });
