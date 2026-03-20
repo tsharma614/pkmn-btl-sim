@@ -85,6 +85,7 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
   const [currentIdx, setCurrentIdx] = useState(0);
   const [moveSelections, setMoveSelections] = useState<Record<number, string[]>>({});
   const [detailMove, setDetailMove] = useState<{ name: string; data: any } | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<'All' | 'Physical' | 'Special' | 'Status'>('All');
 
   const pokemon = team[currentIdx];
   const currentMoves = moveSelections[currentIdx] ?? [];
@@ -111,6 +112,10 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
       return powerB - powerA;
     });
 
+  const filteredMoves = categoryFilter === 'All'
+    ? allMoves
+    : allMoves.filter(m => m.data.category === categoryFilter);
+
   const selectedSet = new Set(currentMoves);
 
   const toggleMove = (moveName: string) => {
@@ -126,6 +131,7 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
     if (currentMoves.length !== 4) return;
     if (currentIdx < team.length - 1) {
       setCurrentIdx(currentIdx + 1);
+      setCategoryFilter('All');
     } else {
       onComplete(moveSelections);
     }
@@ -134,6 +140,7 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
   const handleBack = () => {
     if (currentIdx > 0) {
       setCurrentIdx(currentIdx - 1);
+      setCategoryFilter('All');
     } else {
       onBack();
     }
@@ -223,9 +230,25 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
         ))}
       </View>
 
+      {/* Category filter */}
+      <View style={styles.filterRow}>
+        {(['All', 'Physical', 'Special', 'Status'] as const).map(cat => (
+          <TouchableOpacity
+            key={cat}
+            style={[styles.filterBtn, categoryFilter === cat && styles.filterBtnActive]}
+            onPress={() => setCategoryFilter(cat)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.filterBtnText, categoryFilter === cat && styles.filterBtnTextActive]}>
+              {cat}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {/* Move list */}
       <ScrollView style={styles.moveScroll}>
-        {allMoves.map(({ name, data: md }) => {
+        {filteredMoves.map(({ name, data: md }) => {
           const isSelected = selectedSet.has(name);
           const isSetMove = setMoveNames.has(name);
           const power = md.basePower ?? md.power ?? 0;
@@ -375,6 +398,34 @@ const styles = StyleSheet.create({
   selectedChip: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   selectedChipText: { color: '#fff', fontSize: 11, fontWeight: '700' },
   emptyChip: { width: 60, height: 24, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed' },
+  filterRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+    gap: spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  filterBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filterBtnActive: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  filterBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textDim,
+  },
+  filterBtnTextActive: {
+    color: '#fff',
+  },
   moveScroll: { flex: 1 },
   moveRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, gap: 8 },
   moveRowSelected: { backgroundColor: 'rgba(79,195,247,0.08)' },
