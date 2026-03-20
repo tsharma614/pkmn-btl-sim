@@ -24,8 +24,7 @@ import type {
 } from '../utils/stats-storage';
 import { PokemonSprite } from './PokemonSprite';
 
-// Showdown trainer sprite CDN
-const TRAINER_SPRITE_BASE = 'https://play.pokemonshowdown.com/sprites/trainers/';
+import TRAINER_SPRITE_MAP from '../trainer-sprite-map';
 
 const TRAINER_OPTIONS = [
   'red', 'leaf', 'ethan', 'lyra', 'brendan', 'may',
@@ -123,7 +122,7 @@ export function StatsScreen({ onBack }: Props) {
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={() => setShowTrainerPicker(true)} activeOpacity={0.7}>
             <Image
-              source={{ uri: `${TRAINER_SPRITE_BASE}${profile.trainerSprite}.png` }}
+              source={TRAINER_SPRITE_MAP[profile.trainerSprite] ?? { uri: '' }}
               style={styles.trainerSprite}
             />
           </TouchableOpacity>
@@ -173,7 +172,7 @@ export function StatsScreen({ onBack }: Props) {
                   activeOpacity={0.7}
                 >
                   <Image
-                    source={{ uri: `${TRAINER_SPRITE_BASE}${sprite}.png` }}
+                    source={TRAINER_SPRITE_MAP[sprite] ?? { uri: '' }}
                     style={styles.pickerSprite}
                   />
                   <Text style={styles.pickerLabel}>{sprite}</Text>

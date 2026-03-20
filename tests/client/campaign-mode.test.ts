@@ -118,9 +118,9 @@ describe('Phase 5 — Campaign mode', () => {
       expect(source).toContain('mustDrop');
     });
 
-    it('shows opponent trainer sprite', () => {
+    it('shows opponent trainer sprite from local bundle', () => {
       expect(source).toContain('trainerSprite');
-      expect(source).toContain('pokemonshowdown.com/sprites/trainers/');
+      expect(source).toContain('TRAINER_SPRITE_MAP');
     });
   });
 
@@ -130,8 +130,8 @@ describe('Phase 5 — Campaign mode', () => {
       'utf-8',
     );
 
-    it('shows trainer sprite from Showdown CDN', () => {
-      expect(source).toContain('play.pokemonshowdown.com/sprites/trainers/');
+    it('uses local bundled trainer sprites', () => {
+      expect(source).toContain('TRAINER_SPRITE_MAP');
     });
 
     it('shows opponent name and title', () => {

@@ -5,6 +5,7 @@ import { PokemonDetailModal } from './PokemonDetailModal';
 import { colors, spacing } from '../theme';
 import type { OwnPokemon } from '../../server/types';
 import type { PokemonSpecies } from '../../types';
+import TRAINER_SPRITE_MAP from '../trainer-sprite-map';
 
 interface Props {
   /** Opponent's team to steal from */
@@ -42,7 +43,7 @@ export function GauntletStealScreen({
         <Text style={styles.title}>VICTORY!</Text>
         <View style={styles.trainerRow}>
           <Image
-            source={{ uri: `https://play.pokemonshowdown.com/sprites/trainers/${trainerSprite}.png` }}
+            source={TRAINER_SPRITE_MAP[trainerSprite] ?? { uri: '' }}
             style={styles.trainerSprite}
           />
           <Text style={styles.subtitle}>

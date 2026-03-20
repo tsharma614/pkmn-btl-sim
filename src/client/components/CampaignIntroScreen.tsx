@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { colors, spacing } from '../theme';
-
-const TRAINER_SPRITE_BASE = 'https://play.pokemonshowdown.com/sprites/trainers/';
+import TRAINER_SPRITE_MAP from '../trainer-sprite-map';
 
 interface Props {
   /** e.g. "Gym 3 of 8", "Elite Four 2 of 4", "Champion" */
@@ -44,7 +43,7 @@ export function CampaignIntroScreen({
         <Text style={styles.stageLabel}>{stageLabel}</Text>
 
         <Image
-          source={{ uri: `${TRAINER_SPRITE_BASE}${trainerSprite}.png` }}
+          source={TRAINER_SPRITE_MAP[trainerSprite] ?? { uri: '' }}
           style={styles.trainerSprite}
         />
 

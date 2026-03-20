@@ -112,8 +112,8 @@ describe('Phase 4 — Stats page overhaul', () => {
       expect(source).toContain('profileName');
     });
 
-    it('uses Showdown trainer sprite CDN', () => {
-      expect(source).toContain('play.pokemonshowdown.com/sprites/trainers/');
+    it('uses local bundled trainer sprites', () => {
+      expect(source).toContain('TRAINER_SPRITE_MAP');
     });
 
     it('removed old gym badge grid and E4 section', () => {

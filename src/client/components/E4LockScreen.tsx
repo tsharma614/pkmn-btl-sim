@@ -33,7 +33,7 @@ interface Props {
   onSaveQuit?: () => void;
 }
 
-const SPRITE_BASE = 'https://play.pokemonshowdown.com/sprites/trainers/';
+import TRAINER_SPRITE_MAP from '../trainer-sprite-map';
 const GOLD = '#FFD700';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_GAP = spacing.md;
@@ -98,7 +98,7 @@ export function E4LockScreen({
           <View style={styles.cardInner}>
             <View style={[styles.spriteContainer, beaten && styles.spriteGreyed]}>
               <Image
-                source={{ uri: `${SPRITE_BASE}${member.sprite}.png` }}
+                source={TRAINER_SPRITE_MAP[member.sprite] ?? { uri: '' }}
                 style={styles.sprite}
                 resizeMode="contain"
               />
