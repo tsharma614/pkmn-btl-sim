@@ -38,6 +38,9 @@
         "projectId": "7efe854a-1941-4674-8878-87952e308e65"
       }
     },
-    "owner": "tanmaysharma"
+    "owner": "tanmaysharma",
+    "plugins": [
+      "expo-image"
+    ]
   }
 }

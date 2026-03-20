@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Image, Animated, ImageStyle, View, Text, StyleSheet } from 'react-native';
+import { Animated, View, Text, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import SPRITE_MAP from '../sprite-map';
 import ANI_SPRITE_MAP from '../ani-sprite-map';
 import ANI_BACK_SPRITE_MAP from '../ani-back-sprite-map';
@@ -91,7 +92,7 @@ function PokemonSpriteInner({ speciesId, facing, size = 120, animated = false, a
     }
   }, [switchOutTrigger]);
 
-  const style: ImageStyle = { width: size, height: size };
+  const style = { width: size, height: size };
 
   if (!source) {
     return (
@@ -108,7 +109,8 @@ function PokemonSpriteInner({ speciesId, facing, size = 120, animated = false, a
       <Image
         source={source}
         style={style}
-        resizeMode="contain"
+        contentFit="contain"
+        autoplay={true}
       />
     </Animated.View>
   );

@@ -98,9 +98,10 @@ export function PokemonDetailModal({ visible, species, moves, item, ability, onC
                 const val = baseStats[stat];
                 const pct = Math.min(100, val / 1.8);
                 const barColor = val >= 100 ? '#4caf50' : val >= 70 ? '#ff9800' : '#f44336';
+                const label: Record<string, string> = { hp: 'HP', atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe' };
                 return (
                   <View key={stat} style={styles.statRow}>
-                    <Text style={styles.statLabel}>{stat.toUpperCase()}</Text>
+                    <Text style={styles.statLabel}>{label[stat]}</Text>
                     <View style={styles.statBarBg}>
                       <View style={[styles.statBar, { width: `${pct}%`, backgroundColor: barColor }]} />
                     </View>
@@ -260,7 +261,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   statLabel: {
-    width: 32,
+    width: 34,
     fontSize: 11,
     fontWeight: '800',
     color: colors.textSecondary,
