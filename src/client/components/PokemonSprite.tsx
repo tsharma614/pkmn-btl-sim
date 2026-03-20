@@ -21,7 +21,7 @@ export function PokemonSprite(props: Props) {
   return <PokemonSpriteInner key={props.speciesId} {...props} />;
 }
 
-function PokemonSpriteInner({ speciesId, facing, size = 120, animated = false, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0 }: Props) {
+function PokemonSpriteInner({ speciesId, facing, size = 120, animated = true, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0 }: Props) {
   const aniMap = facing === 'back' ? ANI_BACK_SPRITE_MAP : ANI_SPRITE_MAP;
   const useAnimated = animated && aniMap[speciesId];
   const source = useAnimated ? aniMap[speciesId] : SPRITE_MAP[speciesId];
