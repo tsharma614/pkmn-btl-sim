@@ -802,6 +802,15 @@ export function useEventQueue(
 
     let i = 0;
     let cancelled = false;
+    const pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
+    const safeTimeout = (fn: () => void, delay: number) => {
+      const id = setTimeout(() => {
+        if (cancelled) return;
+        fn();
+      }, delay);
+      pendingTimeouts.push(id);
+      return id;
+    };
     // Track who was last hit — used to contextualize SE/NVE reactions
     let lastDamageWasToOpponent = false;
     // Cooldown: avoid rapid-fire speech bubbles (e.g. multi-hit moves)
@@ -831,8 +840,8 @@ export function useEventQueue(
         // Keep sprite/name overrides — prevents brief flash of fainted Pokemon
         // between event batches. They'll be naturally overridden by subsequent
         // batches or become irrelevant when real state catches up.
-        setTimeout(() => {
-          if (!cancelled) setDamageReaction(null);
+        safeTimeout(() => {
+          setDamageReaction(null);
         }, 2000);
         // Fire onComplete which triggers EVENTS_PROCESSED in the reducer.
         // The isProcessing useEffect will clear HP overrides after a short
@@ -1071,8 +1080,7 @@ export function useEventQueue(
           setAnimations(prev => ({ ...prev, opponentSwitchOut: prev.opponentSwitchOut + 1 }));
           setDamageReaction(null);
           // After switch-out animation (300ms), show new Pokemon
-          setTimeout(() => {
-            if (cancelled) return;
+          safeTimeout(() => {
             oppNameRef.current = toName;
             setOpponentSpriteOverride(toId);
             setOpponentNameOverride(toName);
@@ -1084,8 +1092,7 @@ export function useEventQueue(
           }, 400);
         } else {
           setAnimations(prev => ({ ...prev, playerSwitchOut: prev.playerSwitchOut + 1 }));
-          setTimeout(() => {
-            if (cancelled) return;
+          safeTimeout(() => {
             yourNameRef.current = toName;
             setPlayerSpriteOverride(toId);
             setPlayerNameOverride(toName);
@@ -1195,13 +1202,15 @@ export function useEventQueue(
       else if (event.type === 'use_move') delay = 1300;
       else if (event.type === 'damage' && event.data.hit) delay = 500; // multi-hit: fast per-hit
       else if (event.type === 'multi_hit') delay = 600; // summary after multi-hit
-      setTimeout(processNext, delay);
+      safeTimeout(processNext, delay);
     };
 
     processNext();
 
     return () => {
       cancelled = true;
+      pendingTimeouts.forEach(clearTimeout);
+      pendingTimeouts.length = 0;
     };
   }, [events]);
 

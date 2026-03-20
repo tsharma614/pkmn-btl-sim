@@ -490,11 +490,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
 
           {isWinner && campaignMode && onAdvanceCampaign ? (
             <>
-              <TouchableOpacity style={styles.btn} onPress={() => {
-                InteractionManager.runAfterInteractions(() => {
-                  onAdvanceCampaign();
-                });
-              }} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.btn} onPress={onAdvanceCampaign} activeOpacity={0.7}>
                 <Text style={styles.btnText}>Continue</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
