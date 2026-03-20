@@ -28,6 +28,7 @@ interface Props {
   campaignMode?: 'gauntlet' | 'gym_career' | null;
   campaignStage?: number;
   onAdvanceCampaign?: () => void;
+  onReturnToMap?: () => void;
 }
 
 function formatReason(reason: string): string {
@@ -244,7 +245,7 @@ function buildBattleLogText(
   return sections.join('\n\n');
 }
 
-export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp, campaignMode, campaignStage, onAdvanceCampaign }: Props) {
+export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp, campaignMode, campaignStage, onAdvanceCampaign, onReturnToMap }: Props) {
   const isWinner = data.winner === playerName;
   const savedRef = useRef(false);
   const [newBadge, setNewBadge] = React.useState<string | null>(null);
@@ -495,6 +496,17 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
                 });
               }} activeOpacity={0.7}>
                 <Text style={styles.btnText}>Continue</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
+                <Text style={styles.exitBtnText}>Forfeit Run</Text>
+              </TouchableOpacity>
+            </>
+          ) : !isWinner && campaignMode === 'gym_career' && onReturnToMap ? (
+            <>
+              <TouchableOpacity style={styles.btn} onPress={() => {
+                InteractionManager.runAfterInteractions(() => onReturnToMap());
+              }} activeOpacity={0.7}>
+                <Text style={styles.btnText}>Return to Map</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
                 <Text style={styles.exitBtnText}>Forfeit Run</Text>

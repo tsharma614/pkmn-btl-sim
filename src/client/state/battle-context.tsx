@@ -78,6 +78,7 @@ interface BattleContextValue {
   showGymMap: () => void;
   challengeGym: (gymIndex: number) => void;
   showE4Locks: () => void;
+  returnToMapAfterLoss: () => void;
 }
 
 const BattleContext = createContext<BattleContextValue | null>(null);
@@ -888,6 +889,62 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SHOW_E4_LOCKS' });
   }, []);
 
+  /** After losing a gym/E4 battle, heal team and return to gym map or E4 locks. */
+  const returnToMapAfterLoss = useCallback(() => {
+    const currentState = stateRef.current;
+    if (currentState.campaignMode !== 'gym_career') return;
+
+    // Heal the team
+    const team = campaignPlayerTeamRef.current;
+    if (team) {
+      campaignPlayerTeamRef.current = team.map(p => ({
+        ...p,
+        currentHp: p.stats.hp,
+        maxHp: p.stats.hp,
+        isAlive: true,
+        status: null,
+        volatileStatuses: new Set<string>(),
+        boosts: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, accuracy: 0, evasion: 0 },
+        lastMoveUsed: null,
+        choiceLocked: null,
+        substituteHp: 0,
+        hasMovedThisTurn: false,
+        tookDamageThisTurn: false,
+        protectedLastTurn: false,
+        timesHit: 0,
+        lastDamageTaken: null,
+        toxicCounter: 0,
+        sleepTurns: 0,
+        confusionTurns: 0,
+        encoreTurns: 0,
+        encoreMove: null,
+        flashFireActive: false,
+        moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp, disabled: false })),
+      }));
+    }
+
+    cleanupAll();
+
+    // Save current progress
+    saveGymCareer({
+      currentStage: currentState.beatenGyms.filter(Boolean).length + currentState.beatenE4.filter(Boolean).length,
+      gymTypes: currentState.gymTypes,
+      team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+      date: new Date().toISOString(),
+      shopBalance: currentState.shopBalance ?? 0,
+      beatenGyms: [...currentState.beatenGyms],
+      beatenE4: [...currentState.beatenE4],
+    });
+
+    // Go to gym map or E4 locks depending on progress
+    const allGymsBeaten = currentState.beatenGyms.filter(Boolean).length >= 8;
+    if (allGymsBeaten) {
+      dispatch({ type: 'SHOW_E4_LOCKS' });
+    } else {
+      dispatch({ type: 'SHOW_GYM_MAP' });
+    }
+  }, [cleanupAll]);
+
   return (
     <BattleContext.Provider
       value={{
@@ -923,6 +980,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         showGymMap,
         challengeGym,
         showE4Locks,
+        returnToMapAfterLoss,
       }}
     >
       {children}

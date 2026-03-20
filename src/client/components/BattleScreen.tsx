@@ -73,7 +73,7 @@ function HazardIndicator({ side, label }: { side: SideEffects | undefined; label
 }
 
 export function BattleScreen() {
-  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete, itemSelectComplete, shopSwapMove, shopSwapItem, shopBuyPokemon, shopDone, saveAndQuit, showGymMap, challengeGym, showE4Locks } = useBattle();
+  const { state, dispatch, startGame, startOnline, createRoom, joinRoom, selectLead, selectForceSwitch, submitDraftPick, rerollDraftPool, playAgain, requestRematchOnline, returnToMenu, moveSelectionComplete, startGauntlet, gauntletStarterPicked, gauntletStealComplete, advanceCampaign, beginCampaignBattle, startGymCareer, gymCareerDraftComplete, itemSelectComplete, shopSwapMove, shopSwapItem, shopBuyPokemon, shopDone, saveAndQuit, showGymMap, challengeGym, showE4Locks, returnToMapAfterLoss } = useBattle();
 
   const onEventsProcessed = useCallback(() => {
     dispatch({ type: 'EVENTS_PROCESSED' });
@@ -639,6 +639,7 @@ export function BattleScreen() {
           campaignMode={state.campaignMode}
           campaignStage={state.campaignStage}
           onAdvanceCampaign={state.campaignMode !== null ? advanceCampaign : undefined}
+          onReturnToMap={state.campaignMode === 'gym_career' ? returnToMapAfterLoss : undefined}
         />
       )}
 
