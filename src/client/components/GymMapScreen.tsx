@@ -41,6 +41,8 @@ interface Props {
   onEliteFour: () => void;
   onBack: () => void;
   onSaveQuit?: () => void;
+  onShop?: () => void;
+  shopBalance?: number;
 }
 
 export function GymMapScreen({
@@ -50,6 +52,8 @@ export function GymMapScreen({
   onChallenge,
   onEliteFour,
   onBack,
+  onShop,
+  shopBalance,
 }: Props) {
   const beatenCount = beatenGyms.filter(Boolean).length;
   const allBeaten = beatenCount === 8;
@@ -132,14 +136,19 @@ export function GymMapScreen({
           </TouchableOpacity>
         ) : (
           <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.forfeitBtn} onPress={onBack} activeOpacity={0.7}>
-              <Text style={styles.forfeitText}>Forfeit Run</Text>
-            </TouchableOpacity>
+            {onShop && (
+              <TouchableOpacity style={styles.shopBtn} onPress={onShop} activeOpacity={0.7}>
+                <Text style={styles.shopText}>Shop ({shopBalance ?? 0} pts)</Text>
+              </TouchableOpacity>
+            )}
             {onSaveQuit && (
               <TouchableOpacity style={styles.saveBtn} onPress={onSaveQuit} activeOpacity={0.7}>
                 <Text style={styles.saveText}>Save & Quit</Text>
               </TouchableOpacity>
             )}
+            <TouchableOpacity style={styles.forfeitBtn} onPress={onBack} activeOpacity={0.7}>
+              <Text style={styles.forfeitText}>Forfeit</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -281,6 +290,20 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: spacing.md,
+  },
+  shopBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(76,175,80,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(76,175,80,0.3)',
+    alignItems: 'center',
+  },
+  shopText: {
+    color: '#4caf50',
+    fontSize: 13,
+    fontWeight: '700',
   },
   forfeitBtn: {
     flex: 1,

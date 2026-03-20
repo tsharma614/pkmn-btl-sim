@@ -31,6 +31,8 @@ interface Props {
   onChallengeChampion: () => void;
   onBack: () => void;
   onSaveQuit?: () => void;
+  onShop?: () => void;
+  shopBalance?: number;
 }
 
 import TRAINER_SPRITE_MAP from '../trainer-sprite-map';
@@ -48,6 +50,8 @@ export function E4LockScreen({
   onChallengeChampion,
   onBack,
   onSaveQuit,
+  onShop,
+  shopBalance,
 }: Props) {
   // Track which cards have been "revealed" (tapped once to show trainer, second tap starts battle)
   const [revealed, setRevealed] = useState<boolean[]>(members.map(() => false));
@@ -139,11 +143,18 @@ export function E4LockScreen({
           <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={styles.backBtn}>
             <Text style={styles.backText}>{'< Forfeit Run'}</Text>
           </TouchableOpacity>
-          {onSaveQuit && (
-            <TouchableOpacity onPress={onSaveQuit} activeOpacity={0.7} style={styles.backBtn}>
-              <Text style={[styles.backText, { color: colors.textSecondary }]}>Save & Quit</Text>
-            </TouchableOpacity>
-          )}
+          <View style={{ flexDirection: 'row', gap: spacing.md }}>
+            {onShop && (
+              <TouchableOpacity onPress={onShop} activeOpacity={0.7} style={styles.backBtn}>
+                <Text style={[styles.backText, { color: '#4caf50' }]}>Shop ({shopBalance ?? 0})</Text>
+              </TouchableOpacity>
+            )}
+            {onSaveQuit && (
+              <TouchableOpacity onPress={onSaveQuit} activeOpacity={0.7} style={styles.backBtn}>
+                <Text style={[styles.backText, { color: colors.textSecondary }]}>Save & Quit</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
         <Text style={styles.title}>ELITE FOUR</Text>
         <Text style={styles.progress}>{beatenCount}/4 Defeated</Text>

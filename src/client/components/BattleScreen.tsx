@@ -225,6 +225,8 @@ export function BattleScreen() {
           onEliteFour={showE4Locks}
           onBack={returnToMenu}
           onSaveQuit={saveAndQuit}
+          onShop={() => dispatch({ type: 'SHOW_SHOP', payout: 0 })}
+          shopBalance={state.shopBalance}
         />
       </SafeAreaView>
     );
@@ -270,6 +272,8 @@ export function BattleScreen() {
           }}
           onBack={returnToMenu}
           onSaveQuit={saveAndQuit}
+          onShop={() => dispatch({ type: 'SHOW_SHOP', payout: 0 })}
+          shopBalance={state.shopBalance}
         />
       </SafeAreaView>
     );
