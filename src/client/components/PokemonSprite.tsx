@@ -1,112 +1,29 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Image, Animated, ImageStyle, View, Text, StyleSheet } from 'react-native';
-import { getCachedUri, cacheSprite } from '../utils/sprite-cache';
+import SPRITE_MAP from '../sprite-map';
 
 interface Props {
   speciesId: string;
   facing: 'front' | 'back';
   size?: number;
-  /** Increment to trigger attack animation */
   attackTrigger?: number;
-  /** Increment to trigger damage shake animation */
   damageTrigger?: number;
-  /** Increment to trigger faint animation (fade + shrink + drop) */
   faintTrigger?: number;
-  /** Increment to trigger switch-out animation (slide off screen) */
   switchOutTrigger?: number;
 }
 
-/**
- * Convert our pokedex ID to Showdown sprite ID.
- * Regional forms: 'raichualola' → 'raichu-alola'
- */
-function toSpriteId(id: string): string {
-  // Mega forms: 'charizardmegax' → 'charizard-megax', 'venusaurmega' → 'venusaur-mega'
-  // Exclude false positives: 'yanmega' is a base Pokemon, not a mega form
-  const NOT_MEGA = new Set(['yanmega']);
-  if (!NOT_MEGA.has(id)) {
-    const megaMatch = id.match(/^(.+?)(mega[xy]?)$/);
-    if (megaMatch) {
-      return megaMatch[1] + '-' + megaMatch[2];
-    }
-  }
-  // Regional forms: 'raichualola' → 'raichu-alola'
-  const suffixes = ['alola', 'galar', 'hisui', 'paldea'];
-  for (const suffix of suffixes) {
-    if (id.endsWith(suffix) && id.length > suffix.length) {
-      return id.slice(0, -suffix.length) + '-' + suffix;
-    }
-  }
-  return id;
-}
-
-/**
- * Build sprite URL with fallback chain:
- * 1. ani/ (high-quality 3D animated GIF, Gen 1-7 + some Gen 8-9)
- * 2. gen5ani/ (BW-style pixel animated GIF)
- * 3. home/ (Pokemon HOME sprites — covers ALL gens including Gen 9 Paradox)
- */
-function getSpriteUrls(speciesId: string, facing: 'front' | 'back'): string[] {
-  const spriteId = toSpriteId(speciesId);
-  const backSuffix = facing === 'back' ? '-back' : '';
-  return [
-    `https://play.pokemonshowdown.com/sprites/ani${backSuffix}/${spriteId}.gif`,
-    `https://play.pokemonshowdown.com/sprites/gen5ani${backSuffix}/${spriteId}.gif`,
-    `https://play.pokemonshowdown.com/sprites/home/${spriteId}.png`,
-    `https://play.pokemonshowdown.com/sprites/dex/${spriteId}.png`,
-  ];
-}
-
-/** Static PNG sprites for small UI elements (team grids, draft cards) — loads faster than GIFs */
-function getSmallSpriteUrls(speciesId: string): string[] {
-  const spriteId = toSpriteId(speciesId);
-  return [
-    `https://play.pokemonshowdown.com/sprites/home/${spriteId}.png`,
-    `https://play.pokemonshowdown.com/sprites/dex/${spriteId}.png`,
-    `https://play.pokemonshowdown.com/sprites/gen5/${spriteId}.png`,
-  ];
-}
-
-/**
- * Wrapper that adds a key based on speciesId so React fully remounts the
- * inner component when the Pokemon changes.  This guarantees fresh
- * Animated.Values — no stale faint/switch-out animations can linger.
- */
 export function PokemonSprite(props: Props) {
   return <PokemonSpriteInner key={props.speciesId} {...props} />;
 }
 
 function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0 }: Props) {
-  // Small sprites (team grids) prefer static PNGs for faster/more reliable loading
-  const urls = size <= 60
-    ? getSmallSpriteUrls(speciesId)
-    : getSpriteUrls(speciesId, facing);
+  const source = SPRITE_MAP[speciesId];
 
-  const [urlIndex, setUrlIndex] = useState(0);
-  const [allFailed, setAllFailed] = useState(false);
-  const [cachedUri, setCachedUri] = useState<string | null>(null);
-
-  const remoteUri = urls[urlIndex];
-  const uri = cachedUri || remoteUri;
-
-  // Trigger background caching for current URL
-  useEffect(() => {
-    let cancelled = false;
-    cacheSprite(remoteUri).then(localUri => {
-      if (!cancelled && localUri) {
-        setCachedUri(localUri);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [remoteUri]);
-
-  // Animated values — fresh on every mount (key={speciesId} forces remount)
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.6)).current;
 
-  // Animate in on mount: fade + scale up for a "send out" effect
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
@@ -114,21 +31,11 @@ function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, 
     ]).start();
   }, []);
 
-  const handleImageError = () => {
-    if (urlIndex < urls.length - 1) {
-      setCachedUri(null);
-      setUrlIndex(prev => prev + 1);
-    } else {
-      setAllFailed(true);
-    }
-  };
-
   const lastAttack = useRef(attackTrigger);
   const lastDamage = useRef(damageTrigger);
   const lastFaint = useRef(faintTrigger);
   const lastSwitchOut = useRef(switchOutTrigger);
 
-  // Attack: quick hop forward
   useEffect(() => {
     if (attackTrigger > 0 && attackTrigger !== lastAttack.current) {
       lastAttack.current = attackTrigger;
@@ -142,7 +49,6 @@ function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, 
     }
   }, [attackTrigger]);
 
-  // Damage: shake horizontally
   useEffect(() => {
     if (damageTrigger > 0 && damageTrigger !== lastDamage.current) {
       lastDamage.current = damageTrigger;
@@ -156,7 +62,6 @@ function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, 
     }
   }, [damageTrigger]);
 
-  // Faint: slow fade out, shrink, and drop — dramatic death
   useEffect(() => {
     if (faintTrigger > 0 && faintTrigger !== lastFaint.current) {
       lastFaint.current = faintTrigger;
@@ -168,7 +73,6 @@ function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, 
     }
   }, [faintTrigger]);
 
-  // Switch out: quick red flash + slide sideways off screen
   useEffect(() => {
     if (switchOutTrigger > 0 && switchOutTrigger !== lastSwitchOut.current) {
       lastSwitchOut.current = switchOutTrigger;
@@ -183,7 +87,7 @@ function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, 
 
   const style: ImageStyle = { width: size, height: size };
 
-  if (allFailed) {
+  if (!source) {
     return (
       <Animated.View style={{ opacity, transform: [{ translateX }, { translateY }, { scale }] }}>
         <View style={[styles.placeholder, { width: size, height: size }]}>
@@ -196,10 +100,9 @@ function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, 
   return (
     <Animated.View style={{ opacity, transform: [{ translateX }, { translateY }, { scale }] }}>
       <Image
-        source={{ uri }}
+        source={source}
         style={style}
         resizeMode="contain"
-        onError={handleImageError}
       />
     </Animated.View>
   );
