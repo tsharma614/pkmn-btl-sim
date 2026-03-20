@@ -31,23 +31,36 @@ interface Props {
   onStartGymCareer?: (playerName: string, existingSave?: GymCareerSave) => void;
 }
 
-/** Background sprite positions — fewer, cleaner layout */
+/** Background sprite positions — 7 rows of 3, filling the whole screen */
 const BG_SPRITES: { id: string; x: number; y: number; size: number; opacity: number }[] = [
-  // Row 1
-  { id: 'mewtwo', x: -10, y: -10, size: 130, opacity: 0.08 },
-  { id: 'garchomp', x: SCREEN_W - 120, y: 5, size: 120, opacity: 0.07 },
+  // Row 1 (top)
+  { id: 'mewtwo', x: -10, y: -10, size: 130, opacity: 0.12 },
+  { id: 'ceruledge', x: SCREEN_W / 2 - 55, y: 10, size: 110, opacity: 0.10 },
+  { id: 'garchomp', x: SCREEN_W - 120, y: -5, size: 120, opacity: 0.11 },
   // Row 2
-  { id: 'kyogre', x: -20, y: SCREEN_H * 0.15, size: 120, opacity: 0.07 },
-  { id: 'groudon', x: SCREEN_W - 110, y: SCREEN_H * 0.16, size: 120, opacity: 0.07 },
+  { id: 'kyogre', x: -20, y: SCREEN_H * 0.11, size: 120, opacity: 0.10 },
+  { id: 'aggron', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.12, size: 110, opacity: 0.09 },
+  { id: 'groudon', x: SCREEN_W - 110, y: SCREEN_H * 0.11, size: 120, opacity: 0.10 },
   // Row 3
-  { id: 'dragonite', x: -15, y: SCREEN_H * 0.35, size: 120, opacity: 0.07 },
-  { id: 'metagross', x: SCREEN_W - 110, y: SCREEN_H * 0.36, size: 110, opacity: 0.06 },
+  { id: 'electivire', x: -10, y: SCREEN_H * 0.24, size: 110, opacity: 0.09 },
+  { id: 'heracross', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.25, size: 100, opacity: 0.09 },
+  { id: 'roserade', x: SCREEN_W - 100, y: SCREEN_H * 0.24, size: 100, opacity: 0.08 },
   // Row 4
-  { id: 'gengar', x: -10, y: SCREEN_H * 0.55, size: 120, opacity: 0.07 },
-  { id: 'tyrantrum', x: SCREEN_W - 120, y: SCREEN_H * 0.56, size: 120, opacity: 0.07 },
+  { id: 'rhyperior', x: -15, y: SCREEN_H * 0.37, size: 120, opacity: 0.10 },
+  { id: 'metagross', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.38, size: 110, opacity: 0.09 },
+  { id: 'magmortar', x: SCREEN_W - 110, y: SCREEN_H * 0.37, size: 110, opacity: 0.10 },
   // Row 5
-  { id: 'cinderace', x: -10, y: SCREEN_H * 0.75, size: 110, opacity: 0.07 },
-  { id: 'empoleon', x: SCREEN_W - 110, y: SCREEN_H * 0.76, size: 110, opacity: 0.06 },
+  { id: 'cinderace', x: -10, y: SCREEN_H * 0.50, size: 110, opacity: 0.10 },
+  { id: 'registeel', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.51, size: 100, opacity: 0.09 },
+  { id: 'empoleon', x: SCREEN_W - 110, y: SCREEN_H * 0.50, size: 110, opacity: 0.09 },
+  // Row 6
+  { id: 'dragonite', x: -15, y: SCREEN_H * 0.63, size: 120, opacity: 0.10 },
+  { id: 'gliscor', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.64, size: 100, opacity: 0.09 },
+  { id: 'tyrantrum', x: SCREEN_W - 120, y: SCREEN_H * 0.63, size: 120, opacity: 0.11 },
+  // Row 7 (bottom)
+  { id: 'gengar', x: -10, y: SCREEN_H * 0.76, size: 120, opacity: 0.11 },
+  { id: 'baxcalibur', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.77, size: 110, opacity: 0.09 },
+  { id: 'glalie', x: SCREEN_W - 100, y: SCREEN_H * 0.76, size: 100, opacity: 0.08 },
 ];
 
 function PokeballLogo({ size = 100 }: { size?: number }) {

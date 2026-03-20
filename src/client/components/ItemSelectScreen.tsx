@@ -11,10 +11,12 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { PokemonSprite } from './PokemonSprite';
 import { colors, spacing, typeColors } from '../theme';
 import type { OwnPokemon } from '../../server/types';
 import abilitiesData from '../../data/abilities.json';
+import ITEM_SPRITE_MAP from '../item-sprite-map';
 
 const HELD_ITEMS = [
   'Leftovers',
@@ -215,6 +217,13 @@ export function ItemSelectScreen({ team, onComplete, onBack, playerName }: Props
               onLongPress={() => setDetailItem(itemName)}
               activeOpacity={0.7}
             >
+              {ITEM_SPRITE_MAP[itemName] && (
+                <Image
+                  source={ITEM_SPRITE_MAP[itemName]}
+                  style={styles.itemSprite}
+                  contentFit="contain"
+                />
+              )}
               <Text
                 style={[
                   styles.itemText,
@@ -249,7 +258,16 @@ export function ItemSelectScreen({ team, onComplete, onBack, playerName }: Props
           <View style={styles.modalContent}>
             {detailItem && (
               <>
-                <Text style={styles.modalItemName}>{detailItem}</Text>
+                <View style={styles.modalHeader}>
+                  {ITEM_SPRITE_MAP[detailItem] && (
+                    <Image
+                      source={ITEM_SPRITE_MAP[detailItem]}
+                      style={styles.modalSprite}
+                      contentFit="contain"
+                    />
+                  )}
+                  <Text style={styles.modalItemName}>{detailItem}</Text>
+                </View>
                 <Text style={styles.modalDesc}>
                   {ITEM_DESCRIPTIONS[detailItem] || 'No description available.'}
                 </Text>
@@ -363,6 +381,7 @@ const styles = StyleSheet.create({
   itemBtnTaken: {
     opacity: 0.35,
   },
+  itemSprite: { width: 24, height: 24, marginBottom: 2 },
   itemText: {
     fontSize: 11,
     fontWeight: '700',
@@ -402,11 +421,17 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
   },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  modalSprite: { width: 32, height: 32 },
   modalItemName: {
     fontSize: 22,
     fontWeight: '900',
     color: colors.text,
-    marginBottom: spacing.md,
   },
   modalDesc: {
     fontSize: 14,

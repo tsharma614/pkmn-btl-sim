@@ -974,6 +974,10 @@ export class Battle {
       this.applySelfEffectsOnly(attacker, move, events);
     }
 
+    // White Herb: restore all lowered stats after move effects applied
+    if (attacker.isAlive) this.checkWhiteHerb(attacker, events);
+    if (defender.isAlive) this.checkWhiteHerb(defender, events);
+
     // Contact-triggered abilities
     if (move.flags.contact && defender.isAlive && attacker.isAlive) {
       this.handleContactAbilities(attacker, defender, playerIndex, opponentIndex, events);
@@ -1623,9 +1627,20 @@ export class Battle {
       this.applyBoost(pokemon, 'spa', 2, events);
     }
 
-    // White Herb: restore lowered stats once
-    if (actualChange < 0 && pokemon.item === 'White Herb' && !pokemon.itemConsumed) {
-      pokemon.boosts[stat] = oldStage; // restore to before the drop
+  }
+
+  /** White Herb: restore ALL lowered stats at once, then consume. Call after all boosts from a move are applied. */
+  checkWhiteHerb(pokemon: BattlePokemon, events: BattleEvent[]) {
+    if (pokemon.item !== 'White Herb' || pokemon.itemConsumed) return;
+    const stats = ['atk', 'def', 'spa', 'spd', 'spe'] as const;
+    let anyRestored = false;
+    for (const s of stats) {
+      if (pokemon.boosts[s] < 0) {
+        pokemon.boosts[s] = 0;
+        anyRestored = true;
+      }
+    }
+    if (anyRestored) {
       pokemon.itemConsumed = true;
       this.addEvent(events, 'item_trigger', { pokemon: pokemon.species.name, item: 'White Herb' });
     }
@@ -1853,6 +1868,7 @@ export class Battle {
             ability: 'Intimidate',
           });
           this.applyBoost(opponent, 'atk', -1, events, true);
+          this.checkWhiteHerb(opponent, events);
         }
         break;
       case 'Drizzle':
