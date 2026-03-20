@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share } from 'react-native';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share, InteractionManager } from 'react-native';
 import { saveBattleResult } from '../utils/battle-history';
 import { earnBadge } from '../utils/badge-tracker';
 import { recordBattleResult, recordBattlePokemonStats, saveCampaignRun } from '../utils/stats-storage';
@@ -489,7 +489,11 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
 
           {isWinner && campaignMode && onAdvanceCampaign ? (
             <>
-              <TouchableOpacity style={styles.btn} onPress={onAdvanceCampaign} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.btn} onPress={() => {
+                InteractionManager.runAfterInteractions(() => {
+                  onAdvanceCampaign();
+                });
+              }} activeOpacity={0.7}>
                 <Text style={styles.btnText}>Continue</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>

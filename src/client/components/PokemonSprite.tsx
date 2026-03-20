@@ -53,6 +53,17 @@ function getSpriteUrls(speciesId: string, facing: 'front' | 'back'): string[] {
     `https://play.pokemonshowdown.com/sprites/ani${backSuffix}/${spriteId}.gif`,
     `https://play.pokemonshowdown.com/sprites/gen5ani${backSuffix}/${spriteId}.gif`,
     `https://play.pokemonshowdown.com/sprites/home/${spriteId}.png`,
+    `https://play.pokemonshowdown.com/sprites/dex/${spriteId}.png`,
+  ];
+}
+
+/** Static PNG sprites for small UI elements (team grids, draft cards) — loads faster than GIFs */
+function getSmallSpriteUrls(speciesId: string): string[] {
+  const spriteId = toSpriteId(speciesId);
+  return [
+    `https://play.pokemonshowdown.com/sprites/home/${spriteId}.png`,
+    `https://play.pokemonshowdown.com/sprites/dex/${spriteId}.png`,
+    `https://play.pokemonshowdown.com/sprites/gen5/${spriteId}.png`,
   ];
 }
 
@@ -66,7 +77,10 @@ export function PokemonSprite(props: Props) {
 }
 
 function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0 }: Props) {
-  const urls = getSpriteUrls(speciesId, facing);
+  // Small sprites (team grids) prefer static PNGs for faster/more reliable loading
+  const urls = size <= 60
+    ? getSmallSpriteUrls(speciesId)
+    : getSpriteUrls(speciesId, facing);
 
   const [urlIndex, setUrlIndex] = useState(0);
   const [allFailed, setAllFailed] = useState(false);
