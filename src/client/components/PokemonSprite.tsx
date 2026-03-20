@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Image, Animated, ImageStyle, View, Text, StyleSheet } from 'react-native';
 import SPRITE_MAP from '../sprite-map';
 import ANI_SPRITE_MAP from '../ani-sprite-map';
+import ANI_BACK_SPRITE_MAP from '../ani-back-sprite-map';
 
 interface Props {
   speciesId: string;
@@ -20,8 +21,9 @@ export function PokemonSprite(props: Props) {
 }
 
 function PokemonSpriteInner({ speciesId, facing, size = 120, animated = false, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0 }: Props) {
-  const useAnimated = animated && ANI_SPRITE_MAP[speciesId];
-  const source = useAnimated ? ANI_SPRITE_MAP[speciesId] : SPRITE_MAP[speciesId];
+  const aniMap = facing === 'back' ? ANI_BACK_SPRITE_MAP : ANI_SPRITE_MAP;
+  const useAnimated = animated && aniMap[speciesId];
+  const source = useAnimated ? aniMap[speciesId] : SPRITE_MAP[speciesId];
 
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
