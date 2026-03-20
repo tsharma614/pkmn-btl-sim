@@ -34,7 +34,10 @@ export function BattleLog({ visible, lines, onClose }: Props) {
   // Auto-scroll to bottom when new lines appear
   useEffect(() => {
     if (visible && scrollRef.current) {
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+      const timer = setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [lines.length, visible]);
 

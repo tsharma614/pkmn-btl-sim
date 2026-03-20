@@ -3,7 +3,7 @@
  * Shows Pokemon stats, move details on long press, and the same
  * filtering as E4 draft (set moves always shown + 60bp+ damaging + status whitelist).
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -147,21 +147,19 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
   };
 
   // Auto-select existing set moves if nothing selected yet for this Pokemon
-  if (!moveSelections[currentIdx] && pokemon.moves.length > 0) {
-    const defaultMoves = pokemon.moves.slice(0, 4).map(m => m.name);
-    // Check all default moves are in the filtered list
-    const available = new Set(allMoves.map(m => m.name));
-    const validDefaults = defaultMoves.filter(m => available.has(m));
-    if (validDefaults.length > 0) {
-      // Set default selection (will trigger re-render)
-      setTimeout(() => {
+  useEffect(() => {
+    if (!moveSelections[currentIdx] && pokemon.moves.length > 0) {
+      const defaultMoves = pokemon.moves.slice(0, 4).map(m => m.name);
+      const available = new Set(allMoves.map(m => m.name));
+      const validDefaults = defaultMoves.filter(m => available.has(m));
+      if (validDefaults.length > 0) {
         setMoveSelections(prev => ({
           ...prev,
           [currentIdx]: validDefaults.slice(0, 4),
         }));
-      }, 0);
+      }
     }
-  }
+  }, [currentIdx]);
 
   const baseStats = pokemon.species.baseStats;
   const bst = Object.values(baseStats).reduce((a: number, b: number) => a + b, 0);

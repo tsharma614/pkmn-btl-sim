@@ -60,13 +60,21 @@ export function StatsScreen({ onBack }: Props) {
   const [showTrainerPicker, setShowTrainerPicker] = useState(false);
 
   useEffect(() => {
-    getProfile().then(p => {
+    let mounted = true;
+    Promise.all([
+      getProfile(),
+      getOverallStats(),
+      getTopPokemonByKOs(10),
+      getCampaignRuns(),
+    ]).then(([p, overall, topPokemon, runs]) => {
+      if (!mounted) return;
       setProfile(p);
       setNameInput(p.trainerName);
+      setOverall(overall);
+      setTopPokemon(topPokemon);
+      setCampaignRuns(runs);
     });
-    getOverallStats().then(setOverall);
-    getTopPokemonByKOs(10).then(setTopPokemon);
-    getCampaignRuns().then(setCampaignRuns);
+    return () => { mounted = false; };
   }, []);
 
   const handleSaveName = () => {

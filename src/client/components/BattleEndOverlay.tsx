@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share, InteractionManager } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share } from 'react-native';
 import { saveBattleResult } from '../utils/battle-history';
 import { earnBadge } from '../utils/badge-tracker';
 import { recordBattleResult, recordBattlePokemonStats, saveCampaignRun } from '../utils/stats-storage';
@@ -253,6 +253,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
   useEffect(() => {
     if (savedRef.current) return;
     savedRef.current = true;
+    let mounted = true;
     const pokemonLeft = data.finalState.yourTeam.filter(p => p.isAlive).length;
     // Old win/loss tracking (backward compat)
     saveBattleResult({
@@ -299,9 +300,10 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
     // Award badge for beating Hard CPU in monotype draft (gym leader challenge)
     if (isWinner && badgeType) {
       earnBadge(badgeType, gymLeaderName ?? undefined, badgeNameProp ?? undefined).then(earned => {
-        if (earned) setNewBadge(badgeType);
+        if (mounted && earned) setNewBadge(badgeType);
       });
     }
+    return () => { mounted = false; };
   }, []);
   const hasTeamData = data.finalState.yourTeam.length > 0;
   const mvp = getMVP(stats, data.finalState.yourTeam);
@@ -499,9 +501,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
             </>
           ) : !isWinner && campaignMode === 'gym_career' && onReturnToMap ? (
             <>
-              <TouchableOpacity style={styles.btn} onPress={() => {
-                InteractionManager.runAfterInteractions(() => onReturnToMap());
-              }} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.btn} onPress={onReturnToMap} activeOpacity={0.7}>
                 <Text style={styles.btnText}>Return to Map</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>

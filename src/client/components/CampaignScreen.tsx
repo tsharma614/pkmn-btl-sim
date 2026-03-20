@@ -34,10 +34,13 @@ export function CampaignScreen({ onBack, onStartGauntlet, onStartGymCareer }: Pr
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     AsyncStorage.getItem(GYM_SAVE_KEY).then(raw => {
+      if (!mounted) return;
       if (raw) setSave(JSON.parse(raw));
       setLoaded(true);
     });
+    return () => { mounted = false; };
   }, []);
 
   const handleRestart = () => {

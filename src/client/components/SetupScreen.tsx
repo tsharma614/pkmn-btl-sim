@@ -101,20 +101,23 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
   const [moveSelection, setMoveSelection] = useState(false);
 
   useEffect(() => {
-    // Read from unified profile storage; migrate old key on first load
+    let mounted = true;
     getProfile().then(async (profile) => {
+      if (!mounted) return;
       if (profile.trainerName && profile.trainerName !== 'Player') {
         setName(profile.trainerName);
       } else {
-        // Migrate old @pbs_trainer_name key
         const oldName = await AsyncStorage.getItem(OLD_NAME_KEY);
+        if (!mounted) return;
         if (oldName) {
           setName(oldName);
           await saveProfile({ trainerName: oldName });
+          if (!mounted) return;
           await AsyncStorage.removeItem(OLD_NAME_KEY);
         }
       }
     });
+    return () => { mounted = false; };
   }, []);
 
   const displayName = name.trim() || 'Player';

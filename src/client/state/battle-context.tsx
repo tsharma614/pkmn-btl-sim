@@ -253,7 +253,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       actionPendingRef.current = true;
       dispatch({ type: 'ACTION_SUBMITTED' });
       // Use setTimeout to let the UI update to 'waiting' before processing
-      setTimeout(() => {
+      const t = setTimeout(() => {
+        if (!mountedRef.current) return;
         local.submitAction({ type: 'move', index: moveIndex });
         actionPendingRef.current = false;
       }, 50);
@@ -274,7 +275,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     if (local) {
       actionPendingRef.current = true;
       dispatch({ type: 'ACTION_SUBMITTED' });
-      setTimeout(() => {
+      const t = setTimeout(() => {
+        if (!mountedRef.current) return;
         local.submitAction({ type: 'switch', index: pokemonIndex });
         actionPendingRef.current = false;
       }, 50);
@@ -294,7 +296,8 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     if (local) {
       actionPendingRef.current = true;
       dispatch({ type: 'ACTION_SUBMITTED' });
-      setTimeout(() => {
+      const t = setTimeout(() => {
+        if (!mountedRef.current) return;
         local.submitForceSwitch(pokemonIndex);
         actionPendingRef.current = false;
       }, 50);
