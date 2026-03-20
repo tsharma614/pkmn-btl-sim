@@ -956,6 +956,13 @@ export class Battle {
       this.checkFaint(attacker, playerIndex, events);
     }
 
+    // Shell Bell: heal 1/8 of damage dealt
+    if (attacker.isAlive && attacker.item === 'Shell Bell' && totalDamage > 0) {
+      const shellBellHeal = Math.max(1, Math.floor(totalDamage / 8));
+      attacker.currentHp = clampHp(attacker.currentHp + shellBellHeal, attacker.maxHp);
+      this.addEvent(events, 'item_heal', { pokemon: attacker.species.name, item: 'Shell Bell', amount: shellBellHeal });
+    }
+
     // Self-targeting effects (like Close Combat's -1 Def/-1 SpD) must apply even if defender fainted
     if (sheerForceActive) {
       // Sheer Force: only apply self-targeting effects, suppress target-facing secondary effects
@@ -1614,6 +1621,13 @@ export class Battle {
     if (fromOpponent && actualChange < 0 && pokemon.ability === 'Competitive') {
       this.addEvent(events, 'ability_trigger', { pokemon: pokemon.species.name, ability: 'Competitive' });
       this.applyBoost(pokemon, 'spa', 2, events);
+    }
+
+    // White Herb: restore lowered stats once
+    if (actualChange < 0 && pokemon.item === 'White Herb' && !pokemon.itemConsumed) {
+      pokemon.boosts[stat] = oldStage; // restore to before the drop
+      pokemon.itemConsumed = true;
+      this.addEvent(events, 'item_trigger', { pokemon: pokemon.species.name, item: 'White Herb' });
     }
   }
 

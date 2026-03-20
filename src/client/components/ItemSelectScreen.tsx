@@ -37,6 +37,10 @@ const HELD_ITEMS = [
   'Flame Orb',
   'Black Sludge',
   'Safety Goggles',
+  'Scope Lens',
+  'Razor Claw',
+  'Shell Bell',
+  'White Herb',
 ];
 
 const ITEM_DESCRIPTIONS: Record<string, string> = {
@@ -60,6 +64,10 @@ const ITEM_DESCRIPTIONS: Record<string, string> = {
   'Flame Orb': 'Burns the holder at the end of the turn. Used with Guts or Magic Guard.',
   'Black Sludge': 'Restores 1/16 max HP per turn for Poison types. Damages non-Poison types.',
   'Safety Goggles': 'Protects from weather damage and powder/spore moves.',
+  'Scope Lens': 'Increases critical hit ratio by 1 stage.',
+  'Razor Claw': 'Increases critical hit ratio by 1 stage.',
+  'Shell Bell': 'Restores 1/8 of damage dealt to the opponent after each attack.',
+  'White Herb': 'Restores lowered stats to 0 once. Consumed after use.',
 };
 
 interface Props {

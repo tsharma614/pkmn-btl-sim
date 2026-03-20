@@ -931,6 +931,46 @@ describe('Assault Vest', () => {
   });
 });
 
+describe('Shell Bell heals 1/8 of damage dealt', () => {
+  it('heals attacker after dealing damage', () => {
+    const p1 = createTestPlayer('p1', 'Alice');
+    const p2 = createTestPlayer('p2', 'Bob');
+    const battle = new Battle(p1, p2);
+
+    const attacker = battle.getActivePokemon(0);
+    const defender = battle.getActivePokemon(1);
+    attacker.item = 'Shell Bell';
+    attacker.currentHp = Math.floor(attacker.maxHp / 2);
+
+    // Give defender a harmless status move so attacker isn't hit back
+    defender.moves[0] = {
+      data: makeMoveData({ name: 'Splash', category: 'Status', power: null as any, target: 'self', effects: [] }),
+      currentPp: 20, maxPp: 20, disabled: false,
+    };
+
+    const hpBefore = attacker.currentHp;
+    battle.processTurn({ type: 'move', moveIndex: 0 }, { type: 'move', moveIndex: 0 });
+    expect(attacker.currentHp).toBeGreaterThan(hpBefore);
+  });
+});
+
+describe('White Herb restores lowered stats once', () => {
+  it('restores stat drop from Intimidate', () => {
+    const p1 = createTestPlayer('p1', 'Alice', [
+      { set: { ability: 'Intimidate' } }
+    ]);
+    const p2 = createTestPlayer('p2', 'Bob', [
+      { set: { item: 'White Herb' } }
+    ]);
+    const battle = new Battle(p1, p2);
+
+    const defender = battle.getActivePokemon(1);
+    // After Intimidate + White Herb, Atk should be 0 (restored)
+    expect(defender.boosts.atk).toBe(0);
+    expect(defender.itemConsumed).toBe(true);
+  });
+});
+
 // ========================
 // SELF-BOOST MOVE EFFECTS
 // ========================
