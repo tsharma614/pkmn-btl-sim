@@ -1,11 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { Image, Animated, ImageStyle, View, Text, StyleSheet } from 'react-native';
 import SPRITE_MAP from '../sprite-map';
+import ANI_SPRITE_MAP from '../ani-sprite-map';
 
 interface Props {
   speciesId: string;
   facing: 'front' | 'back';
   size?: number;
+  /** Use animated GIF sprite (for battle screen) */
+  animated?: boolean;
   attackTrigger?: number;
   damageTrigger?: number;
   faintTrigger?: number;
@@ -16,8 +19,9 @@ export function PokemonSprite(props: Props) {
   return <PokemonSpriteInner key={props.speciesId} {...props} />;
 }
 
-function PokemonSpriteInner({ speciesId, facing, size = 120, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0 }: Props) {
-  const source = SPRITE_MAP[speciesId];
+function PokemonSpriteInner({ speciesId, facing, size = 120, animated = false, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0 }: Props) {
+  const useAnimated = animated && ANI_SPRITE_MAP[speciesId];
+  const source = useAnimated ? ANI_SPRITE_MAP[speciesId] : SPRITE_MAP[speciesId];
 
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;

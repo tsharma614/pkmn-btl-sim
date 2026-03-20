@@ -77,6 +77,7 @@ export function OpponentPanel({ opponentVisible, botName, attackTrigger = 0, dam
             speciesId={displaySpeciesId}
             facing="front"
             size={SPRITE_SIZE}
+            animated
             attackTrigger={attackTrigger}
             damageTrigger={damageTrigger}
             faintTrigger={faintTrigger}

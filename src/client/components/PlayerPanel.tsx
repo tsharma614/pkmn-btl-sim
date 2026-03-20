@@ -39,6 +39,7 @@ export function PlayerPanel({ active, team, attackTrigger = 0, damageTrigger = 0
           speciesId={speciesIdOverride ?? active.species.id}
           facing="back"
           size={SPRITE_SIZE}
+          animated
           attackTrigger={attackTrigger}
           damageTrigger={damageTrigger}
           faintTrigger={faintTrigger}
