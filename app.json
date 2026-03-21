@@ -39,6 +39,7 @@
       }
     },
     "owner": "tanmaysharma",
+    "newArchEnabled": false,
     "plugins": [
       "expo-image"
     ]
