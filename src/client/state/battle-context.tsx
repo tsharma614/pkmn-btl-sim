@@ -545,8 +545,13 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
             : new Array(4).fill(false),
         });
 
-        // Single dispatch — no intermediate render with inconsistent state
-        dispatch({ type: 'GYM_WIN_ADVANCE', gymIndex: stage, payout: 1 });
+        // Delay dispatch by one frame to let pending native bridge calls complete
+        // before unmounting BattleScreen (prevents ObjCTurboModule SIGABRT)
+        requestAnimationFrame(() => {
+          if (mountedRef.current) {
+            dispatch({ type: 'GYM_WIN_ADVANCE', gymIndex: stage, payout: 1 });
+          }
+        });
       } else if (stage < 12) {
         // E4 member beaten — single atomic dispatch
         const memberIdx = stage - 8;
@@ -568,8 +573,12 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
           beatenE4: newBeatenE4,
         });
 
-        // Single dispatch — no intermediate render with inconsistent state
-        dispatch({ type: 'E4_WIN_ADVANCE', memberIndex: memberIdx, payout: 2 });
+        // Delay dispatch by one frame to let pending native bridge calls complete
+        requestAnimationFrame(() => {
+          if (mountedRef.current) {
+            dispatch({ type: 'E4_WIN_ADVANCE', memberIndex: memberIdx, payout: 2 });
+          }
+        });
       } else {
         // Champion defeated!
         saveCampaignRun({
