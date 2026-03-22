@@ -645,6 +645,7 @@ export function BattleScreen() {
           campaignStage={state.campaignStage}
           onAdvanceCampaign={state.campaignMode !== null ? advanceCampaign : undefined}
           onReturnToMap={state.campaignMode === 'gym_career' ? returnToMapAfterLoss : undefined}
+          shopBalance={state.campaignMode === 'gym_career' ? state.shopBalance : undefined}
         />
       )}
 

@@ -40,6 +40,7 @@ export function serializeOwnPokemon(pokemon: BattlePokemon): OwnPokemon {
     isAlive: pokemon.isAlive,
     choiceLocked: pokemon.choiceLocked,
     encoreMove: pokemon.encoreMove,
+    battleStats: pokemon.battleStats ? { ...pokemon.battleStats } : { kos: 0, damageDealt: 0, timesFainted: 0 },
   };
 }
 

@@ -699,6 +699,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         const mon = createBattlePokemon(fullSpecies, baseSet, 100, null);
         mon.item = saved.item;
         mon.ability = saved.ability;
+        if (saved.battleStats) mon.battleStats = { ...saved.battleStats };
         return mon;
       }).filter(Boolean) as BattlePokemon[];
 
@@ -935,6 +936,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         encoreMove: null,
         flashFireActive: false,
         moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp, disabled: false })),
+        battleStats: p.battleStats ? { ...p.battleStats } : { kos: 0, damageDealt: 0, timesFainted: 0 },
       }));
     }
 

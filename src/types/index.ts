@@ -143,6 +143,7 @@ export interface BattlePokemon {
   turnsOnField: number;     // Turns since entering battle (for Fake Out, etc.)
   itemConsumed: boolean;    // True if held item was consumed (Focus Sash, Weakness Policy, etc.)
   flashFireActive: boolean; // True if Flash Fire has been activated (1.5x Fire moves)
+  battleStats: { kos: number; damageDealt: number; timesFainted: number };
 }
 
 export interface BattleMove {

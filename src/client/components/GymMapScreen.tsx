@@ -181,6 +181,13 @@ export function GymMapScreen({
                         <Text key={j} style={styles.teamModalMove}>{m.name}</Text>
                       ))}
                     </View>
+                    {p.battleStats && (
+                      <View style={styles.teamModalStats}>
+                        <Text style={styles.teamModalStat}>{p.battleStats.kos} KOs</Text>
+                        <Text style={styles.teamModalStat}>{p.battleStats.damageDealt} Dmg</Text>
+                        <Text style={styles.teamModalStat}>{p.battleStats.timesFainted} Faints</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               ))}
@@ -349,6 +356,8 @@ const styles = StyleSheet.create({
   teamModalAbility: { fontSize: 10, color: colors.textDim, marginTop: 1 },
   teamModalMoves: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 3 },
   teamModalMove: { fontSize: 9, color: colors.textSecondary, backgroundColor: colors.surface, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 },
+  teamModalStats: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  teamModalStat: { fontSize: 9, color: colors.textDim, fontWeight: '600' },
   teamModalClose: { marginTop: spacing.md, backgroundColor: colors.surface, paddingVertical: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   teamModalCloseText: { color: colors.textSecondary, fontSize: 14, fontWeight: '700' },
   shopBtn: {

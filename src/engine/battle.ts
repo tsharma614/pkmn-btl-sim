@@ -820,6 +820,7 @@ export class Battle {
       }
 
       totalDamage += damage;
+      if (damage > 0) attacker.battleStats.damageDealt += damage;
 
       // Apply damage
       defender.currentHp = clampHp(defender.currentHp - damage, defender.maxHp);
@@ -855,7 +856,7 @@ export class Battle {
         hit: hits > 1 ? hit + 1 : undefined,
       });
 
-      this.checkFaint(defender, opponentIndex, events, true);
+      this.checkFaint(defender, opponentIndex, events, true, attacker);
     }
 
     if (hits > 1) {
@@ -2649,7 +2650,7 @@ export class Battle {
     return Math.max(1, damage);
   }
 
-  private checkFaint(pokemon: BattlePokemon, playerIndex: number, events: BattleEvent[], fromDirectAttack: boolean = false): void {
+  private checkFaint(pokemon: BattlePokemon, playerIndex: number, events: BattleEvent[], fromDirectAttack: boolean = false, attacker?: BattlePokemon): void {
     if (pokemon.currentHp <= 0) {
       // Endure: survive at 1 HP (only from direct attacks, not residual damage)
       if (fromDirectAttack && pokemon.volatileStatuses.has('endure')) {
@@ -2661,6 +2662,8 @@ export class Battle {
       pokemon.isAlive = false;
       pokemon.status = null;
       pokemon.volatileStatuses.clear();
+      pokemon.battleStats.timesFainted++;
+      if (attacker) attacker.battleStats.kos++;
       this.addEvent(events, 'faint', { pokemon: pokemon.species.name, player: playerIndex });
     }
   }

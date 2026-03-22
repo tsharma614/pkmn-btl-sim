@@ -117,6 +117,7 @@ export interface OwnPokemon {
   isAlive: boolean;
   choiceLocked: string | null;
   encoreMove: string | null;
+  battleStats?: { kos: number; damageDealt: number; timesFainted: number };
 }
 
 export interface TeamPreviewPayload {

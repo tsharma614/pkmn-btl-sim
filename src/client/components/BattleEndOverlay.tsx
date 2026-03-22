@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Share, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { saveBattleResult } from '../utils/battle-history';
 import { earnBadge } from '../utils/badge-tracker';
 import { recordBattleResult, recordBattlePokemonStats, saveCampaignRun } from '../utils/stats-storage';
@@ -29,6 +30,7 @@ interface Props {
   campaignStage?: number;
   onAdvanceCampaign?: () => void;
   onReturnToMap?: () => void;
+  shopBalance?: number;
 }
 
 function formatReason(reason: string): string {
@@ -245,8 +247,9 @@ function buildBattleLogText(
   return sections.join('\n\n');
 }
 
-export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp, campaignMode, campaignStage, onAdvanceCampaign, onReturnToMap }: Props) {
+export function BattleEndOverlay({ data, playerName, opponentName, stats, battleLog, gameMode, onPlayAgain, onExitToMenu, badgeType, gymLeaderName, badgeName: badgeNameProp, campaignMode, campaignStage, onAdvanceCampaign, onReturnToMap, shopBalance }: Props) {
   const isWinner = data.winner === playerName;
+  const insets = useSafeAreaInsets();
   const savedRef = useRef(false);
   const [newBadge, setNewBadge] = React.useState<string | null>(null);
 
@@ -342,7 +345,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
 
   return (
     <View style={styles.overlay}>
-      <ScrollView contentContainerStyle={styles.scrollContent} bounces={false} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + spacing.md, spacing.xl) }]} bounces={false} showsVerticalScrollIndicator={false}>
         <View style={styles.modal}>
           {/* Result header */}
           <Text style={[styles.result, isWinner ? styles.win : styles.lose]}>
@@ -351,6 +354,14 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
           <Text style={styles.detail}>
             {formatReason(data.reason)}{data.finalState.turn > 0 ? ` \u2014 Turn ${data.finalState.turn}` : ''}
           </Text>
+
+          {campaignMode === 'gym_career' && shopBalance != null && (
+            <View style={styles.pointsRow}>
+              <Text style={styles.pointsText}>
+                {shopBalance} pts{isWinner ? ` (+${(campaignStage ?? 0) >= 8 ? 2 : 1})` : ''}
+              </Text>
+            </View>
+          )}
 
           {/* Battle Stats */}
           <View style={styles.statsSection}>
@@ -568,7 +579,15 @@ const styles = StyleSheet.create({
   detail: {
     color: colors.textSecondary,
     fontSize: 13,
+    marginBottom: spacing.sm,
+  },
+  pointsRow: {
     marginBottom: spacing.lg,
+  },
+  pointsText: {
+    color: '#4caf50',
+    fontSize: 14,
+    fontWeight: '700',
   },
 
   // Stats section

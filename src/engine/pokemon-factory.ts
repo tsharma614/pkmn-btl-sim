@@ -104,6 +104,7 @@ export function createBattlePokemon(
     turnsOnField: 0,
     itemConsumed: false,
     flashFireActive: false,
+    battleStats: { kos: 0, damageDealt: 0, timesFainted: 0 },
   };
 
   return pokemon;
