@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, View, Text, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
+import { Animated, View, Text, StyleSheet, Image as RNImage } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import SPRITE_MAP from '../sprite-map';
 import ANI_SPRITE_MAP from '../ani-sprite-map';
 import ANI_BACK_SPRITE_MAP from '../ani-back-sprite-map';
@@ -104,14 +104,16 @@ function PokemonSpriteInner({ speciesId, facing, size = 120, animated = true, at
     );
   }
 
+  // Use expo-image only for animated GIFs (battle screen), React Native Image for everything else.
+  // expo-image's TurboModule crashes on iOS 26 (RN issue #54859).
+  const ImageComponent = useAnimated ? ExpoImage : RNImage;
+  const imageProps = useAnimated
+    ? { source, style, contentFit: 'contain' as const, autoplay: true }
+    : { source, style, resizeMode: 'contain' as const };
+
   return (
     <Animated.View style={{ opacity, transform: [{ translateX }, { translateY }, { scale }] }}>
-      <Image
-        source={source}
-        style={style}
-        contentFit="contain"
-        autoplay={true}
-      />
+      <ImageComponent {...imageProps} />
     </Animated.View>
   );
 }

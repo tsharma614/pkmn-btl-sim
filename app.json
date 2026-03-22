@@ -41,7 +41,8 @@
     "owner": "tanmaysharma",
     "newArchEnabled": false,
     "plugins": [
-      "expo-image"
+      "expo-image",
+      "./plugins/turbo-module-crash-guard"
     ]
   }
 }
