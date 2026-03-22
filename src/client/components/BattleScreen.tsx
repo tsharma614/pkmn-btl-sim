@@ -203,9 +203,9 @@ export function BattleScreen() {
           buyPool={shopBuyPool}
           onSwapMove={shopSwapMove}
           onSwapItem={shopSwapItem}
-          onBuyPokemon={(poolIdx, replaceIdx) => {
+          onBuyPokemon={(poolIdx, replaceIdx, customMoves, customItem) => {
             const item = shopBuyPool[poolIdx];
-            if (item) shopBuyPokemon(item.species, item.cost, replaceIdx);
+            if (item) shopBuyPokemon(item.species, item.cost, replaceIdx, customMoves, customItem);
           }}
           onDone={shopDone}
         />
@@ -226,6 +226,7 @@ export function BattleScreen() {
           onSaveQuit={saveAndQuit}
           onShop={() => dispatch({ type: 'SHOW_SHOP', payout: 0 })}
           shopBalance={state.shopBalance}
+          team={state.yourTeam}
         />
       </SafeAreaView>
     );
@@ -273,6 +274,7 @@ export function BattleScreen() {
           onSaveQuit={saveAndQuit}
           onShop={() => dispatch({ type: 'SHOW_SHOP', payout: 0 })}
           shopBalance={state.shopBalance}
+          team={state.yourTeam}
         />
       </SafeAreaView>
     );

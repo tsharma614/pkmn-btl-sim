@@ -33,6 +33,7 @@ interface Props {
   onSaveQuit?: () => void;
   onShop?: () => void;
   shopBalance?: number;
+  team?: import('../../server/types').OwnPokemon[];
 }
 
 import TRAINER_SPRITE_MAP from '../trainer-sprite-map';

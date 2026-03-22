@@ -105,7 +105,11 @@ type ActiveOption = 'none' | 'move' | 'item' | 'buy';
 /** Sub-step tracking for multi-step flows */
 type MoveStep = { phase: 'pickPokemon' } | { phase: 'pickSlot'; pokemonIdx: number } | { phase: 'pickMove'; pokemonIdx: number; moveSlotIdx: number };
 type ItemStep = { phase: 'pickPokemon' } | { phase: 'pickItem'; pokemonIdx: number };
-type BuyStep = { phase: 'pickBuy' } | { phase: 'pickSlot'; buyPoolIdx: number };
+type BuyStep =
+  | { phase: 'pickBuy' }
+  | { phase: 'pickSlot'; buyPoolIdx: number }
+  | { phase: 'pickMoves'; buyPoolIdx: number; replaceIdx: number; selectedMoves: string[] }
+  | { phase: 'pickItem'; buyPoolIdx: number; replaceIdx: number; selectedMoves: string[]; selectedItem: string };
 
 interface Props {
   balance: number;
@@ -114,7 +118,7 @@ interface Props {
   buyPool: { species: PokemonSpecies; tier: number; cost: number }[];
   onSwapMove: (pokemonIdx: number, moveSlotIdx: number, newMoveName: string) => void;
   onSwapItem: (pokemonIdx: number, newItem: string) => void;
-  onBuyPokemon: (buyPoolIdx: number, replaceTeamIdx: number) => void;
+  onBuyPokemon: (buyPoolIdx: number, replaceTeamIdx: number, customMoves?: string[], customItem?: string) => void;
   onDone: () => void;
 }
 
@@ -481,15 +485,120 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
       );
     }
 
-    // pickSlot phase — choose which team member to replace
-    const chosen = buyPool[buyStep.buyPoolIdx];
-    return renderTeamGrid(
-      (teamIdx) => {
-        onBuyPokemon(buyStep.buyPoolIdx, teamIdx);
-        resetToMenu();
-      },
-      `Replace a team member with ${chosen.species.name} (${chosen.cost} pts)`,
-    );
+    if (buyStep.phase === 'pickSlot') {
+      // pickSlot phase — choose which team member to replace
+      const chosen = buyPool[buyStep.buyPoolIdx];
+      return renderTeamGrid(
+        (teamIdx) => {
+          setBuyStep({ phase: 'pickMoves', buyPoolIdx: buyStep.buyPoolIdx, replaceIdx: teamIdx, selectedMoves: [] });
+        },
+        `Replace a team member with ${chosen.species.name} (${chosen.cost} pts)`,
+      );
+    }
+
+    if (buyStep.phase === 'pickMoves') {
+      // pickMoves phase — choose 4 moves for the new Pokemon
+      const chosen = buyPool[buyStep.buyPoolIdx];
+      const specData = speciesById[chosen.species.id];
+      const movePool = (specData?.movePool || [])
+        .map(name => {
+          const id = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return { name, data: movesLookup[id] };
+        })
+        .filter(m => m.data && (m.data.category === 'Status' ? GOOD_STATUS_MOVES.has(m.name) : (m.data.power ?? 0) >= 60))
+        .sort((a, b) => (b.data.power ?? 0) - (a.data.power ?? 0));
+
+      const selectedSet = new Set(buyStep.selectedMoves);
+      return (
+        <View style={styles.subView}>
+          {renderBackButton('Back')}
+          <Text style={styles.subTitle}>Pick 4 moves for {chosen.species.name}</Text>
+          <View style={styles.selectedMoveRow}>
+            {buyStep.selectedMoves.map(name => (
+              <TouchableOpacity key={name} style={styles.selectedMoveChip} onPress={() =>
+                setBuyStep({ ...buyStep, selectedMoves: buyStep.selectedMoves.filter(m => m !== name) })
+              }>
+                <Text style={styles.selectedMoveChipText}>{name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <ScrollView style={styles.buyGridScroll}>
+            {movePool.map(({ name, data: md }) => {
+              const isSelected = selectedSet.has(name);
+              return (
+                <TouchableOpacity
+                  key={name}
+                  style={[styles.buyMoveRow, isSelected && styles.buyMoveRowSelected]}
+                  onPress={() => {
+                    if (isSelected) {
+                      setBuyStep({ ...buyStep, selectedMoves: buyStep.selectedMoves.filter(m => m !== name) });
+                    } else if (buyStep.selectedMoves.length < 4) {
+                      setBuyStep({ ...buyStep, selectedMoves: [...buyStep.selectedMoves, name] });
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.buyMoveName, isSelected && { color: colors.accent }]} numberOfLines={1}>{name}</Text>
+                  <Text style={styles.buyMovePower}>{md.power ?? '-'}</Text>
+                  <Text style={styles.buyMoveType}>{md.type}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+          <TouchableOpacity
+            style={[styles.confirmBuyBtn, buyStep.selectedMoves.length < 4 && styles.confirmBuyBtnDisabled]}
+            disabled={buyStep.selectedMoves.length < 4}
+            onPress={() => {
+              setBuyStep({ ...buyStep, phase: 'pickItem', selectedItem: '' });
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.confirmBuyBtnText}>
+              {buyStep.selectedMoves.length < 4 ? `Pick ${4 - buyStep.selectedMoves.length} more` : 'Next: Pick Item'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (buyStep.phase === 'pickItem') {
+      // pickItem phase — choose held item
+      const chosen = buyPool[buyStep.buyPoolIdx];
+      const items = ['Leftovers', 'Life Orb', 'Choice Band', 'Choice Specs', 'Choice Scarf', 'Focus Sash',
+        'Assault Vest', 'Rocky Helmet', 'Expert Belt', 'Heavy-Duty Boots', 'Lum Berry', 'Sitrus Berry',
+        'Toxic Orb', 'Flame Orb', 'Safety Goggles', 'Scope Lens', 'Shell Bell', 'White Herb'];
+      return (
+        <View style={styles.subView}>
+          {renderBackButton('Back')}
+          <Text style={styles.subTitle}>Pick item for {chosen.species.name}</Text>
+          <ScrollView style={styles.buyGridScroll} contentContainerStyle={styles.buyGridContainer}>
+            {items.map(item => (
+              <TouchableOpacity
+                key={item}
+                style={[styles.buyCard, buyStep.selectedItem === item && styles.buyCardSelected]}
+                onPress={() => setBuyStep({ ...buyStep, selectedItem: item })}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.buyCardName, buyStep.selectedItem === item && { color: colors.accent }]} numberOfLines={2}>{item}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <TouchableOpacity
+            style={[styles.confirmBuyBtn, !buyStep.selectedItem && styles.confirmBuyBtnDisabled]}
+            disabled={!buyStep.selectedItem}
+            onPress={() => {
+              onBuyPokemon(buyStep.buyPoolIdx, buyStep.replaceIdx, buyStep.selectedMoves, buyStep.selectedItem);
+              resetToMenu();
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.confirmBuyBtnText}>Confirm Purchase</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return null;
   };
 
   // ---------- Move detail modal ----------
@@ -1088,4 +1197,29 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontStyle: 'italic',
   },
+  selectedMoveRow: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 4,
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.xs,
+  },
+  selectedMoveChip: {
+    backgroundColor: colors.accent, paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 8,
+  },
+  selectedMoveChipText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  buyMoveRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: spacing.lg, paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+  },
+  buyMoveRowSelected: { backgroundColor: 'rgba(79,195,247,0.08)' },
+  buyMoveName: { flex: 1, fontSize: 13, color: colors.text, fontWeight: '600' },
+  buyMovePower: { fontSize: 11, color: colors.textDim, width: 30, textAlign: 'right' },
+  buyMoveType: { fontSize: 10, color: colors.textSecondary, width: 50, textAlign: 'right' },
+  buyCardSelected: { borderColor: colors.accent, backgroundColor: 'rgba(233,69,96,0.1)' },
+  confirmBuyBtn: {
+    marginHorizontal: spacing.lg, marginVertical: spacing.md,
+    backgroundColor: colors.accent, paddingVertical: 14, borderRadius: 10, alignItems: 'center',
+  },
+  confirmBuyBtnDisabled: { backgroundColor: colors.surface, opacity: 0.5 },
+  confirmBuyBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
 });

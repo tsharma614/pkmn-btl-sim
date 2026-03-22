@@ -72,7 +72,7 @@ interface BattleContextValue {
   itemSelectComplete: (itemSelections: Record<number, string>) => void;
   shopSwapMove: (pokemonIdx: number, moveSlotIdx: number, newMoveName: string) => void;
   shopSwapItem: (pokemonIdx: number, newItem: string) => void;
-  shopBuyPokemon: (species: PokemonSpecies, cost: number, replaceIdx: number) => void;
+  shopBuyPokemon: (species: PokemonSpecies, cost: number, replaceIdx: number, customMoves?: string[], customItem?: string) => void;
   shopDone: () => void;
   saveAndQuit: () => void;
   showGymMap: () => void;
@@ -825,13 +825,16 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_SHOP_BALANCE', balance: stateRef.current.shopBalance - 1 });
   }, []);
 
-  /** Shop: buy a Pokemon and replace a team slot */
-  const shopBuyPokemon = useCallback((species: PokemonSpecies, cost: number, replaceIdx: number) => {
+  /** Shop: buy a Pokemon and replace a team slot (optionally with custom moves/item) */
+  const shopBuyPokemon = useCallback((species: PokemonSpecies, cost: number, replaceIdx: number, customMoves?: string[], customItem?: string) => {
     const team = campaignPlayerTeamRef.current;
     if (!team) return;
     const rng = campaignRngRef.current;
     const set = pickSet(species, rng, 'competitive');
+    if (customMoves && customMoves.length > 0) set.moves = customMoves;
+    if (customItem) set.item = customItem;
     const newMon = createBattlePokemon(species, set, 100, null);
+    if (customItem) newMon.item = customItem;
     team[replaceIdx] = newMon;
     dispatch({ type: 'SET_SHOP_BALANCE', balance: stateRef.current.shopBalance - cost });
   }, []);

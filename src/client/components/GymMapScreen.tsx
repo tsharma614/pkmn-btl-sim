@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,10 @@ import {
   StyleSheet,
   ScrollView,
   Dimensions,
+  Modal,
 } from 'react-native';
+import { PokemonSprite } from './PokemonSprite';
+import { PokemonDetailModal } from './PokemonDetailModal';
 import { colors, spacing, typeColors } from '../theme';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -43,6 +46,7 @@ interface Props {
   onSaveQuit?: () => void;
   onShop?: () => void;
   shopBalance?: number;
+  team?: import('../../server/types').OwnPokemon[];
 }
 
 export function GymMapScreen({
@@ -54,7 +58,9 @@ export function GymMapScreen({
   onBack,
   onShop,
   shopBalance,
+  team,
 }: Props) {
+  const [showTeam, setShowTeam] = useState(false);
   const beatenCount = beatenGyms.filter(Boolean).length;
   const allBeaten = beatenCount === 8;
 
@@ -136,6 +142,11 @@ export function GymMapScreen({
           </TouchableOpacity>
         ) : (
           <View style={styles.actionRow}>
+            {team && team.length > 0 && (
+              <TouchableOpacity style={styles.teamBtn} onPress={() => setShowTeam(true)} activeOpacity={0.7}>
+                <Text style={styles.teamBtnText}>Team</Text>
+              </TouchableOpacity>
+            )}
             {onShop && (
               <TouchableOpacity style={styles.shopBtn} onPress={onShop} activeOpacity={0.7}>
                 <Text style={styles.shopText}>Shop ({shopBalance ?? 0} pts)</Text>
@@ -152,6 +163,34 @@ export function GymMapScreen({
           </View>
         )}
       </View>
+
+      {/* Team details modal */}
+      <Modal visible={showTeam} transparent animationType="fade" onRequestClose={() => setShowTeam(false)}>
+        <TouchableOpacity style={styles.teamModalOverlay} activeOpacity={1} onPress={() => setShowTeam(false)}>
+          <View style={styles.teamModalContent} onStartShouldSetResponder={() => true}>
+            <Text style={styles.teamModalTitle}>YOUR TEAM</Text>
+            <ScrollView>
+              {(team ?? []).map((p, i) => (
+                <View key={i} style={styles.teamModalRow}>
+                  <PokemonSprite speciesId={p.species.id} facing="front" size={48} />
+                  <View style={styles.teamModalInfo}>
+                    <Text style={styles.teamModalName}>{p.species.name}</Text>
+                    <Text style={styles.teamModalAbility}>{p.ability} · {p.item || 'No item'}</Text>
+                    <View style={styles.teamModalMoves}>
+                      {p.moves.map((m, j) => (
+                        <Text key={j} style={styles.teamModalMove}>{m.name}</Text>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.teamModalClose} onPress={() => setShowTeam(false)} activeOpacity={0.7}>
+              <Text style={styles.teamModalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -291,6 +330,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
   },
+  teamBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: 'rgba(79,195,247,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(79,195,247,0.3)',
+    alignItems: 'center',
+  },
+  teamBtnText: { color: '#4fc3f7', fontSize: 13, fontWeight: '700' },
+  teamModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
+  teamModalContent: { backgroundColor: colors.background, borderRadius: 16, padding: spacing.lg, width: '90%', maxHeight: '80%', borderWidth: 2, borderColor: colors.border },
+  teamModalTitle: { fontSize: 16, fontWeight: '900', color: colors.accent, letterSpacing: 2, marginBottom: spacing.md, textAlign: 'center' },
+  teamModalRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  teamModalInfo: { flex: 1 },
+  teamModalName: { fontSize: 14, fontWeight: '800', color: colors.text },
+  teamModalAbility: { fontSize: 10, color: colors.textDim, marginTop: 1 },
+  teamModalMoves: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 3 },
+  teamModalMove: { fontSize: 9, color: colors.textSecondary, backgroundColor: colors.surface, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 },
+  teamModalClose: { marginTop: spacing.md, backgroundColor: colors.surface, paddingVertical: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  teamModalCloseText: { color: colors.textSecondary, fontSize: 14, fontWeight: '700' },
   shopBtn: {
     flex: 1,
     paddingVertical: 12,
