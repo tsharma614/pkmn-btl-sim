@@ -11,7 +11,7 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
-import { Image } from 'expo-image';
+import { Image } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
 import { colors, spacing, typeColors } from '../theme';
 import type { OwnPokemon } from '../../server/types';
@@ -221,7 +221,7 @@ export function ItemSelectScreen({ team, onComplete, onBack, playerName }: Props
                 <Image
                   source={ITEM_SPRITE_MAP[itemName]}
                   style={styles.itemSprite}
-                  contentFit="contain"
+                  resizeMode="contain"
                 />
               )}
               <Text
@@ -263,7 +263,7 @@ export function ItemSelectScreen({ team, onComplete, onBack, playerName }: Props
                     <Image
                       source={ITEM_SPRITE_MAP[detailItem]}
                       style={styles.modalSprite}
-                      contentFit="contain"
+                      resizeMode="contain"
                     />
                   )}
                   <Text style={styles.modalItemName}>{detailItem}</Text>
