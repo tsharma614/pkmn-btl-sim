@@ -20,7 +20,7 @@ const NO_SPRITE: Set<string> = new Set([
   'ironboulder', 'ironcrown', 'terapagos', 'pecharunt',
 ]);
 
-const TIERS: Record<Tier, PokemonSpecies[]> = { 1: [], 2: [], 3: [], 4: [] };
+export const TIERS: Record<Tier, PokemonSpecies[]> = { 1: [], 2: [], 3: [], 4: [] };
 
 for (const species of Object.values(pokedex)) {
   if (NO_SPRITE.has(species.id)) continue;

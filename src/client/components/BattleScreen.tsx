@@ -34,7 +34,7 @@ import { ItemSelectScreen } from './ItemSelectScreen';
 import { ShopScreen } from './ShopScreen';
 import { GymMapScreen } from './GymMapScreen';
 import { E4LockScreen } from './E4LockScreen';
-import { generateBudgetDraftOptions } from '../../engine/draft-pool';
+import { generateBudgetDraftOptions, MEGA_POOL, TIERS as draftTiers } from '../../engine/draft-pool';
 import { SeededRNG } from '../../utils/rng';
 import { colors, spacing } from '../theme';
 import { getGymLeader } from '../../data/gym-leaders';
@@ -179,17 +179,16 @@ export function BattleScreen() {
 
   // --- Shop (after gym/E4 win) ---
   if (state.phase === 'shop') {
-    // Generate buy pool
+    // Generate buy pool (using top-level imports, not dynamic require)
     const shopBuyPool = (() => {
       const rng = new SeededRNG();
-      const { MEGA_POOL, TIERS: draftTiers } = require('../../engine/draft-pool');
       const pool: { species: any; tier: number; cost: number }[] = [];
       const megas = [...(MEGA_POOL as any[])];
       rng.shuffle(megas);
-      pool.push(...megas.slice(0, 3).map((s: any) => ({ species: s, tier: 0, cost: 4 })));
+      pool.push(...megas.slice(0, 5).map((s: any) => ({ species: s, tier: 0, cost: 4 })));
       const t1 = [...(draftTiers as any)[1]];
       rng.shuffle(t1);
-      pool.push(...t1.slice(0, 4).map((s: any) => ({ species: s, tier: 1, cost: 3 })));
+      pool.push(...t1.slice(0, 5).map((s: any) => ({ species: s, tier: 1, cost: 3 })));
       const t2 = [...(draftTiers as any)[2]];
       rng.shuffle(t2);
       pool.push(...t2.slice(0, 5).map((s: any) => ({ species: s, tier: 2, cost: 2 })));
