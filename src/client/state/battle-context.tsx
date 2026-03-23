@@ -503,7 +503,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /** Called after winning a campaign battle to advance. */
-  const advanceCampaign = useCallback(() => {
+  const advanceCampaign = useCallback(async () => {
     const currentState = stateRef.current;
 
     if (currentState.campaignMode === 'gauntlet') {
@@ -533,17 +533,21 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         const beatenCount = newBeatenGyms.filter(Boolean).length;
 
         // Save BEFORE dispatch to avoid async race with render
-        saveGymCareer({
-          currentStage: beatenCount,
-          gymTypes: currentState.gymTypes,
-          team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
-          date: new Date().toISOString(),
-          shopBalance: (currentState.shopBalance ?? 0) + 1,
-          beatenGyms: newBeatenGyms,
-          beatenE4: currentState.beatenE4.length === 4
-            ? [...currentState.beatenE4]
-            : new Array(4).fill(false),
-        });
+        try {
+          await saveGymCareer({
+            currentStage: beatenCount,
+            gymTypes: currentState.gymTypes,
+            team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+            date: new Date().toISOString(),
+            shopBalance: (currentState.shopBalance ?? 0) + 1,
+            beatenGyms: newBeatenGyms,
+            beatenE4: currentState.beatenE4.length === 4
+              ? [...currentState.beatenE4]
+              : new Array(4).fill(false),
+          });
+        } catch (e) {
+          console.error('Failed to save gym career:', e);
+        }
 
         // Delay dispatch by one frame to let pending native bridge calls complete
         // before unmounting BattleScreen (prevents ObjCTurboModule SIGABRT)
@@ -561,17 +565,21 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         newBeatenE4[memberIdx] = true;
         const e4BeatenCount = newBeatenE4.filter(Boolean).length;
 
-        saveGymCareer({
-          currentStage: 8 + e4BeatenCount,
-          gymTypes: currentState.gymTypes,
-          team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
-          date: new Date().toISOString(),
-          shopBalance: (currentState.shopBalance ?? 0) + 2,
-          beatenGyms: currentState.beatenGyms.length === 8
-            ? [...currentState.beatenGyms]
-            : new Array(8).fill(false),
-          beatenE4: newBeatenE4,
-        });
+        try {
+          await saveGymCareer({
+            currentStage: 8 + e4BeatenCount,
+            gymTypes: currentState.gymTypes,
+            team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+            date: new Date().toISOString(),
+            shopBalance: (currentState.shopBalance ?? 0) + 2,
+            beatenGyms: currentState.beatenGyms.length === 8
+              ? [...currentState.beatenGyms]
+              : new Array(8).fill(false),
+            beatenE4: newBeatenE4,
+          });
+        } catch (e) {
+          console.error('Failed to save gym career:', e);
+        }
 
         // Delay dispatch by one frame to let pending native bridge calls complete
         requestAnimationFrame(() => {
@@ -734,12 +742,18 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   /** Called from BudgetDraftScreen with picked species IDs. Goes to move selection. */
   const gymCareerDraftComplete = useCallback((picks: { speciesId: string; tier: number }[]) => {
     const rng = campaignRngRef.current;
-    const playerTeam = picks.map(pick => {
-      const species = fullSpeciesById[pick.speciesId];
-      if (!species) throw new Error(`Species not found: ${pick.speciesId}`);
-      const baseSet = pickSet(species, rng, 'competitive');
-      return createBattlePokemon(species, baseSet, 100, null);
-    });
+    let playerTeam;
+    try {
+      playerTeam = picks.map(pick => {
+        const species = fullSpeciesById[pick.speciesId];
+        if (!species) throw new Error(`Species not found: ${pick.speciesId}`);
+        const baseSet = pickSet(species, rng, 'competitive');
+        return createBattlePokemon(species, baseSet, 100, null);
+      });
+    } catch (e) {
+      console.error('Failed to build draft team:', e);
+      return;
+    }
     campaignPlayerTeamRef.current = playerTeam;
 
     // Calculate shop balance from unspent draft budget (14 - spent)
@@ -756,7 +770,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
 
   /** Show the gym map screen. */
   /** Called after item selection in gym career. Saves and shows gym map. */
-  const itemSelectComplete = useCallback((itemSelections: Record<number, string>) => {
+  const itemSelectComplete = useCallback(async (itemSelections: Record<number, string>) => {
     const team = campaignPlayerTeamRef.current;
     if (team) {
       for (const [idx, item] of Object.entries(itemSelections)) {
@@ -784,15 +798,19 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Gym career: save and show gym map
-    saveGymCareer({
-      currentStage: 0,
-      gymTypes: currentState.gymTypes,
-      team: team?.map(serializeOwnPokemon) ?? [],
-      date: new Date().toISOString(),
-      shopBalance: currentState.shopBalance ?? 0,
-      beatenGyms: [...currentState.beatenGyms],
-      beatenE4: [...currentState.beatenE4],
-    });
+    try {
+      await saveGymCareer({
+        currentStage: 0,
+        gymTypes: currentState.gymTypes,
+        team: team?.map(serializeOwnPokemon) ?? [],
+        date: new Date().toISOString(),
+        shopBalance: currentState.shopBalance ?? 0,
+        beatenGyms: [...currentState.beatenGyms],
+        beatenE4: [...currentState.beatenE4],
+      });
+    } catch (e) {
+      console.error('Failed to save gym career:', e);
+    }
     dispatch({ type: 'SHOW_GYM_MAP' });
   }, []);
 
@@ -841,26 +859,11 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /** Shop: done shopping, go back to gym map or E4 locks */
-  const shopDone = useCallback(() => {
+  const shopDone = useCallback(async () => {
     const currentState = stateRef.current;
     // Save updated team
-    saveGymCareer({
-      currentStage: currentState.beatenGyms.filter(Boolean).length + currentState.beatenE4.filter(Boolean).length,
-      gymTypes: currentState.gymTypes,
-      team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
-      date: new Date().toISOString(),
-      shopBalance: currentState.shopBalance,
-      beatenGyms: [...currentState.beatenGyms],
-      beatenE4: [...currentState.beatenE4],
-    });
-    dispatch({ type: 'SHOP_DONE' });
-  }, []);
-
-  /** Save & Quit: save progress and return to menu without recording a loss */
-  const saveAndQuit = useCallback(() => {
-    const currentState = stateRef.current;
-    if (currentState.campaignMode === 'gym_career') {
-      saveGymCareer({
+    try {
+      await saveGymCareer({
         currentStage: currentState.beatenGyms.filter(Boolean).length + currentState.beatenE4.filter(Boolean).length,
         gymTypes: currentState.gymTypes,
         team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
@@ -869,6 +872,29 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         beatenGyms: [...currentState.beatenGyms],
         beatenE4: [...currentState.beatenE4],
       });
+    } catch (e) {
+      console.error('Failed to save gym career:', e);
+    }
+    dispatch({ type: 'SHOP_DONE' });
+  }, []);
+
+  /** Save & Quit: save progress and return to menu without recording a loss */
+  const saveAndQuit = useCallback(async () => {
+    const currentState = stateRef.current;
+    if (currentState.campaignMode === 'gym_career') {
+      try {
+        await saveGymCareer({
+          currentStage: currentState.beatenGyms.filter(Boolean).length + currentState.beatenE4.filter(Boolean).length,
+          gymTypes: currentState.gymTypes,
+          team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+          date: new Date().toISOString(),
+          shopBalance: currentState.shopBalance,
+          beatenGyms: [...currentState.beatenGyms],
+          beatenE4: [...currentState.beatenE4],
+        });
+      } catch (e) {
+        console.error('Failed to save gym career:', e);
+      }
     }
     cleanupAll();
     campaignPlayerTeamRef.current = null;
@@ -906,7 +932,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /** After losing a gym/E4 battle, heal team and return to gym map or E4 locks. */
-  const returnToMapAfterLoss = useCallback(() => {
+  const returnToMapAfterLoss = useCallback(async () => {
     const currentState = stateRef.current;
     if (currentState.campaignMode !== 'gym_career') return;
 
@@ -943,15 +969,19 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     cleanupAll();
 
     // Save current progress
-    saveGymCareer({
-      currentStage: currentState.beatenGyms.filter(Boolean).length + currentState.beatenE4.filter(Boolean).length,
-      gymTypes: currentState.gymTypes,
-      team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
-      date: new Date().toISOString(),
-      shopBalance: currentState.shopBalance ?? 0,
-      beatenGyms: [...currentState.beatenGyms],
-      beatenE4: [...currentState.beatenE4],
-    });
+    try {
+      await saveGymCareer({
+        currentStage: currentState.beatenGyms.filter(Boolean).length + currentState.beatenE4.filter(Boolean).length,
+        gymTypes: currentState.gymTypes,
+        team: campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [],
+        date: new Date().toISOString(),
+        shopBalance: currentState.shopBalance ?? 0,
+        beatenGyms: [...currentState.beatenGyms],
+        beatenE4: [...currentState.beatenE4],
+      });
+    } catch (e) {
+      console.error('Failed to save gym career:', e);
+    }
 
     // Go to gym map or E4 locks depending on progress
     const allGymsBeaten = currentState.beatenGyms.filter(Boolean).length >= 8;

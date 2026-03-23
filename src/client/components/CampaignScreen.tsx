@@ -37,7 +37,14 @@ export function CampaignScreen({ onBack, onStartGauntlet, onStartGymCareer }: Pr
     let mounted = true;
     AsyncStorage.getItem(GYM_SAVE_KEY).then(raw => {
       if (!mounted) return;
-      if (raw) setSave(JSON.parse(raw));
+      if (raw) {
+        try {
+          setSave(JSON.parse(raw));
+        } catch (e) {
+          console.error('Corrupted gym save, resetting:', e);
+          AsyncStorage.removeItem(GYM_SAVE_KEY);
+        }
+      }
       setLoaded(true);
     });
     return () => { mounted = false; };
