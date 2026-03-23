@@ -8,6 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { CategoryIcon } from './CategoryIcon';
+import { lightTap } from '../utils/haptics';
 import { typeColors, colors, spacing } from '../theme';
 import { getTypeEffectiveness } from '../../data/type-chart';
 import type { OwnPokemon } from '../../server/types';
@@ -65,7 +66,7 @@ export function MoveGrid({ active, onSelectMove, disabled, opponentTypes }: Prop
               },
               isDisabled && styles.moveBtnDisabled,
             ]}
-            onPress={() => onSelectMove(i)}
+            onPress={() => { lightTap(); onSelectMove(i); }}
             onLongPress={() => setTooltip({ move, index: i })}
             delayLongPress={300}
             disabled={isDisabled}

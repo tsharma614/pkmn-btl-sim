@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
 import { HpBar } from './HpBar';
 import { StatusBadge } from './StatusBadge';
@@ -8,9 +8,6 @@ import { FloatingIndicator } from './FloatingIndicator';
 import type { IndicatorData } from '../hooks/use-event-queue';
 import { colors, spacing } from '../theme';
 import type { OwnPokemon } from '../../server/types';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const SPRITE_SIZE = Math.round(SCREEN_WIDTH * 0.55);
 
 interface Props {
   active: OwnPokemon;
@@ -27,6 +24,8 @@ interface Props {
 }
 
 export function PlayerPanel({ active, team, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0, hpOverride, indicator, onLongPressSprite, speciesIdOverride, nameOverride }: Props) {
+  const { width: screenWidth } = useWindowDimensions();
+  const spriteSize = Math.round(screenWidth * 0.55);
   const faintedCount = team.filter(p => !p.isAlive).length;
   const displayHp = hpOverride?.current ?? active.currentHp;
   const displayMaxHp = hpOverride?.max ?? active.maxHp;
@@ -34,11 +33,11 @@ export function PlayerPanel({ active, team, attackTrigger = 0, damageTrigger = 0
   return (
     <View style={styles.container}>
       {/* Sprite - left, big */}
-      <Pressable style={styles.spriteArea} onLongPress={onLongPressSprite} delayLongPress={300}>
+      <Pressable style={[styles.spriteArea, { width: spriteSize, height: spriteSize }]} onLongPress={onLongPressSprite} delayLongPress={300}>
         <PokemonSprite
           speciesId={speciesIdOverride ?? active.species.id}
           facing="back"
-          size={SPRITE_SIZE}
+          size={spriteSize}
           animated
           attackTrigger={attackTrigger}
           damageTrigger={damageTrigger}
@@ -85,8 +84,6 @@ const styles = StyleSheet.create({
     paddingRight: spacing.lg,
   },
   spriteArea: {
-    width: SPRITE_SIZE,
-    height: SPRITE_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
   },

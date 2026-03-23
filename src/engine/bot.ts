@@ -4,13 +4,13 @@ import { SeededRNG } from '../utils/rng';
 import { getTypeEffectiveness } from '../data/type-chart';
 import type { PokemonType } from '../types';
 
-const CPU_NAMES = [
+export const BOT_NAMES = [
   'Jonathan', 'Nikhil', 'Trusha', 'Som', 'Meha', 'Ishan',
   'Vikram', 'Amit', 'Tejal', 'Akshay', 'Tanmay', 'Ambi',
 ];
 
 export function pickCpuName(rng: SeededRNG, exclude?: string): string {
-  const available = exclude ? CPU_NAMES.filter(n => n !== exclude) : CPU_NAMES;
+  const available = exclude ? BOT_NAMES.filter(n => n !== exclude) : BOT_NAMES;
   return rng.pick(available);
 }
 

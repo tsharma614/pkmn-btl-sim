@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
   ActivityIndicator,
 } from 'react-native';
+import { lightTap } from '../utils/haptics';
 import { PokemonSprite } from './PokemonSprite';
 import { TypeBadge } from './TypeBadge';
 import { DraftPreviewModal } from './DraftPreviewModal';
@@ -118,12 +119,14 @@ export function RoleDraftScreen({
     if (selected === null || !isYourTurn || pickedIndices.has(selected)) return;
     // Verify pick is in current role
     if (currentRole && rolePool[selected]?.role !== currentRole) return;
+    lightTap();
     onPick(selected);
     setSelected(null);
   };
 
   const handlePickFromModal = (poolIndex: number) => {
     if (currentRole && rolePool[poolIndex]?.role === currentRole && !pickedIndices.has(poolIndex)) {
+      lightTap();
       onPick(poolIndex);
     }
     setPreviewIndex(null);

@@ -26,14 +26,11 @@ import type { BattleAction as ReducerAction } from './state/battle-reducer';
 // Re-export the bot AI functions from socket.ts would create a circular dep,
 // so we inline a simplified version here and import the shared scoring logic.
 import { getTypeEffectiveness } from '../data/type-chart';
+import { BOT_NAMES } from '../engine/bot';
 import type { PokemonType } from '../types';
 
 export type BotDifficulty = 'easy' | 'normal' | 'hard';
 
-const BOT_NAMES = [
-  'Jonathan', 'Nikhil', 'Trusha', 'Som', 'Meha', 'Ishan',
-  'Vikram', 'Amit', 'Tejal', 'Akshay', 'Tanmay', 'Ambi',
-];
 
 interface LocalBattleOptions {
   playerName: string;

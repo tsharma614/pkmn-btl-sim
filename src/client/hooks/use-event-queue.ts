@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { BattleEvent } from '../../types';
+import { mediumImpact, heavyImpact } from '../utils/haptics';
 
 /** A segment of styled text for rendering in the EventLog */
 export interface TextSegment {
@@ -883,6 +884,7 @@ export function useEventQueue(
           big: isCrit,
         };
         if (isOpponentHit) {
+          mediumImpact();
           setAnimations(prev => ({ ...prev, opponentDamage: prev.opponentDamage + 1 }));
           setOpponentIndicator(dmgIndicator);
           const reaction = getDamageReaction(dmg, event.data.maxHp as number, isCrit);
@@ -892,6 +894,7 @@ export function useEventQueue(
             setScreenFlash({ color: '#FFD700', key: flashKeyRef.current });
           }
         } else {
+          mediumImpact();
           setAnimations(prev => ({ ...prev, playerDamage: prev.playerDamage + 1 }));
           setPlayerIndicator(dmgIndicator);
           // Opponent gloats when they land a big hit or crit on you
@@ -1146,6 +1149,7 @@ export function useEventQueue(
           : (event.data.pokemon as string) === oppNameRef.current;
         indicatorKeyRef.current++;
         if (isOpponentFaint) {
+          heavyImpact();
           setAnimations(prev => ({ ...prev, opponentFaint: prev.opponentFaint + 1 }));
           setOpponentIndicator({ text: 'KO!', color: '#e94560', key: indicatorKeyRef.current, big: true });
           tryReaction(getFaintReaction(true), 'high'); // their mon died — they're upset
@@ -1154,6 +1158,7 @@ export function useEventQueue(
             setOpponentHpOverride({ ...runningOpponentHp });
           }
         } else {
+          heavyImpact();
           setAnimations(prev => ({ ...prev, playerFaint: prev.playerFaint + 1 }));
           setPlayerIndicator({ text: 'KO!', color: '#e94560', key: indicatorKeyRef.current, big: true });
           tryReaction(getFaintReaction(false), 'high'); // your mon died — they gloat

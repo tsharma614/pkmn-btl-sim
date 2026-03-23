@@ -31,10 +31,7 @@ import type { PokemonType } from '../types';
 
 type ClientSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-const BOT_NAMES = [
-  'Jonathan', 'Nikhil', 'Trusha', 'Som', 'Meha', 'Ishan',
-  'Vikram', 'Amit', 'Tejal', 'Akshay', 'Tanmay', 'Ambi',
-];
+import { BOT_NAMES } from '../engine/bot';
 
 /** Socket.io client options — WebSocket only, auto-reconnect */
 const SOCKET_OPTS = {

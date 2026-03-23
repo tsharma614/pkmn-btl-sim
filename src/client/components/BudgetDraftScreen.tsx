@@ -7,6 +7,7 @@ import {
   ScrollView,
   useWindowDimensions,
 } from 'react-native';
+import { lightTap } from '../utils/haptics';
 import { PokemonSprite } from './PokemonSprite';
 import { PokemonDetailModal } from './PokemonDetailModal';
 import { colors, spacing } from '../theme';
@@ -99,6 +100,7 @@ export function BudgetDraftScreen({
   const allPicked = roleOptions.length > 0 && roleOptions.every(r => selections[r.role] !== undefined);
 
   const handleSelect = (role: string, optionIdx: number, cost: number) => {
+    lightTap();
     setSelections(prev => {
       const currentIdx = prev[role];
       // Deselect if tapping the already-selected card

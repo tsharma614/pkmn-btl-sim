@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -178,22 +178,23 @@ export function BattleScreen() {
   }
 
   // --- Shop (after gym/E4 win) ---
+  const shopBuyPool = useMemo(() => {
+    const seed = state.campaignStage * 1000 + state.beatenGyms.filter(Boolean).length;
+    const rng = new SeededRNG(seed);
+    const pool: { species: any; tier: number; cost: number }[] = [];
+    const megas = [...(MEGA_POOL as any[])];
+    rng.shuffle(megas);
+    pool.push(...megas.slice(0, 5).map((s: any) => ({ species: s, tier: 0, cost: 4 })));
+    const t1 = [...(draftTiers as any)[1]];
+    rng.shuffle(t1);
+    pool.push(...t1.slice(0, 5).map((s: any) => ({ species: s, tier: 1, cost: 3 })));
+    const t2 = [...(draftTiers as any)[2]];
+    rng.shuffle(t2);
+    pool.push(...t2.slice(0, 5).map((s: any) => ({ species: s, tier: 2, cost: 2 })));
+    return pool;
+  }, [state.campaignStage, state.beatenGyms]);
+
   if (state.phase === 'shop') {
-    // Generate buy pool (using top-level imports, not dynamic require)
-    const shopBuyPool = (() => {
-      const rng = new SeededRNG();
-      const pool: { species: any; tier: number; cost: number }[] = [];
-      const megas = [...(MEGA_POOL as any[])];
-      rng.shuffle(megas);
-      pool.push(...megas.slice(0, 5).map((s: any) => ({ species: s, tier: 0, cost: 4 })));
-      const t1 = [...(draftTiers as any)[1]];
-      rng.shuffle(t1);
-      pool.push(...t1.slice(0, 5).map((s: any) => ({ species: s, tier: 1, cost: 3 })));
-      const t2 = [...(draftTiers as any)[2]];
-      rng.shuffle(t2);
-      pool.push(...t2.slice(0, 5).map((s: any) => ({ species: s, tier: 2, cost: 2 })));
-      return pool;
-    })();
 
     return (
       <SafeAreaView style={styles.full}>

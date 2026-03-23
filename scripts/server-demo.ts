@@ -19,11 +19,7 @@ import type { BattleEvent } from '../src/types';
 
 type ClientSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-// --- Bot name pool ---
-const BOT_NAMES = [
-  'Jonathan', 'Nikhil', 'Trusha', 'Som', 'Meha', 'Ishan',
-  'Vikram', 'Amit', 'Tejal', 'Akshay', 'Tanmay', 'Ambi',
-];
+import { BOT_NAMES } from '../src/engine/bot';
 
 // --- BotClient: wraps a socket with a unified event buffer ---
 

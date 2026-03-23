@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
   ActivityIndicator,
 } from 'react-native';
+import { lightTap } from '../utils/haptics';
 import { PokemonSprite } from './PokemonSprite';
 import { TypeBadge } from './TypeBadge';
 import { DraftPreviewModal } from './DraftPreviewModal';
@@ -98,11 +99,13 @@ export function DraftScreen({
 
   const handlePick = () => {
     if (selected === null || !isYourTurn || pickedIndices.has(selected)) return;
+    lightTap();
     onPick(selected);
     setSelected(null);
   };
 
   const handlePickFromModal = (poolIndex: number) => {
+    lightTap();
     onPick(poolIndex);
     setPreviewIndex(null);
     setSelected(null);

@@ -5,15 +5,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Dimensions,
   Modal,
+  useWindowDimensions,
 } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
 import { PokemonDetailModal } from './PokemonDetailModal';
 import { colors, spacing, typeColors } from '../theme';
-
-const { width: SCREEN_W } = Dimensions.get('window');
-const CARD_W = (SCREEN_W - spacing.lg * 2 - spacing.md) / 2;
 
 /** Type-themed emoji icons */
 const TYPE_ICONS: Record<string, string> = {
@@ -60,6 +57,8 @@ export function GymMapScreen({
   shopBalance,
   team,
 }: Props) {
+  const { width: screenW } = useWindowDimensions();
+  const cardW = (screenW - spacing.lg * 2 - spacing.md) / 2;
   const [showTeam, setShowTeam] = useState(false);
   const beatenCount = beatenGyms.filter(Boolean).length;
   const allBeaten = beatenCount === 8;
@@ -101,7 +100,7 @@ export function GymMapScreen({
           return (
             <TouchableOpacity
               key={index}
-              style={[styles.card]}
+              style={[styles.card, { width: cardW }]}
               activeOpacity={beaten ? 1 : 0.7}
               onPress={() => !beaten && onChallenge(index)}
               disabled={beaten}
@@ -261,7 +260,7 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    width: CARD_W,
+    // width set via inline style from useWindowDimensions
     height: 160,
     borderRadius: 14,
     overflow: 'hidden',

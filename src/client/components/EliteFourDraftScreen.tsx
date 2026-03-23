@@ -4,6 +4,7 @@
  * Phase 2: For each Pokemon, player picks 4 moves from the move pool.
  */
 import React, { useState } from 'react';
+import { lightTap } from '../utils/haptics';
 import {
   View,
   Text,
@@ -81,6 +82,7 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
   // --- Phase 1: Pick Pokemon ---
 
   const handleTap = (idx: number) => {
+    lightTap();
     if (pickedSet.has(idx)) {
       setPicks(picks.filter(i => i !== idx));
       if (selected === idx) setSelected(null);

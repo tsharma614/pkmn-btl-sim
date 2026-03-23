@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,13 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PokemonSprite } from './PokemonSprite';
-import { colors, spacing, typeColors } from '../theme';
-import { MONOTYPE_TYPES, POOL_SIZES } from '../../engine/draft-pool';
+import { MatchSettingsForm } from './MatchSettingsForm';
+import { colors, spacing } from '../theme';
+import { MONOTYPE_TYPES } from '../../engine/draft-pool';
 import type { PoolSize, DraftType } from '../../engine/draft-pool';
 import { StatsScreen } from './StatsScreen';
 import { CampaignScreen } from './CampaignScreen';
@@ -19,8 +20,6 @@ import type { GymCareerSave } from './CampaignScreen';
 import { getProfile, saveProfile } from '../utils/stats-storage';
 
 const OLD_NAME_KEY = '@pbs_trainer_name';
-
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
@@ -31,37 +30,31 @@ interface Props {
   onStartGymCareer?: (playerName: string, existingSave?: GymCareerSave) => void;
 }
 
-/** Background sprite positions — 7 rows of 3, filling the whole screen */
-const BG_SPRITES: { id: string; x: number; y: number; size: number; opacity: number }[] = [
-  // Row 1 (top)
-  { id: 'mewtwo', x: -10, y: -10, size: 130, opacity: 0.12 },
-  { id: 'ceruledge', x: SCREEN_W / 2 - 55, y: 10, size: 110, opacity: 0.10 },
-  { id: 'garchomp', x: SCREEN_W - 120, y: -5, size: 120, opacity: 0.11 },
-  // Row 2
-  { id: 'kyogre', x: -20, y: SCREEN_H * 0.11, size: 120, opacity: 0.10 },
-  { id: 'aggron', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.12, size: 110, opacity: 0.09 },
-  { id: 'groudon', x: SCREEN_W - 110, y: SCREEN_H * 0.11, size: 120, opacity: 0.10 },
-  // Row 3
-  { id: 'electivire', x: -10, y: SCREEN_H * 0.24, size: 110, opacity: 0.09 },
-  { id: 'heracross', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.25, size: 100, opacity: 0.09 },
-  { id: 'roserade', x: SCREEN_W - 100, y: SCREEN_H * 0.24, size: 100, opacity: 0.08 },
-  // Row 4
-  { id: 'rhyperior', x: -15, y: SCREEN_H * 0.37, size: 120, opacity: 0.10 },
-  { id: 'metagross', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.38, size: 110, opacity: 0.09 },
-  { id: 'magmortar', x: SCREEN_W - 110, y: SCREEN_H * 0.37, size: 110, opacity: 0.10 },
-  // Row 5
-  { id: 'cinderace', x: -10, y: SCREEN_H * 0.50, size: 110, opacity: 0.10 },
-  { id: 'registeel', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.51, size: 100, opacity: 0.09 },
-  { id: 'empoleon', x: SCREEN_W - 110, y: SCREEN_H * 0.50, size: 110, opacity: 0.09 },
-  // Row 6
-  { id: 'dragonite', x: -15, y: SCREEN_H * 0.63, size: 120, opacity: 0.10 },
-  { id: 'gliscor', x: SCREEN_W / 2 - 50, y: SCREEN_H * 0.64, size: 100, opacity: 0.09 },
-  { id: 'tyrantrum', x: SCREEN_W - 120, y: SCREEN_H * 0.63, size: 120, opacity: 0.11 },
-  // Row 7 (bottom)
-  { id: 'gengar', x: -10, y: SCREEN_H * 0.76, size: 120, opacity: 0.11 },
-  { id: 'baxcalibur', x: SCREEN_W / 2 - 55, y: SCREEN_H * 0.77, size: 110, opacity: 0.09 },
-  { id: 'glalie', x: SCREEN_W - 100, y: SCREEN_H * 0.76, size: 100, opacity: 0.08 },
-];
+function makeBgSprites(w: number, h: number) {
+  return [
+    { id: 'mewtwo', x: -10, y: -10, size: 130, opacity: 0.12 },
+    { id: 'ceruledge', x: w / 2 - 55, y: 10, size: 110, opacity: 0.10 },
+    { id: 'garchomp', x: w - 120, y: -5, size: 120, opacity: 0.11 },
+    { id: 'kyogre', x: -20, y: h * 0.11, size: 120, opacity: 0.10 },
+    { id: 'aggron', x: w / 2 - 55, y: h * 0.12, size: 110, opacity: 0.09 },
+    { id: 'groudon', x: w - 110, y: h * 0.11, size: 120, opacity: 0.10 },
+    { id: 'electivire', x: -10, y: h * 0.24, size: 110, opacity: 0.09 },
+    { id: 'heracross', x: w / 2 - 50, y: h * 0.25, size: 100, opacity: 0.09 },
+    { id: 'roserade', x: w - 100, y: h * 0.24, size: 100, opacity: 0.08 },
+    { id: 'rhyperior', x: -15, y: h * 0.37, size: 120, opacity: 0.10 },
+    { id: 'metagross', x: w / 2 - 55, y: h * 0.38, size: 110, opacity: 0.09 },
+    { id: 'magmortar', x: w - 110, y: h * 0.37, size: 110, opacity: 0.10 },
+    { id: 'cinderace', x: -10, y: h * 0.50, size: 110, opacity: 0.10 },
+    { id: 'registeel', x: w / 2 - 50, y: h * 0.51, size: 100, opacity: 0.09 },
+    { id: 'empoleon', x: w - 110, y: h * 0.50, size: 110, opacity: 0.09 },
+    { id: 'dragonite', x: -15, y: h * 0.63, size: 120, opacity: 0.10 },
+    { id: 'gliscor', x: w / 2 - 50, y: h * 0.64, size: 100, opacity: 0.09 },
+    { id: 'tyrantrum', x: w - 120, y: h * 0.63, size: 120, opacity: 0.11 },
+    { id: 'gengar', x: -10, y: h * 0.76, size: 120, opacity: 0.11 },
+    { id: 'baxcalibur', x: w / 2 - 55, y: h * 0.77, size: 110, opacity: 0.09 },
+    { id: 'glalie', x: w - 100, y: h * 0.76, size: 100, opacity: 0.08 },
+  ];
+}
 
 function PokeballLogo({ size = 100 }: { size?: number }) {
   const half = size / 2;
@@ -87,6 +80,8 @@ function PokeballLogo({ size = 100 }: { size?: number }) {
 type Screen = 'main' | 'cpu_setup' | 'online_setup' | 'stats' | 'campaign';
 
 export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGymCareer }: Props) {
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  const bgSprites = useMemo(() => makeBgSprites(screenW, screenH), [screenW, screenH]);
   const [screen, setScreen] = useState<Screen>('main');
   const [name, setName] = useState('');
   const [itemMode, setItemMode] = useState<'competitive' | 'casual'>('competitive');
@@ -142,7 +137,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
   if (screen === 'main') {
     return (
       <View style={styles.container}>
-        {BG_SPRITES.map((s) => (
+        {bgSprites.map((s) => (
           <View
             key={s.id}
             style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity }]}
@@ -206,7 +201,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {BG_SPRITES.map((s) => (
+        {bgSprites.map((s) => (
           <View
             key={s.id}
             style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity * 0.5 }]}
@@ -242,169 +237,19 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
             </View>
           </View>
 
-          {/* Items */}
-          <View style={styles.sectionCompact}>
-            <Text style={styles.label}>Items</Text>
-            <View style={styles.toggleRow}>
-              <TouchableOpacity
-                style={[styles.toggleBtn, itemMode === 'competitive' && styles.toggleBtnActive]}
-                onPress={() => setItemMode('competitive')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.toggleText, itemMode === 'competitive' && styles.toggleTextActive]}>Competitive</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.toggleBtn, itemMode === 'casual' && styles.toggleBtnActive]}
-                onPress={() => setItemMode('casual')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.toggleText, itemMode === 'casual' && styles.toggleTextActive]}>Casual</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Modifiers — compact pill toggles */}
-          <View style={styles.sectionCompact}>
-            <Text style={styles.label}>Modifiers</Text>
-            <View style={styles.pillRow}>
-              <TouchableOpacity
-                style={[styles.pill, classicMode && styles.pillActive]}
-                onPress={() => setClassicMode(!classicMode)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.pillText, classicMode && styles.pillTextActive]}>Classic</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.pill, legendaryMode && styles.pillActive]}
-                onPress={() => setLegendaryMode(!legendaryMode)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.pillText, legendaryMode && styles.pillTextActive]}>Legendary</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.pill, draftMode && styles.pillActive]}
-                onPress={() => { setDraftMode(!draftMode); if (draftMode) { setMonotype(null); setDraftTypeMode('snake'); setPoolSize(21); } }}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.pillText, draftMode && styles.pillTextActive]}>Draft</Text>
-              </TouchableOpacity>
-              {draftMode && (
-                <TouchableOpacity
-                  style={[styles.pill, !!monotype && styles.pillActive]}
-                  onPress={() => { setMonotype(monotype ? null : 'random'); if (!monotype) setDraftTypeMode('snake'); }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.pillText, !!monotype && styles.pillTextActive]}>Monotype</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={[styles.pill, megaMode && styles.pillActive]}
-                onPress={() => setMegaMode(!megaMode)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.pillText, megaMode && styles.pillTextActive]}>Mega</Text>
-              </TouchableOpacity>
-              {draftMode && (
-                <TouchableOpacity
-                  style={[styles.pill, moveSelection && styles.pillActive]}
-                  onPress={() => setMoveSelection(!moveSelection)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.pillText, moveSelection && styles.pillTextActive]}>Pick Moves</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-            {/* Active modifier descriptions — one-liners */}
-            {(classicMode || legendaryMode || draftMode || megaMode) && (
-              <Text style={styles.modifierDesc}>
-                {[
-                  classicMode && 'Gen 1–4 only',
-                  legendaryMode && 'T1 & T2 Pokemon',
-                  draftMode && (draftTypeMode === 'role' ? 'Role draft from shared pool' : 'Snake draft from shared pool'),
-                  draftMode && poolSize !== 21 && `${poolSize} Pokemon pool`,
-                  monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
-                  megaMode && (draftMode ? 'Mega evolutions in draft pool' : '~25% chance of a mega on each team'),
-                  moveSelection && 'Choose your moves after draft',
-                  null,
-                ].filter(Boolean).join(' · ')}
-              </Text>
-            )}
-          </View>
-
-          {/* Draft type + pool size (only when draft mode is on) */}
-          {draftMode && (
-            <View style={styles.sectionCompact}>
-              <Text style={styles.label}>Draft Options</Text>
-              <View style={styles.toggleRow}>
-                <TouchableOpacity
-                  style={[styles.toggleBtn, draftTypeMode === 'snake' && styles.toggleBtnActive]}
-                  onPress={() => setDraftTypeMode('snake')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.toggleText, draftTypeMode === 'snake' && styles.toggleTextActive]}>Snake</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.toggleBtn, draftTypeMode === 'role' && styles.toggleBtnActive, !!monotype && { opacity: 0.4 }]}
-                  onPress={() => !monotype && setDraftTypeMode('role')}
-                  activeOpacity={0.7}
-                  disabled={!!monotype}
-                >
-                  <Text style={[styles.toggleText, draftTypeMode === 'role' && styles.toggleTextActive]}>Role</Text>
-                </TouchableOpacity>
-              </View>
-              {draftTypeMode === 'snake' && (
-                <>
-                  <View style={[styles.toggleRow, { marginTop: spacing.sm }]}>
-                    {POOL_SIZES.map(size => (
-                      <TouchableOpacity
-                        key={size}
-                        style={[styles.toggleBtn, poolSize === size && styles.toggleBtnActive]}
-                        onPress={() => setPoolSize(size)}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={[styles.toggleText, poolSize === size && styles.toggleTextActive]}>{size}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                  <Text style={styles.modifierDesc}>Pool size: {poolSize} Pokemon</Text>
-                </>
-              )}
-              {draftTypeMode === 'role' && (
-                <Text style={styles.modifierDesc}>Pick one from each role: Sweepers, Walls, Support, Mega</Text>
-              )}
-            </View>
-          )}
-
-          {/* Monotype type picker */}
-          {draftMode && monotype && (
-            <View style={styles.sectionCompact}>
-              <View style={styles.typeGrid}>
-                <TouchableOpacity
-                  style={[styles.typeChip, { backgroundColor: colors.surfaceLight }, monotype === 'random' && styles.typeChipSelected]}
-                  onPress={() => setMonotype('random')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.typeChipText, monotype === 'random' && styles.typeChipTextSelected]}>Random</Text>
-                </TouchableOpacity>
-                {MONOTYPE_TYPES.map(t => (
-                    <TouchableOpacity
-                      key={t}
-                      style={[
-                        styles.typeChip,
-                        { backgroundColor: typeColors[t] || '#666' },
-                        monotype === t && styles.typeChipSelected,
-                      ]}
-                      onPress={() => setMonotype(t)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.typeChipText, monotype === t && styles.typeChipTextSelected]}>
-                        {t}
-                      </Text>
-                    </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
+          <MatchSettingsForm
+            itemMode={itemMode} setItemMode={setItemMode}
+            classicMode={classicMode} setClassicMode={setClassicMode}
+            legendaryMode={legendaryMode} setLegendaryMode={setLegendaryMode}
+            draftMode={draftMode} setDraftMode={setDraftMode}
+            monotype={monotype} setMonotype={setMonotype}
+            draftTypeMode={draftTypeMode} setDraftTypeMode={setDraftTypeMode}
+            poolSize={poolSize} setPoolSize={setPoolSize}
+            megaMode={megaMode} setMegaMode={setMegaMode}
+            moveSelection={moveSelection} setMoveSelection={setMoveSelection}
+            showPoolSize
+            onDraftToggle={() => { setDraftMode(!draftMode); if (draftMode) { setMonotype(null); setDraftTypeMode('snake'); setPoolSize(21); } }}
+          />
 
           <View style={{ flex: 1 }} />
 
@@ -432,7 +277,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {BG_SPRITES.map((s) => (
+      {bgSprites.map((s) => (
         <View
           key={s.id}
           style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity * 0.5 }]}
@@ -449,147 +294,19 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
 
         <Text style={styles.setupTitle}>PLAY ONLINE</Text>
 
-        {/* Items */}
-        <View style={styles.sectionCompact}>
-          <Text style={styles.label}>Items</Text>
-          <View style={styles.toggleRow}>
-            <TouchableOpacity
-              style={[styles.toggleBtn, itemMode === 'competitive' && styles.toggleBtnActive]}
-              onPress={() => setItemMode('competitive')}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.toggleText, itemMode === 'competitive' && styles.toggleTextActive]}>Competitive</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleBtn, itemMode === 'casual' && styles.toggleBtnActive]}
-              onPress={() => setItemMode('casual')}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.toggleText, itemMode === 'casual' && styles.toggleTextActive]}>Casual</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Modifiers */}
-        <View style={styles.sectionCompact}>
-          <Text style={styles.label}>Modifiers (Host Decides)</Text>
-          <View style={styles.pillRow}>
-            <TouchableOpacity
-              style={[styles.pill, classicMode && styles.pillActive]}
-              onPress={() => setClassicMode(!classicMode)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.pillText, classicMode && styles.pillTextActive]}>Classic</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.pill, legendaryMode && styles.pillActive]}
-              onPress={() => setLegendaryMode(!legendaryMode)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.pillText, legendaryMode && styles.pillTextActive]}>Legendary</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.pill, draftMode && styles.pillActive]}
-              onPress={() => { setDraftMode(!draftMode); if (draftMode) setMonotype(null); }}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.pillText, draftMode && styles.pillTextActive]}>Draft</Text>
-            </TouchableOpacity>
-            {draftMode && (
-              <TouchableOpacity
-                style={[styles.pill, !!monotype && styles.pillActive]}
-                onPress={() => { setMonotype(monotype ? null : 'random'); if (!monotype) setDraftTypeMode('snake'); }}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.pillText, !!monotype && styles.pillTextActive]}>Monotype</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={[styles.pill, megaMode && styles.pillActive]}
-              onPress={() => setMegaMode(!megaMode)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.pillText, megaMode && styles.pillTextActive]}>Mega</Text>
-            </TouchableOpacity>
-            {draftMode && (
-              <TouchableOpacity
-                style={[styles.pill, moveSelection && styles.pillActive]}
-                onPress={() => setMoveSelection(!moveSelection)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.pillText, moveSelection && styles.pillTextActive]}>Pick Moves</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          {(classicMode || legendaryMode || draftMode || megaMode) && (
-            <Text style={styles.modifierDesc}>
-              {[
-                classicMode && 'Gen 1–4 only',
-                legendaryMode && 'T1 & T2 Pokemon',
-                draftMode && (draftTypeMode === 'role' ? 'Role draft from shared pool' : 'Snake draft from shared pool'),
-                monotype && (monotype === 'random' ? 'Random type' : monotype + ' type'),
-                megaMode && (draftMode ? 'Mega evolutions in draft pool' : '~25% chance of a mega on each team'),
-                moveSelection && 'Choose your moves after draft',
-              ].filter(Boolean).join(' · ')}
-            </Text>
-          )}
-        </View>
-
-        {/* Draft type toggle for online */}
-        {draftMode && (
-          <View style={styles.sectionCompact}>
-            <Text style={styles.label}>Draft Options</Text>
-            <View style={styles.toggleRow}>
-              <TouchableOpacity
-                style={[styles.toggleBtn, draftTypeMode === 'snake' && styles.toggleBtnActive]}
-                onPress={() => setDraftTypeMode('snake')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.toggleText, draftTypeMode === 'snake' && styles.toggleTextActive]}>Snake</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.toggleBtn, draftTypeMode === 'role' && styles.toggleBtnActive, !!monotype && { opacity: 0.4 }]}
-                onPress={() => !monotype && setDraftTypeMode('role')}
-                activeOpacity={0.7}
-                disabled={!!monotype}
-              >
-                <Text style={[styles.toggleText, draftTypeMode === 'role' && styles.toggleTextActive]}>Role</Text>
-              </TouchableOpacity>
-            </View>
-            {draftTypeMode === 'role' && (
-              <Text style={styles.modifierDesc}>Pick one from each role: Sweepers, Walls, Support, Mega</Text>
-            )}
-          </View>
-        )}
-
-        {/* Monotype type picker for online */}
-        {draftMode && monotype && (
-          <View style={styles.sectionCompact}>
-            <View style={styles.typeGrid}>
-              <TouchableOpacity
-                style={[styles.typeChip, { backgroundColor: colors.surfaceLight }, monotype === 'random' && styles.typeChipSelected]}
-                onPress={() => setMonotype('random')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.typeChipText, monotype === 'random' && styles.typeChipTextSelected]}>Random</Text>
-              </TouchableOpacity>
-              {MONOTYPE_TYPES.map(t => (
-                <TouchableOpacity
-                  key={t}
-                  style={[
-                    styles.typeChip,
-                    { backgroundColor: typeColors[t] || '#666' },
-                    monotype === t && styles.typeChipSelected,
-                  ]}
-                  onPress={() => setMonotype(t)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.typeChipText, monotype === t && styles.typeChipTextSelected]}>{t}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
+        <MatchSettingsForm
+          itemMode={itemMode} setItemMode={setItemMode}
+          classicMode={classicMode} setClassicMode={setClassicMode}
+          legendaryMode={legendaryMode} setLegendaryMode={setLegendaryMode}
+          draftMode={draftMode} setDraftMode={setDraftMode}
+          monotype={monotype} setMonotype={setMonotype}
+          draftTypeMode={draftTypeMode} setDraftTypeMode={setDraftTypeMode}
+          poolSize={poolSize} setPoolSize={setPoolSize}
+          megaMode={megaMode} setMegaMode={setMegaMode}
+          moveSelection={moveSelection} setMoveSelection={setMoveSelection}
+          modifierLabel="Modifiers (Host Decides)"
+          onDraftToggle={() => { setDraftMode(!draftMode); if (draftMode) setMonotype(null); }}
+        />
 
         <View style={{ flex: 1 }} />
 

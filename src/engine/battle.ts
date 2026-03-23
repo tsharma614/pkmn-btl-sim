@@ -31,6 +31,8 @@ const WEATHER_ALIASES: Record<string, Weather> = {
   snowscape: 'hail', Snowscape: 'hail', hail: 'hail',
 };
 
+const POWDER_MOVES = new Set(['Sleep Powder', 'Stun Spore', 'Poison Powder', 'Spore', 'Cotton Spore', 'Powder', 'Rage Powder']);
+
 export class Battle {
   state: BattleState;
   rng: SeededRNG;
@@ -1980,7 +1982,6 @@ export class Battle {
       return true;
     }
     // Safety Goggles: immune to powder/spore moves
-    const POWDER_MOVES = new Set(['Sleep Powder', 'Stun Spore', 'Poison Powder', 'Spore', 'Cotton Spore', 'Powder', 'Rage Powder']);
     if (defender.item === 'Safety Goggles' && POWDER_MOVES.has(move.name)) {
       this.addEvent(events, 'immune', { target: defender.species.name, move: move.name, reason: 'Safety Goggles' });
       return true;
