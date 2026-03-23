@@ -149,8 +149,14 @@ export function BattleScreen() {
   }, [screenFlash?.key]);
 
   // --- Budget Draft (Gym Career) ---
-  if (state.phase === 'budget_draft') {
-    const budgetOptions = generateBudgetDraftOptions(new SeededRNG());
+  // Memoize expensive draft generation — was crashing on 8GB devices due to
+  // unmemoized synchronous computation (645 Pokemon × 6 roles × 4 tiers) on every render
+  const budgetOptions = useMemo(
+    () => state.phase === 'budget_draft' ? generateBudgetDraftOptions(new SeededRNG()) : null,
+    [state.phase]
+  );
+
+  if (state.phase === 'budget_draft' && budgetOptions) {
     return (
       <SafeAreaView style={styles.full}>
         <BudgetDraftScreen
