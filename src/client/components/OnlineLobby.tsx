@@ -9,7 +9,9 @@ import {
   Share,
   Platform,
 } from 'react-native';
-import { colors, spacing } from '../theme';
+import { colors, spacing, shadows } from '../theme';
+import { PkButton } from './shared/PkButton';
+import { PkCard } from './shared/PkCard';
 
 interface Props {
   /** Room code if we created a room (null = show create/join choice) */
@@ -31,6 +33,14 @@ export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, maxG
   const [mode, setMode] = useState<'choice' | 'create' | 'join'>(roomCode ? 'create' : 'choice');
   const [joinCode, setJoinCode] = useState('');
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (!roomCode) return;
+    Share.share({ message: roomCode });
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // If we have a room code, we're in create mode waiting for opponent
   if (roomCode && mode !== 'join') {
@@ -40,16 +50,27 @@ export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, maxG
           {opponentName ? `${opponentName} joined!` : 'Waiting for opponent...'}
         </Text>
 
-        <View style={styles.codeBox}>
+        <PkCard style={styles.codeCard} padding="spacious">
           <Text style={styles.codeLabel}>ROOM CODE</Text>
           <Text style={styles.code}>{roomCode}</Text>
-        </View>
+          <TouchableOpacity style={styles.copyBtn} onPress={handleCopy} activeOpacity={0.7}>
+            <Text style={styles.copyBtnText}>{copied ? 'COPIED!' : 'COPY CODE'}</Text>
+          </TouchableOpacity>
+        </PkCard>
 
         {/* Show room settings */}
         {(maxGen || legendaryMode) && (
           <View style={styles.settingsTags}>
-            {maxGen && maxGen <= 4 && <Text style={styles.settingsTag}>Classic Mode</Text>}
-            {legendaryMode && <Text style={styles.settingsTag}>Legendary Team</Text>}
+            {maxGen && maxGen <= 4 && (
+              <View style={[styles.settingsTag, styles.settingsTagActive]}>
+                <Text style={styles.settingsTagText}>Classic Mode</Text>
+              </View>
+            )}
+            {legendaryMode && (
+              <View style={[styles.settingsTag, styles.settingsTagActive]}>
+                <Text style={styles.settingsTagText}>Legendary Team</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -58,17 +79,17 @@ export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, maxG
             <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: spacing.xl }} />
             <Text style={styles.hint}>Share this code with your opponent</Text>
 
-            <TouchableOpacity
-              style={styles.shareBtn}
+            <PkButton
+              title="SHARE CODE"
+              variant="secondary"
+              size="md"
               onPress={() => {
                 Share.share({
                   message: `Join my PBS battle! Room code: ${roomCode}`,
                 });
               }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.shareBtnText}>Share Code</Text>
-            </TouchableOpacity>
+              style={{ marginTop: spacing.lg }}
+            />
           </>
         )}
 
@@ -104,8 +125,10 @@ export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, maxG
 
         {joinError && <Text style={styles.error}>{joinError}</Text>}
 
-        <TouchableOpacity
-          style={[styles.joinBtn, joinCode.length < 6 && styles.joinBtnDisabled]}
+        <PkButton
+          title="JOIN"
+          variant="primary"
+          size="md"
           onPress={() => {
             if (joinCode.length < 6) {
               setJoinError('Code must be 6 characters');
@@ -113,11 +136,9 @@ export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, maxG
             }
             onJoinRoom(playerName, itemMode, joinCode);
           }}
-          activeOpacity={0.7}
           disabled={joinCode.length < 6}
-        >
-          <Text style={styles.joinBtnText}>Join</Text>
-        </TouchableOpacity>
+          style={{ marginTop: spacing.xl, width: '100%' }}
+        />
 
         <TouchableOpacity style={styles.cancelBtn} onPress={() => setMode('choice')} activeOpacity={0.7}>
           <Text style={styles.cancelText}>Back</Text>
@@ -132,26 +153,26 @@ export function OnlineLobby({ roomCode, opponentName, playerName, itemMode, maxG
       <Text style={styles.title}>Play Online</Text>
       <Text style={styles.subtitle}>Battle a friend using a room code</Text>
 
-      <TouchableOpacity
-        style={styles.createBtn}
+      <PkButton
+        title="CREATE ROOM"
+        subtitle="Generate a code and wait for opponent"
+        variant="primary"
+        size="lg"
         onPress={() => {
           setMode('create');
           onCreateRoom(playerName, itemMode, maxGen, legendaryMode);
         }}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.createBtnText}>CREATE ROOM</Text>
-        <Text style={styles.createBtnSub}>Generate a code and wait for opponent</Text>
-      </TouchableOpacity>
+        style={{ width: '100%', marginBottom: spacing.md }}
+      />
 
-      <TouchableOpacity
-        style={styles.joinChoiceBtn}
+      <PkButton
+        title="JOIN ROOM"
+        subtitle="Enter a 6-character room code"
+        variant="secondary"
+        size="lg"
         onPress={() => setMode('join')}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.joinChoiceBtnText}>JOIN ROOM</Text>
-        <Text style={styles.joinChoiceBtnSub}>Enter a 6-character room code</Text>
-      </TouchableOpacity>
+        style={{ width: '100%' }}
+      />
 
       <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.7}>
         <Text style={styles.cancelText}>Back to Menu</Text>
@@ -180,15 +201,10 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.xl * 2,
   },
-  codeBox: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    paddingHorizontal: 40,
-    paddingVertical: spacing.xl,
+  codeCard: {
     marginTop: spacing.xl,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.border,
+    width: '100%',
   },
   codeLabel: {
     color: colors.textDim,
@@ -202,25 +218,27 @@ const styles = StyleSheet.create({
     fontSize: 42,
     fontWeight: '900',
     letterSpacing: 8,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  copyBtn: {
+    marginTop: spacing.md,
+    backgroundColor: colors.surfaceLight,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  copyBtnText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   hint: {
     color: colors.textDim,
     fontSize: 12,
     marginTop: spacing.lg,
-  },
-  shareBtn: {
-    backgroundColor: colors.surfaceLight,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginTop: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  shareBtnText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '700',
   },
   cancelBtn: {
     marginTop: spacing.xl,
@@ -230,51 +248,6 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 14,
     fontWeight: '600',
-  },
-  createBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    borderRadius: 14,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  createBtnText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
-  createBtnSub: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 11,
-    marginTop: 4,
-  },
-  joinChoiceBtn: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 14,
-    width: '100%',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
-  joinChoiceBtnText: {
-    color: colors.accent,
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 2,
-  },
-  joinChoiceBtnSub: {
-    color: colors.textDim,
-    fontSize: 11,
-    marginTop: 4,
   },
   inputSection: {
     width: '100%',
@@ -301,6 +274,7 @@ const styles = StyleSheet.create({
     letterSpacing: 8,
     textAlign: 'center',
     width: '100%',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   error: {
     color: colors.hpRed,
@@ -308,33 +282,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: spacing.sm,
   },
-  joinBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 14,
-    paddingHorizontal: 48,
-    borderRadius: 12,
-    marginTop: spacing.xl,
-  },
-  joinBtnDisabled: {
-    opacity: 0.5,
-  },
-  joinBtnText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '800',
-  },
   settingsTags: {
     flexDirection: 'row',
-    gap: 8,
+    gap: spacing.sm,
     marginTop: spacing.md,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   settingsTag: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     backgroundColor: colors.surfaceLight,
     borderWidth: 1,
+    borderColor: colors.border,
+  },
+  settingsTagActive: {
     borderColor: colors.accent,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    backgroundColor: 'rgba(227,53,13,0.1)',
+  },
+  settingsTagText: {
     color: colors.accent,
     fontSize: 12,
     fontWeight: '700',

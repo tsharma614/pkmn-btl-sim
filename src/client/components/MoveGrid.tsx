@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,11 @@ import {
   StyleSheet,
   Modal,
   Pressable,
+  Animated,
 } from 'react-native';
 import { CategoryIcon } from './CategoryIcon';
 import { lightTap } from '../utils/haptics';
-import { typeColors, colors, spacing } from '../theme';
+import { typeColors, colors, spacing, shadows } from '../theme';
 import { getTypeEffectiveness } from '../../data/type-chart';
 import type { OwnPokemon } from '../../server/types';
 import type { PokemonType } from '../../types';
@@ -25,10 +26,111 @@ function getEffBadge(move: OwnPokemon['moves'][0], opponentTypes?: PokemonType[]
   if (!opponentTypes || opponentTypes.length === 0) return null;
   if (move.category === 'Status') return null;
   const eff = getTypeEffectiveness(move.type as PokemonType, opponentTypes);
-  if (eff === 0) return { label: 'IMMUNE', color: '#e53935' };
-  if (eff >= 2) return { label: 'SE', color: '#43a047' };
-  if (eff < 1) return { label: 'NVE', color: '#757575' };
+  if (eff === 0) return { label: 'IMMUNE', color: colors.hpRed };
+  if (eff >= 2) return { label: 'SE', color: colors.hpGreen };
+  if (eff < 1) return { label: 'NVE', color: colors.greyDark };
   return null;
+}
+
+function MoveButton({ move, index, isDisabled, onPress, onLongPress, opponentTypes }: {
+  move: OwnPokemon['moves'][0];
+  index: number;
+  isDisabled: boolean;
+  onPress: () => void;
+  onLongPress: () => void;
+  opponentTypes?: PokemonType[];
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const bg = typeColors[move.type] || '#555';
+  const ppRatio = move.maxPp > 0 ? move.currentPp / move.maxPp : 0;
+  const darkerBg = darkenColor(bg, 0.65);
+  const effBadge = getEffBadge(move, opponentTypes);
+
+  const handlePressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={[styles.moveBtnWrap, { transform: [{ scale }] }]}>
+      <TouchableOpacity
+        style={[
+          styles.moveBtn,
+          {
+            backgroundColor: bg,
+            shadowColor: darkerBg,
+          },
+          isDisabled && styles.moveBtnDisabled,
+        ]}
+        onPress={() => { lightTap(); onPress(); }}
+        onLongPress={onLongPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        delayLongPress={300}
+        disabled={isDisabled}
+        activeOpacity={1}
+      >
+        {/* Gradient-like bottom darkening */}
+        <View style={[styles.gradientOverlay, { backgroundColor: darkerBg }]} />
+
+        {/* Effectiveness badge pill */}
+        {effBadge && (
+          <View style={[styles.effBadge, { backgroundColor: effBadge.color }]}>
+            <Text style={styles.effBadgeText}>{effBadge.label}</Text>
+          </View>
+        )}
+
+        {/* Move name */}
+        <Text style={styles.moveName} numberOfLines={1}>
+          {move.name}
+        </Text>
+
+        {/* Middle row: category + type label ... power pill */}
+        <View style={styles.midRow}>
+          <View style={styles.catType}>
+            <CategoryIcon category={move.category} size={13} />
+            <Text style={styles.typeLabel}>{move.type}</Text>
+          </View>
+          {move.power ? (
+            <View style={styles.powerPill}>
+              <Text style={styles.powerText}>{move.power}</Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* PP bar along the bottom */}
+        <View style={styles.ppTrack}>
+          <View style={[
+            styles.ppFill,
+            {
+              width: `${ppRatio * 100}%`,
+              backgroundColor: ppRatio > 0.5
+                ? 'rgba(255,255,255,0.7)'
+                : ppRatio > 0.25
+                  ? colors.hpYellow
+                  : colors.hpRed,
+            },
+          ]} />
+        </View>
+        <Text style={styles.ppLabel}>
+          PP {move.currentPp}/{move.maxPp}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
 }
 
 export function MoveGrid({ active, onSelectMove, disabled, opponentTypes }: Props) {
@@ -47,67 +149,16 @@ export function MoveGrid({ active, onSelectMove, disabled, opponentTypes }: Prop
           (active.choiceLocked !== null && move.name !== active.choiceLocked) ||
           (active.encoreMove != null && move.name !== active.encoreMove);
 
-        const bg = typeColors[move.type] || '#555';
-        const ppRatio = move.maxPp > 0 ? move.currentPp / move.maxPp : 0;
-        // Darker shade for border (multiply RGB by ~0.65)
-        const borderColor = darkenColor(bg, 0.55);
-        const highlightColor = lightenColor(bg, 0.25);
-        const effBadge = getEffBadge(move, opponentTypes);
-
         return (
-          <TouchableOpacity
+          <MoveButton
             key={i}
-            style={[
-              styles.moveBtn,
-              {
-                backgroundColor: bg,
-                borderColor,
-                shadowColor: borderColor,
-              },
-              isDisabled && styles.moveBtnDisabled,
-            ]}
-            onPress={() => { lightTap(); onSelectMove(i); }}
+            move={move}
+            index={i}
+            isDisabled={isDisabled}
+            onPress={() => onSelectMove(i)}
             onLongPress={() => setTooltip({ move, index: i })}
-            delayLongPress={300}
-            disabled={isDisabled}
-            activeOpacity={0.8}
-          >
-            {/* Top highlight edge */}
-            <View style={[styles.topHighlight, { backgroundColor: highlightColor }]} />
-
-            {/* Effectiveness badge */}
-            {effBadge && (
-              <View style={[styles.effBadge, { backgroundColor: effBadge.color }]}>
-                <Text style={styles.effBadgeText}>{effBadge.label}</Text>
-              </View>
-            )}
-
-            {/* Move name */}
-            <Text style={styles.moveName} numberOfLines={1}>
-              {move.name}
-            </Text>
-
-            {/* Middle row: category + type label ... power pill */}
-            <View style={styles.midRow}>
-              <View style={styles.catType}>
-                <CategoryIcon category={move.category} size={13} />
-                <Text style={styles.typeLabel}>{move.type}</Text>
-              </View>
-              {move.power ? (
-                <View style={styles.powerPill}>
-                  <Text style={styles.powerText}>{move.power}</Text>
-                </View>
-              ) : null}
-            </View>
-
-            {/* PP bar along the bottom */}
-            <View style={styles.ppTrack}>
-              <View style={[styles.ppFill, { width: `${ppRatio * 100}%` }]} />
-            </View>
-            <Text style={styles.ppLabel}>
-              PP {move.currentPp}/{move.maxPp}
-            </Text>
-          </TouchableOpacity>
+            opponentTypes={opponentTypes}
+          />
         );
       })}
 
@@ -173,59 +224,50 @@ function darkenColor(hex: string, factor: number): string {
   return `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
 }
 
-/** Lighten a hex color by mixing with white. */
-function lightenColor(hex: string, amount: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${Math.min(255, r + Math.round((255 - r) * amount))}, ${Math.min(255, g + Math.round((255 - g) * amount))}, ${Math.min(255, b + Math.round((255 - b) * amount))}, 0.6)`;
-}
-
 const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
-    padding: spacing.sm,
+    gap: spacing.md,
+    padding: spacing.md,
   },
-  moveBtn: {
+  moveBtnWrap: {
     width: '47%',
     flexGrow: 1,
-    borderRadius: 12,
+  },
+  moveBtn: {
+    borderRadius: 14,
     padding: spacing.md,
     paddingBottom: spacing.sm,
-    minHeight: 76,
+    minHeight: 84,
     justifyContent: 'space-between',
     overflow: 'hidden',
-    // 3D raised border
-    borderWidth: 2.5,
-    borderBottomWidth: 4,
-    borderRightWidth: 3.5,
     // Shadow for depth
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 6,
   },
-  topHighlight: {
+  gradientOverlay: {
     position: 'absolute',
-    top: 0,
+    bottom: 0,
     left: 0,
     right: 0,
-    height: 3,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    height: '45%',
+    opacity: 0.3,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
   moveBtnDisabled: {
     opacity: 0.35,
   },
   effBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-    borderRadius: 6,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
+    top: spacing.sm,
+    right: spacing.sm,
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     zIndex: 2,
   },
   effBadgeText: {
@@ -241,13 +283,13 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
-    marginBottom: 6,
+    marginBottom: spacing.sm,
   },
   midRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: spacing.sm,
   },
   catType: {
     flexDirection: 'row',
@@ -273,16 +315,15 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   ppTrack: {
-    height: 3,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 2,
-    marginBottom: 3,
+    height: 5,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderRadius: 3,
+    marginBottom: 4,
     overflow: 'hidden',
   },
   ppFill: {
-    height: 3,
-    backgroundColor: 'rgba(255,255,255,0.6)',
-    borderRadius: 2,
+    height: 5,
+    borderRadius: 3,
   },
   ppLabel: {
     color: 'rgba(255,255,255,0.55)',
@@ -307,11 +348,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 12,
+    ...shadows.lg,
   },
   tooltipHeader: {
     flexDirection: 'row',

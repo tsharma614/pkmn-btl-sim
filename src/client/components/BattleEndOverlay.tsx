@@ -4,9 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { saveBattleResult } from '../utils/battle-history';
 import { earnBadge } from '../utils/badge-tracker';
 import { recordBattleResult, recordBattlePokemonStats, saveCampaignRun } from '../utils/stats-storage';
-import { colors, spacing } from '../theme';
+import { colors, spacing, shadows } from '../theme';
 import { HpBar } from './HpBar';
 import { PokemonSprite } from './PokemonSprite';
+import { PkButton } from './shared/PkButton';
+import { PkCard } from './shared/PkCard';
 import type { BattleEndPayload, OwnPokemon } from '../../server/types';
 import type { BattleStats } from '../state/battle-reducer';
 import type { GameMode } from '../state/battle-reducer';
@@ -20,7 +22,7 @@ interface Props {
   gameMode: GameMode;
   onPlayAgain: () => void;
   onExitToMenu: () => void;
-  /** Badge info — only set for qualifying CPU hard monotype draft wins */
+  /** Badge info -- only set for qualifying CPU hard monotype draft wins */
   badgeType?: string | null;
   /** Gym leader info for gym badge display */
   gymLeaderName?: string | null;
@@ -288,7 +290,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
     if (pokemonEntries.length > 0) {
       recordBattlePokemonStats(pokemonEntries);
     }
-    // Campaign loss tracking — one run entry per campaign
+    // Campaign loss tracking -- one run entry per campaign
     if (!isWinner && campaignMode) {
       const stage = campaignStage ?? 0;
       saveCampaignRun({
@@ -346,10 +348,10 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
   return (
     <View style={styles.overlay}>
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + spacing.md, spacing.xl) }]} bounces={false} showsVerticalScrollIndicator={false}>
-        <View style={styles.modal}>
+        <PkCard style={styles.modal} padding="spacious">
           {/* Result header */}
           <Text style={[styles.result, isWinner ? styles.win : styles.lose]}>
-            {isWinner ? 'YOU WIN!' : 'YOU LOSE!'}
+            {isWinner ? 'VICTORY' : 'DEFEAT'}
           </Text>
           <Text style={styles.detail}>
             {formatReason(data.reason)}{data.finalState.turn > 0 ? ` \u2014 Turn ${data.finalState.turn}` : ''}
@@ -363,8 +365,20 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
             </View>
           )}
 
+          {/* MVP section */}
+          {mvp && (
+            <PkCard accentColor={colors.accentGold} style={styles.mvpCard} padding="normal">
+              <Text style={styles.mvpLabel}>MVP</Text>
+              <View style={styles.mvpSpriteWrap}>
+                <PokemonSprite speciesId={mvp.speciesId} facing="front" size={72} animated={false} />
+              </View>
+              <Text style={styles.mvpName}>{mvp.name}</Text>
+              <Text style={styles.mvpDetail}>{mvp.label}</Text>
+            </PkCard>
+          )}
+
           {/* Battle Stats */}
-          <View style={styles.statsSection}>
+          <PkCard style={styles.statsSection} padding="compact">
             <Text style={styles.statsTitle}>BATTLE STATS</Text>
 
             <View style={styles.statsGrid}>
@@ -391,22 +405,10 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
                 </Text>
               </View>
             )}
-
-            {/* MVP */}
-            {mvp && (
-              <View style={styles.mvpRow}>
-                <Text style={styles.mvpLabel}>MVP</Text>
-                <View style={styles.mvpSpriteWrap}>
-                  <PokemonSprite speciesId={mvp.speciesId} facing="front" size={72} animated={false} />
-                </View>
-                <Text style={styles.mvpName}>{mvp.name}</Text>
-                <Text style={styles.mvpDetail}>{mvp.label}</Text>
-              </View>
-            )}
-          </View>
+          </PkCard>
 
           {/* Highlights */}
-          <View style={styles.statsSection}>
+          <PkCard style={styles.statsSection} padding="compact">
             <Text style={styles.statsTitle}>HIGHLIGHTS</Text>
 
             <View style={styles.statsGrid}>
@@ -447,12 +449,12 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
                 </Text>
               </View>
             )}
-          </View>
+          </PkCard>
 
           {/* Team summaries */}
           {hasTeamData && (
             <View style={styles.teams}>
-              <View style={styles.teamCol}>
+              <PkCard style={styles.teamCol} padding="compact">
                 <Text style={styles.teamLabel}>Your Team</Text>
                 {data.finalState.yourTeam.map((p, i) => (
                   <View key={i} style={styles.pokemonRow}>
@@ -461,7 +463,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
                     </Text>
                     {p.isAlive ? (
                       <View style={styles.pokemonHp}>
-                        <HpBar currentHp={p.currentHp} maxHp={p.maxHp} width={50} height={4} />
+                        <HpBar currentHp={p.currentHp} maxHp={p.maxHp} width={50} height={6} />
                         <Text style={styles.pokemonHpText}>{Math.round((p.currentHp / p.maxHp) * 100)}%</Text>
                       </View>
                     ) : (
@@ -469,8 +471,8 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
                     )}
                   </View>
                 ))}
-              </View>
-              <View style={styles.teamCol}>
+              </PkCard>
+              <PkCard style={styles.teamCol} padding="compact">
                 <Text style={styles.teamLabel}>Opponent</Text>
                 {data.finalState.opponentTeam.map((p, i) => (
                   <View key={i} style={styles.pokemonRow}>
@@ -479,7 +481,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
                     </Text>
                     {p.isAlive ? (
                       <View style={styles.pokemonHp}>
-                        <HpBar currentHp={p.currentHp} maxHp={p.maxHp} width={50} height={4} />
+                        <HpBar currentHp={p.currentHp} maxHp={p.maxHp} width={50} height={6} />
                         <Text style={styles.pokemonHpText}>{Math.round((p.currentHp / p.maxHp) * 100)}%</Text>
                       </View>
                     ) : (
@@ -487,51 +489,45 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
                     )}
                   </View>
                 ))}
-              </View>
+              </PkCard>
             </View>
           )}
 
           {/* Share buttons */}
           <View style={styles.shareRow}>
-            <TouchableOpacity style={styles.shareBtn} onPress={handleShare} activeOpacity={0.7}>
-              <Text style={styles.shareBtnText}>Share</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.shareBtn} onPress={handleShareLog} activeOpacity={0.7}>
-              <Text style={styles.shareBtnText}>Battle Log</Text>
-            </TouchableOpacity>
+            <PkButton title="Share" variant="secondary" size="sm" onPress={handleShare} style={{ flex: 1 }} />
+            <PkButton title="Battle Log" variant="secondary" size="sm" onPress={handleShareLog} style={{ flex: 1 }} />
           </View>
 
           {isWinner && campaignMode && onAdvanceCampaign ? (
             <>
-              <TouchableOpacity style={styles.btn} onPress={onAdvanceCampaign} activeOpacity={0.7}>
-                <Text style={styles.btnText}>Continue</Text>
-              </TouchableOpacity>
+              <PkButton title="Continue" variant="primary" size="md" onPress={onAdvanceCampaign} style={{ width: '100%' }} />
               <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
                 <Text style={styles.exitBtnText}>Forfeit Run</Text>
               </TouchableOpacity>
             </>
           ) : !isWinner && campaignMode === 'gym_career' && onReturnToMap ? (
             <>
-              <TouchableOpacity style={styles.btn} onPress={onReturnToMap} activeOpacity={0.7}>
-                <Text style={styles.btnText}>Return to Map</Text>
-              </TouchableOpacity>
+              <PkButton title="Return to Map" variant="primary" size="md" onPress={onReturnToMap} style={{ width: '100%' }} />
               <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
                 <Text style={styles.exitBtnText}>Forfeit Run</Text>
               </TouchableOpacity>
             </>
           ) : (
             <>
-              <TouchableOpacity style={styles.btn} onPress={onPlayAgain} activeOpacity={0.7}>
-                <Text style={styles.btnText}>
-                  {gameMode === 'online' ? 'Rematch' : 'Play Again'}
-                </Text>
-              </TouchableOpacity>
+              <PkButton
+                title={gameMode === 'online' ? 'REMATCH' : 'PLAY AGAIN'}
+                variant="primary"
+                size="md"
+                onPress={onPlayAgain}
+                style={{ width: '100%' }}
+              />
               <TouchableOpacity style={styles.exitBtn} onPress={onExitToMenu} activeOpacity={0.7}>
                 <Text style={styles.exitBtnText}>Exit to Menu</Text>
               </TouchableOpacity>
             </>
           )}
-        </View>
+        </PkCard>
       </ScrollView>
     </View>
   );
@@ -560,26 +556,31 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   modal: {
-    backgroundColor: colors.background,
-    borderRadius: 16,
-    padding: spacing.xl,
     width: '100%',
-    borderWidth: 2,
-    borderColor: colors.border,
     alignItems: 'center',
   },
   result: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '900',
-    marginBottom: 4,
-    letterSpacing: 1,
+    marginBottom: spacing.xs,
+    letterSpacing: 4,
   },
-  win: { color: colors.hpGreen },
-  lose: { color: colors.hpRed },
+  win: {
+    color: colors.accentGold,
+    textShadowColor: 'rgba(245,158,11,0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 16,
+  },
+  lose: {
+    color: colors.hpRed,
+    textShadowColor: 'rgba(239,68,68,0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+  },
   detail: {
     color: colors.textSecondary,
     fontSize: 13,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   pointsRow: {
     marginBottom: spacing.lg,
@@ -590,15 +591,39 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  // MVP
+  mvpCard: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  mvpLabel: {
+    color: colors.accentGold,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 2,
+  },
+  mvpSpriteWrap: {
+    width: 72,
+    height: 72,
+    marginVertical: spacing.xs,
+  },
+  mvpName: {
+    color: colors.accentGold,
+    fontSize: 18,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  mvpDetail: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    marginTop: 2,
+  },
+
   // Stats section
   statsSection: {
     width: '100%',
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    marginBottom: spacing.md,
   },
   statsTitle: {
     color: colors.textDim,
@@ -613,6 +638,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: spacing.sm,
+    gap: spacing.xs,
   },
   statBox: {
     width: '48%',
@@ -630,7 +656,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   bigHitRow: {
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.05)',
   },
@@ -645,35 +671,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 1,
   },
-  mvpRow: {
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-    alignItems: 'center',
-  },
-  mvpLabel: {
-    color: '#ffd700',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  mvpSpriteWrap: {
-    width: 72,
-    height: 72,
-    marginVertical: 4,
-  },
-  mvpName: {
-    color: '#ffd700',
-    fontSize: 18,
-    fontWeight: '900',
-    marginTop: 2,
-  },
-  mvpDetail: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    marginTop: 2,
-  },
 
   // Badges
   badgeRow: {
@@ -687,9 +684,9 @@ const styles = StyleSheet.create({
   },
   badge: {
     backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   badgeText: {
     color: colors.textSecondary,
@@ -705,7 +702,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.05)',
   },
   awardText: {
-    color: '#ffd700',
+    color: colors.accentGold,
     fontSize: 12,
     fontWeight: '800',
     marginBottom: 2,
@@ -716,20 +713,20 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    backgroundColor: 'rgba(255,215,0,0.15)',
+    backgroundColor: 'rgba(245,158,11,0.12)',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.3)',
+    borderColor: 'rgba(245,158,11,0.3)',
     alignItems: 'center',
   },
   newBadgeTitle: {
-    color: '#ffd700',
+    color: colors.accentGold,
     fontSize: 14,
     fontWeight: '900',
     letterSpacing: 2,
   },
   newBadgeType: {
-    color: '#ffd700',
+    color: colors.accentGold,
     fontSize: 12,
     fontWeight: '700',
     marginTop: 2,
@@ -739,7 +736,7 @@ const styles = StyleSheet.create({
   teams: {
     flexDirection: 'row',
     width: '100%',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     gap: spacing.sm,
   },
   teamCol: {
@@ -756,7 +753,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   pokemonName: {
     color: colors.text,
@@ -786,39 +783,11 @@ const styles = StyleSheet.create({
   // Share buttons
   shareRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: spacing.sm,
-  },
-  shareBtn: {
-    backgroundColor: colors.surfaceLight,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  shareBtnText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+    width: '100%',
   },
 
-  btn: {
-    backgroundColor: colors.accent,
-    paddingHorizontal: 40,
-    paddingVertical: 14,
-    borderRadius: 12,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  btnText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '800',
-  },
   exitBtn: {
     marginTop: spacing.sm,
     paddingHorizontal: 40,

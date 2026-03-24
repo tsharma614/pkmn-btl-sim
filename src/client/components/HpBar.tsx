@@ -10,7 +10,7 @@ interface Props {
   height?: number;
 }
 
-export function HpBar({ currentHp, maxHp, width = 120, height = 8 }: Props) {
+export function HpBar({ currentHp, maxHp, width = 120, height = 10 }: Props) {
   const ratio = useHpAnimation(currentHp, maxHp);
 
   const fillWidth = ratio.interpolate({
@@ -43,8 +43,20 @@ export function HpBar({ currentHp, maxHp, width = 120, height = 8 }: Props) {
 
 const styles = StyleSheet.create({
   track: {
-    backgroundColor: '#333',
+    backgroundColor: colors.background,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.3)',
+    // Inner shadow effect via darker bg
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  fill: {},
+  fill: {
+    // Gradient-like shimmer via top highlight
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.25)',
+  },
 });

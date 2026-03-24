@@ -12,18 +12,20 @@ import { lightTap } from '../utils/haptics';
 import { PokemonSprite } from './PokemonSprite';
 import { TypeBadge } from './TypeBadge';
 import { DraftPreviewModal } from './DraftPreviewModal';
-import { colors, spacing } from '../theme';
+import { PkButton } from './shared/PkButton';
+import { PkCard } from './shared/PkCard';
+import { colors, spacing, shadows, typeColors } from '../theme';
 import type { DraftPoolEntry } from '../../engine/draft-pool';
 
 const NUM_COLUMNS = 3;
-const CARD_GAP = 8;
+const CARD_GAP = 10;
 
-const TIER_COLORS: Record<number, string> = {
-  0: '#FF6B9D', // mega pink
-  1: '#FFD700', // gold
-  2: '#C0C0C0', // silver
-  3: '#CD7F32', // bronze
-  4: '#666',    // gray
+const TIER_META: Record<number, { label: string; color: string; bg: string }> = {
+  0: { label: 'MEGA', color: '#FFFFFF', bg: '#F59E0B' },
+  1: { label: 'T1', color: '#FFFFFF', bg: '#C0C0C0' },
+  2: { label: 'T2', color: '#FFFFFF', bg: '#CD7F32' },
+  3: { label: 'T3', color: '#FFFFFF', bg: '#6B7280' },
+  4: { label: 'T4', color: '#FFFFFF', bg: '#4B5563' },
 };
 
 interface DraftScreenProps {
@@ -125,9 +127,12 @@ export function DraftScreen({
           )}
           <Text style={styles.title}>{gymLeaderTitle || 'DRAFT MODE'}</Text>
           {onReroll && pickNumber === 0 && (
-            <TouchableOpacity style={styles.rerollBtn} onPress={onReroll}>
-              <Text style={styles.rerollText}>REROLL</Text>
-            </TouchableOpacity>
+            <PkButton
+              title="REROLL"
+              variant="secondary"
+              size="sm"
+              onPress={onReroll}
+            />
           )}
         </View>
         {showRerolled && (
@@ -143,35 +148,37 @@ export function DraftScreen({
       <ScrollView style={styles.poolScroll} stickyHeaderIndices={[0]}>
         {/* Sticky teams section */}
         <View style={styles.teamsSticky}>
-          <View style={styles.teamStrip}>
-            <Text style={styles.teamLabel}>{playerName}</Text>
-            <View style={styles.teamMinis}>
-              {yourPicks.map((entry, i) => (
-                <View key={i} style={styles.miniSlot}>
-                  <PokemonSprite speciesId={entry.species.id} facing="front" size={32} animated={false} />
-                </View>
-              ))}
-              {Array.from({ length: 6 - yourPicks.length }).map((_, i) => (
-                <View key={`empty-${i}`} style={styles.miniSlotEmpty} />
-              ))}
+          <View style={styles.teamsRow}>
+            <View style={[styles.teamStrip, styles.yourTeamStrip]}>
+              <Text style={styles.teamLabel}>{playerName}</Text>
+              <View style={styles.teamMinis}>
+                {yourPicks.map((entry, i) => (
+                  <View key={i} style={styles.miniSlot}>
+                    <PokemonSprite speciesId={entry.species.id} facing="front" size={32} animated={false} />
+                  </View>
+                ))}
+                {Array.from({ length: 6 - yourPicks.length }).map((_, i) => (
+                  <View key={`empty-${i}`} style={styles.miniSlotEmpty} />
+                ))}
+              </View>
             </View>
-          </View>
-          <View style={styles.teamStrip}>
-            <Text style={styles.teamLabel}>{opponentName}</Text>
-            <View style={styles.teamMinis}>
-              {opponentPicks.map((entry, i) => (
-                <View key={i} style={styles.miniSlot}>
-                  <PokemonSprite speciesId={entry.species.id} facing="front" size={32} animated={false} />
-                </View>
-              ))}
-              {Array.from({ length: 6 - opponentPicks.length }).map((_, i) => (
-                <View key={`empty-${i}`} style={styles.miniSlotEmpty} />
-              ))}
+            <View style={[styles.teamStrip, styles.oppTeamStrip]}>
+              <Text style={styles.teamLabel}>{opponentName}</Text>
+              <View style={styles.teamMinis}>
+                {opponentPicks.map((entry, i) => (
+                  <View key={i} style={styles.miniSlot}>
+                    <PokemonSprite speciesId={entry.species.id} facing="front" size={32} animated={false} />
+                  </View>
+                ))}
+                {Array.from({ length: 6 - opponentPicks.length }).map((_, i) => (
+                  <View key={`empty-${i}`} style={styles.miniSlotEmpty} />
+                ))}
+              </View>
             </View>
           </View>
         </View>
 
-        {/* Pool grid — megas first, then by tier */}
+        {/* Pool grid -- megas first, then by tier */}
         <View style={styles.poolGrid}>
         {pool
           .map((entry, i) => ({ entry, i }))
@@ -181,6 +188,9 @@ export function DraftScreen({
           const isYourPick = yourPickIndices.has(i);
           const isOppPick = oppPickIndices.has(i);
           const isSelected = selected === i;
+          const tierMeta = TIER_META[entry.tier] || TIER_META[4];
+          const primaryType = entry.species.types[0];
+          const accentColor = typeColors[primaryType] || colors.border;
 
           return (
             <TouchableOpacity
@@ -188,7 +198,6 @@ export function DraftScreen({
               style={[
                 styles.poolCard,
                 { width: cardW },
-                entry.tier === 0 && styles.poolCardMega,
                 isSelected && styles.poolCardSelected,
                 isPicked && styles.poolCardPicked,
               ]}
@@ -197,15 +206,21 @@ export function DraftScreen({
               activeOpacity={isPicked ? 1 : 0.7}
               disabled={isPicked && !isYourTurn}
             >
+              {/* Type accent bar at top */}
+              <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
+
               {isPicked && (
                 <View style={[
                   styles.pickedOverlay,
                   isYourPick ? styles.yourPickOverlay : styles.oppPickOverlay,
                 ]} />
               )}
-              <View style={styles.tierDot}>
-                <View style={[styles.tierDotInner, { backgroundColor: TIER_COLORS[entry.tier] || '#666' }]} />
+
+              {/* Tier badge */}
+              <View style={[styles.tierBadge, { backgroundColor: tierMeta.bg }]}>
+                <Text style={[styles.tierBadgeText, { color: tierMeta.color }]}>{tierMeta.label}</Text>
               </View>
+
               <PokemonSprite speciesId={entry.species.id} facing="front" size={48} animated={false} />
               <Text style={[styles.cardName, isPicked && styles.cardNamePicked]} numberOfLines={1}>
                 {entry.species.name}
@@ -234,16 +249,14 @@ export function DraftScreen({
             <Text style={styles.waitingText}>{opponentName} is picking...</Text>
           </View>
         ) : (
-          <TouchableOpacity
-            style={[styles.confirmBtn, (!isYourTurn || selected === null) && styles.confirmBtnDisabled]}
+          <PkButton
+            title={selected !== null ? `PICK ${selectedEntry?.species.name?.toUpperCase()}` : 'SELECT A POKEMON'}
+            variant="primary"
+            size="md"
             onPress={handlePick}
             disabled={!isYourTurn || selected === null}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.confirmText}>
-              {selected !== null ? `PICK ${selectedEntry?.species.name?.toUpperCase()}` : 'SELECT A POKEMON'}
-            </Text>
-          </TouchableOpacity>
+            style={{ width: '100%' }}
+          />
         )}
       </View>
 
@@ -263,16 +276,16 @@ export function DraftScreen({
       {/* Exit confirmation overlay */}
       {showExitConfirm && (
         <View style={styles.exitOverlay}>
-          <View style={styles.exitModal}>
+          <PkCard style={styles.exitModal} padding="spacious">
             <Text style={styles.exitTitle}>Exit Draft?</Text>
             <Text style={styles.exitSub}>Your draft progress will be lost.</Text>
-            <TouchableOpacity
-              style={styles.exitConfirmBtn}
+            <PkButton
+              title="Exit to Menu"
+              variant="primary"
+              size="md"
               onPress={() => { setShowExitConfirm(false); onBack?.(); }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.exitConfirmText}>Exit to Menu</Text>
-            </TouchableOpacity>
+              style={{ marginTop: spacing.lg, width: '100%' }}
+            />
             <TouchableOpacity
               style={styles.exitCancelBtn}
               onPress={() => setShowExitConfirm(false)}
@@ -280,7 +293,7 @@ export function DraftScreen({
             >
               <Text style={styles.exitCancelText}>Cancel</Text>
             </TouchableOpacity>
-          </View>
+          </PkCard>
         </View>
       )}
     </View>
@@ -301,20 +314,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-  },
-  rerollBtn: {
-    backgroundColor: colors.surfaceLight,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  rerollText: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
   },
   rerolledFlash: {
     color: '#4fc3f7',
@@ -350,15 +349,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
-    gap: spacing.xs,
+  },
+  teamsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
   teamStrip: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: 10,
+    borderRadius: 12,
     padding: spacing.sm,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
+  },
+  yourTeamStrip: {
+    borderColor: 'rgba(79,195,247,0.3)',
+  },
+  oppTeamStrip: {
+    borderColor: 'rgba(233,69,96,0.3)',
   },
   teamLabel: {
     fontSize: 10,
@@ -377,7 +385,7 @@ const styles = StyleSheet.create({
   miniSlot: {
     width: 32,
     height: 32,
-    borderRadius: 4,
+    borderRadius: 6,
     backgroundColor: 'rgba(255,255,255,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -385,7 +393,7 @@ const styles = StyleSheet.create({
   miniSlotEmpty: {
     width: 32,
     height: 32,
-    borderRadius: 4,
+    borderRadius: 6,
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
@@ -404,28 +412,38 @@ const styles = StyleSheet.create({
   },
   poolCard: {
     backgroundColor: colors.surface,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
     paddingHorizontal: 4,
     borderWidth: 2,
     borderColor: colors.border,
     overflow: 'hidden',
   },
-  poolCardMega: {
-    borderColor: '#FF6B9D',
-    backgroundColor: 'rgba(255,107,157,0.08)',
+  accentBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   poolCardSelected: {
-    borderColor: '#4fc3f7',
-    backgroundColor: 'rgba(79,195,247,0.1)',
+    borderColor: colors.accentGold,
+    shadowColor: colors.accentGold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 8,
   },
   poolCardPicked: {
-    opacity: 0.5,
+    opacity: 0.45,
   },
   pickedOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 8,
+    borderRadius: 10,
     zIndex: 1,
   },
   yourPickOverlay: {
@@ -434,22 +452,27 @@ const styles = StyleSheet.create({
   oppPickOverlay: {
     backgroundColor: 'rgba(233,69,96,0.12)',
   },
-  tierDot: {
+  tierBadge: {
     position: 'absolute',
-    top: 4,
+    top: 6,
     right: 4,
     zIndex: 2,
+    borderRadius: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    minWidth: 22,
+    alignItems: 'center',
   },
-  tierDotInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  tierBadgeText: {
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
   cardName: {
     fontSize: 10,
     fontWeight: '700',
     color: colors.text,
-    marginTop: 2,
+    marginTop: 4,
     textAlign: 'center',
   },
   cardNamePicked: {
@@ -458,7 +481,7 @@ const styles = StyleSheet.create({
   cardTypes: {
     flexDirection: 'row',
     gap: 2,
-    marginTop: 3,
+    marginTop: 4,
   },
   pickedLabel: {
     fontSize: 8,
@@ -472,22 +495,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-  },
-  confirmBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  confirmBtnDisabled: {
-    backgroundColor: colors.surface,
-    opacity: 0.5,
-  },
-  confirmText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 1,
   },
   waitingRow: {
     flexDirection: 'row',
@@ -515,13 +522,8 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   exitModal: {
-    backgroundColor: colors.background,
-    borderRadius: 16,
-    padding: spacing.xl,
     width: '80%',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.border,
   },
   exitTitle: {
     color: colors.text,
@@ -533,18 +535,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: spacing.sm,
     textAlign: 'center',
-  },
-  exitConfirmBtn: {
-    backgroundColor: colors.accent,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginTop: spacing.lg,
-  },
-  exitConfirmText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
   },
   exitCancelBtn: {
     marginTop: spacing.md,
