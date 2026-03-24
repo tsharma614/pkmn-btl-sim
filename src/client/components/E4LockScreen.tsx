@@ -4,7 +4,7 @@
  * Player picks the order they challenge the E4.
  * Champion unlocks only after all 4 E4 members are beaten.
  */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import { colors, spacing } from '../theme';
+import { PkCard } from './shared/PkCard';
+import { PkButton } from './shared/PkButton';
+import { colors, spacing, shadows } from '../theme';
 
 interface Member {
   name: string;
@@ -58,7 +60,7 @@ export function E4LockScreen({
   const [revealed, setRevealed] = useState<boolean[]>(members.map(() => false));
   const [championRevealed, setChampionRevealed] = useState(false);
 
-  const beatenCount = beatenMembers.filter(Boolean).length;
+  const beatenCount = useMemo(() => beatenMembers.filter(Boolean).length, [beatenMembers]);
   const allE4Beaten = beatenCount >= 4;
 
   const handleMemberPress = (index: number) => {
@@ -90,46 +92,52 @@ export function E4LockScreen({
     const isRevealed = revealed[index] || beaten;
 
     return (
-      <TouchableOpacity
+      <PkCard
         key={index}
+        accentColor={beaten ? undefined : GOLD}
+        padding="compact"
         style={[
           styles.card,
           beaten && styles.cardBeaten,
-        ]}
-        onPress={() => handleMemberPress(index)}
-        activeOpacity={beaten ? 1 : 0.7}
+        ] as any}
       >
-        {isRevealed ? (
-          <View style={styles.cardInner}>
-            <View style={[styles.spriteContainer, beaten && styles.spriteGreyed]}>
-              <Image
-                source={TRAINER_SPRITE_MAP[member.sprite] ?? { uri: '' }}
-                style={styles.sprite}
-                resizeMode="contain"
-              />
-              {beaten && (
-                <View style={styles.checkOverlay}>
-                  <Text style={styles.checkmark}>✓</Text>
-                </View>
-              )}
+        <TouchableOpacity
+          style={styles.cardTouchable}
+          onPress={() => handleMemberPress(index)}
+          activeOpacity={beaten ? 1 : 0.7}
+        >
+          {isRevealed ? (
+            <View style={styles.cardInner}>
+              <View style={[styles.spriteContainer, beaten && styles.spriteGreyed]}>
+                <Image
+                  source={TRAINER_SPRITE_MAP[member.sprite] ?? { uri: '' }}
+                  style={styles.sprite}
+                  resizeMode="contain"
+                />
+                {beaten && (
+                  <View style={styles.checkOverlay}>
+                    <Text style={styles.checkmark}>✓</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.memberName, beaten && styles.textGreyed]} numberOfLines={1}>
+                {member.name}
+              </Text>
+              <Text style={[styles.tagline, beaten && styles.textGreyed]} numberOfLines={2}>
+                {member.tagline}
+              </Text>
             </View>
-            <Text style={[styles.memberName, beaten && styles.textGreyed]} numberOfLines={1}>
-              {member.name}
-            </Text>
-            <Text style={[styles.tagline, beaten && styles.textGreyed]} numberOfLines={2}>
-              {member.tagline}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.cardInner}>
-            <View style={styles.lockContainer}>
-              <Text style={styles.lockIcon}>🔒</Text>
+          ) : (
+            <View style={styles.cardInner}>
+              <View style={styles.lockContainer}>
+                <Text style={styles.lockIcon}>🔒</Text>
+              </View>
+              <Text style={styles.memberTitle}>{member.title}</Text>
+              <Text style={styles.tapHint}>Tap to reveal</Text>
             </View>
-            <Text style={styles.memberTitle}>{member.title}</Text>
-            <Text style={styles.tapHint}>Tap to reveal</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+      </PkCard>
     );
   };
 
@@ -140,25 +148,36 @@ export function E4LockScreen({
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <View style={styles.headerTopRow}>
           <TouchableOpacity onPress={onBack} activeOpacity={0.7} style={styles.backBtn}>
-            <Text style={styles.backText}>{'< Forfeit Run'}</Text>
+            <Text style={styles.backText}>{'< Forfeit'}</Text>
           </TouchableOpacity>
-          <View style={{ flexDirection: 'row', gap: spacing.md }}>
+          <View style={styles.headerActions}>
             {onShop && (
-              <TouchableOpacity onPress={onShop} activeOpacity={0.7} style={styles.backBtn}>
-                <Text style={[styles.backText, { color: '#4caf50' }]}>Shop ({shopBalance ?? 0})</Text>
+              <TouchableOpacity onPress={onShop} activeOpacity={0.7} style={styles.headerAction}>
+                <Text style={[styles.headerActionText, { color: colors.hpGreen }]}>Shop ({shopBalance ?? 0})</Text>
               </TouchableOpacity>
             )}
             {onSaveQuit && (
-              <TouchableOpacity onPress={onSaveQuit} activeOpacity={0.7} style={styles.backBtn}>
-                <Text style={[styles.backText, { color: colors.textSecondary }]}>Save & Quit</Text>
+              <TouchableOpacity onPress={onSaveQuit} activeOpacity={0.7} style={styles.headerAction}>
+                <Text style={styles.headerActionText}>Save</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
         <Text style={styles.title}>ELITE FOUR</Text>
-        <Text style={styles.progress}>{beatenCount}/4 Defeated</Text>
+        <View style={styles.progressRow}>
+          {[0, 1, 2, 3].map(i => (
+            <View
+              key={i}
+              style={[
+                styles.progressDot,
+                beatenMembers[i] && styles.progressDotFilled,
+              ]}
+            />
+          ))}
+          <Text style={styles.progressText}>{beatenCount}/4 Defeated</Text>
+        </View>
       </View>
 
       {/* 2x2 E4 Grid */}
@@ -172,56 +191,62 @@ export function E4LockScreen({
       </View>
 
       {/* Champion Card */}
-      <TouchableOpacity
+      <PkCard
+        accentColor={championLocked ? undefined : GOLD}
+        padding="normal"
         style={[
           styles.championCard,
           championLocked && styles.championLocked,
           championBeaten && styles.cardBeaten,
-        ]}
-        onPress={handleChampionPress}
-        activeOpacity={championLocked || championBeaten ? 1 : 0.7}
+        ] as any}
       >
-        {champRevealed && !championLocked ? (
-          <View style={styles.championInner}>
-            <View style={[styles.championSpriteContainer, championBeaten && styles.spriteGreyed]}>
-              <Image
-                source={{ uri: `${SPRITE_BASE}${champion.sprite}.png` }}
-                style={styles.championSprite}
-                resizeMode="contain"
-              />
-              {championBeaten && (
-                <View style={styles.checkOverlay}>
-                  <Text style={styles.checkmark}>✓</Text>
-                </View>
-              )}
+        <TouchableOpacity
+          style={styles.championTouchable}
+          onPress={handleChampionPress}
+          activeOpacity={championLocked || championBeaten ? 1 : 0.7}
+        >
+          {champRevealed && !championLocked ? (
+            <View style={styles.championInner}>
+              <View style={[styles.championSpriteContainer, championBeaten && styles.spriteGreyed]}>
+                <Image
+                  source={TRAINER_SPRITE_MAP[champion.sprite] ?? { uri: '' }}
+                  style={styles.championSprite}
+                  resizeMode="contain"
+                />
+                {championBeaten && (
+                  <View style={styles.checkOverlay}>
+                    <Text style={styles.checkmark}>✓</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.championText}>
+                <Text style={[styles.championName, championBeaten && styles.textGreyed]}>
+                  {champion.name}
+                </Text>
+                <Text style={[styles.championTagline, championBeaten && styles.textGreyed]}>
+                  {champion.tagline}
+                </Text>
+              </View>
             </View>
-            <View style={styles.championText}>
-              <Text style={[styles.championName, championBeaten && styles.textGreyed]}>
-                {champion.name}
-              </Text>
-              <Text style={[styles.championTagline, championBeaten && styles.textGreyed]}>
-                {champion.tagline}
-              </Text>
+          ) : (
+            <View style={styles.championInner}>
+              <View style={styles.championLockContainer}>
+                <Text style={styles.championLockIcon}>
+                  {championLocked ? '🔒' : '🔓'}
+                </Text>
+              </View>
+              <View style={styles.championText}>
+                <Text style={[styles.championLabel, !championLocked && { color: GOLD }]}>
+                  CHAMPION
+                </Text>
+                <Text style={styles.championHint}>
+                  {championLocked ? `Defeat all 4 E4 members to unlock` : 'Tap to reveal'}
+                </Text>
+              </View>
             </View>
-          </View>
-        ) : (
-          <View style={styles.championInner}>
-            <View style={styles.championLockContainer}>
-              <Text style={styles.championLockIcon}>
-                {championLocked ? '🔒' : '🔓'}
-              </Text>
-            </View>
-            <View style={styles.championText}>
-              <Text style={[styles.championLabel, !championLocked && { color: GOLD }]}>
-                CHAMPION
-              </Text>
-              <Text style={styles.championHint}>
-                {championLocked ? `Defeat all 4 E4 members to unlock` : 'Tap to reveal'}
-              </Text>
-            </View>
-          </View>
-        )}
-      </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+      </PkCard>
     </View>
   );
 }
@@ -236,30 +261,66 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
+    marginBottom: spacing.xl,
+  },
+  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   backBtn: {
-    paddingVertical: spacing.sm,
-    paddingRight: spacing.md,
+    paddingVertical: spacing.xs,
   },
   backText: {
-    color: colors.accent,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
-  title: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 2,
+  headerActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
   },
-  progress: {
+  headerAction: {
+    paddingVertical: spacing.xs,
+  },
+  headerActionText: {
     color: colors.textSecondary,
     fontSize: 13,
     fontWeight: '600',
+  },
+  title: {
+    color: colors.accentGold,
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: 4,
+    textAlign: 'center',
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  progressDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  progressDotFilled: {
+    backgroundColor: colors.accentGold,
+    borderColor: colors.accentGold,
+    ...shadows.glow(colors.accentGold),
+  },
+  progressText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: spacing.xs,
   },
 
   // 2x2 Grid
@@ -274,20 +335,18 @@ const styles = StyleSheet.create({
   // E4 Member Card
   card: {
     width: CARD_WIDTH,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    alignItems: 'center',
   },
   cardBeaten: {
     opacity: 0.5,
   },
+  cardTouchable: {
+    minHeight: 140,
+  },
   cardInner: {
     alignItems: 'center',
-    minHeight: 140,
     justifyContent: 'center',
+    flex: 1,
+    paddingVertical: spacing.sm,
   },
 
   // Lock state
@@ -299,16 +358,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
+    borderWidth: 2,
+    borderColor: 'rgba(245,158,11,0.2)',
   },
   lockIcon: {
     fontSize: 28,
   },
   memberTitle: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
+    color: colors.accentGold,
+    fontSize: 13,
+    fontWeight: '700',
     textAlign: 'center',
     marginBottom: spacing.xs,
+    letterSpacing: 1,
   },
   tapHint: {
     color: colors.textDim,
@@ -341,13 +403,13 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     fontSize: 32,
-    color: colors.accent,
+    color: colors.accentGold,
     fontWeight: '800',
   },
   memberName: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
@@ -364,30 +426,32 @@ const styles = StyleSheet.create({
   // Champion Card
   championCard: {
     marginTop: spacing.xl,
-    backgroundColor: colors.surface,
-    borderRadius: 14,
     borderWidth: 2,
     borderColor: GOLD,
-    padding: spacing.lg,
   },
   championLocked: {
     borderColor: colors.border,
+  },
+  championTouchable: {
+    minHeight: 80,
   },
   championInner: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   championLockContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.lg,
+    borderWidth: 2,
+    borderColor: 'rgba(245,158,11,0.2)',
   },
   championLockIcon: {
-    fontSize: 24,
+    fontSize: 26,
   },
   championSpriteContainer: {
     width: 80,
@@ -405,21 +469,22 @@ const styles = StyleSheet.create({
   },
   championLabel: {
     color: colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 2,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 3,
     marginBottom: spacing.xs,
   },
   championName: {
     color: GOLD,
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '900',
     marginBottom: spacing.xs,
+    letterSpacing: 1,
   },
   championTagline: {
     color: colors.textSecondary,
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 17,
   },
   championHint: {
     color: colors.textDim,

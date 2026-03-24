@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
 import { PokemonDetailModal } from './PokemonDetailModal';
-import { colors, spacing } from '../theme';
+import { PkCard } from './shared/PkCard';
+import { PkButton } from './shared/PkButton';
+import { colors, spacing, shadows } from '../theme';
 import type { OwnPokemon } from '../../server/types';
 import type { PokemonSpecies } from '../../types';
 import TRAINER_SPRITE_MAP from '../trainer-sprite-map';
@@ -39,57 +41,84 @@ export function GauntletStealScreen({
 
   return (
     <View style={styles.container}>
+      {/* Victory header */}
       <View style={styles.header}>
         <Text style={styles.title}>VICTORY!</Text>
-        <View style={styles.trainerRow}>
-          <Image
-            source={TRAINER_SPRITE_MAP[trainerSprite] ?? { uri: '' }}
-            style={styles.trainerSprite}
-          />
-          <Text style={styles.subtitle}>
-            You defeated {trainerName}! Pick a Pokemon to add to your team.
-          </Text>
-        </View>
+        <PkCard style={styles.trainerCard} padding="compact" accentColor={colors.hpGreen}>
+          <View style={styles.trainerRow}>
+            <Image
+              source={TRAINER_SPRITE_MAP[trainerSprite] ?? { uri: '' }}
+              style={styles.trainerSprite}
+            />
+            <Text style={styles.subtitle}>
+              You defeated {trainerName}! Pick a Pokemon to add to your team.
+            </Text>
+          </View>
+        </PkCard>
       </View>
 
       <ScrollView style={styles.scroll}>
-        {/* Opponent's team — pick one to steal */}
-        <Text style={styles.sectionTitle}>STEAL ONE</Text>
+        {/* Opponent's team -- steal section */}
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionAccent} />
+          <Text style={styles.sectionTitle}>STEAL ONE</Text>
+        </View>
         <View style={styles.row}>
           {opponentTeam.map((p, i) => (
-            <TouchableOpacity
+            <PkCard
               key={`steal-${i}`}
-              style={[styles.card, stealIndex === i && styles.cardSelected]}
-              onPress={() => setStealIndex(i)}
-              onLongPress={() => setDetailIdx(i)}
-              activeOpacity={0.7}
+              padding="compact"
+              accentColor={stealIndex === i ? colors.hpGreen : undefined}
+              style={[
+                styles.card,
+                stealIndex === i && styles.cardSteal,
+              ] as any}
             >
-              <PokemonSprite speciesId={p.species.id} facing="front" size={52} />
-              <Text style={[styles.cardName, stealIndex === i && styles.cardNameSelected]}>
-                {p.species.name}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cardInner}
+                onPress={() => setStealIndex(i)}
+                onLongPress={() => setDetailIdx(i)}
+                activeOpacity={0.7}
+              >
+                <PokemonSprite speciesId={p.species.id} facing="front" size={52} />
+                <Text style={[styles.cardName, stealIndex === i && styles.cardNameSteal]}>
+                  {p.species.name}
+                </Text>
+              </TouchableOpacity>
+            </PkCard>
           ))}
         </View>
 
-        {/* Player's team — drop one if full */}
+        {/* Player's team -- drop section */}
         {mustDrop && (
           <>
-            <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>DROP ONE</Text>
-            <Text style={styles.dropHint}>Your team is full — choose one to release</Text>
+            <View style={[styles.sectionHeader, { marginTop: spacing.xl }]}>
+              <View style={[styles.sectionAccent, { backgroundColor: colors.primary }]} />
+              <Text style={[styles.sectionTitle, { color: colors.primary }]}>DROP ONE</Text>
+            </View>
+            <Text style={styles.dropHint}>Your team is full -- choose one to release</Text>
             <View style={styles.row}>
               {playerTeam.map((p, i) => (
-                <TouchableOpacity
+                <PkCard
                   key={`drop-${i}`}
-                  style={[styles.card, dropIndex === i && styles.cardDrop]}
-                  onPress={() => setDropIndex(i)}
-                  activeOpacity={0.7}
+                  padding="compact"
+                  accentColor={dropIndex === i ? colors.primary : undefined}
+                  style={[
+                    styles.card,
+                    dropIndex === i && styles.cardDrop,
+                  ] as any}
                 >
-                  <PokemonSprite speciesId={p.species.id} facing="front" size={52} />
-                  <Text style={[styles.cardName, dropIndex === i && { color: '#f44336' }]}>
-                    {p.species.name}
-                  </Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cardInner}
+                    onPress={() => setDropIndex(i)}
+                    activeOpacity={0.7}
+                  >
+                    <PokemonSprite speciesId={p.species.id} facing="front" size={52} />
+                    <Text style={[styles.cardName, dropIndex === i && styles.cardNameDrop]}>
+                      {p.species.name}
+                    </Text>
+                  </TouchableOpacity>
+                </PkCard>
               ))}
             </View>
           </>
@@ -97,14 +126,13 @@ export function GauntletStealScreen({
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.confirmBtn, !canConfirm && styles.confirmBtnDisabled]}
+        <PkButton
+          title="CONFIRM"
+          variant="primary"
+          size="lg"
           onPress={() => canConfirm && onComplete(stealIndex!, dropIndex)}
-          activeOpacity={0.7}
           disabled={!canConfirm}
-        >
-          <Text style={styles.confirmBtnText}>CONFIRM</Text>
-        </TouchableOpacity>
+        />
       </View>
       <PokemonDetailModal
         visible={detailSpecies !== null}
@@ -125,26 +153,31 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingTop: spacing.lg,
+    paddingTop: spacing.xl,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '900',
-    color: '#4caf50',
-    letterSpacing: 3,
+    color: colors.hpGreen,
+    letterSpacing: 4,
     textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  trainerCard: {
+    flexDirection: 'row',
   },
   trainerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.md,
     gap: spacing.md,
   },
   trainerSprite: {
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.surfaceLight,
   },
   subtitle: {
     fontSize: 13,
@@ -156,17 +189,29 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.lg,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  sectionAccent: {
+    width: 4,
+    height: 20,
+    borderRadius: 2,
+    backgroundColor: colors.hpGreen,
+  },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
-    color: colors.textSecondary,
+    color: colors.hpGreen,
     letterSpacing: 2,
-    marginBottom: spacing.sm,
   },
   dropHint: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textDim,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+    paddingLeft: spacing.lg,
   },
   row: {
     flexDirection: 'row',
@@ -174,48 +219,36 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   card: {
-    width: 80,
-    alignItems: 'center',
-    padding: spacing.sm,
-    borderRadius: 10,
-    backgroundColor: colors.surface,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    width: 88,
   },
-  cardSelected: {
-    borderColor: '#4caf50',
-    backgroundColor: 'rgba(76,175,80,0.15)',
+  cardInner: {
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  cardSteal: {
+    borderColor: colors.hpGreen,
+    borderWidth: 2,
   },
   cardDrop: {
-    borderColor: '#f44336',
-    backgroundColor: 'rgba(244,67,54,0.15)',
+    borderColor: colors.primary,
+    borderWidth: 2,
   },
   cardName: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
     color: colors.textSecondary,
     marginTop: spacing.xs,
     textAlign: 'center',
   },
-  cardNameSelected: {
-    color: '#4caf50',
+  cardNameSteal: {
+    color: colors.hpGreen,
+    fontWeight: '800',
+  },
+  cardNameDrop: {
+    color: colors.primary,
+    fontWeight: '800',
   },
   footer: {
     padding: spacing.lg,
-  },
-  confirmBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  confirmBtnDisabled: {
-    opacity: 0.4,
-  },
-  confirmBtnText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 2,
   },
 });

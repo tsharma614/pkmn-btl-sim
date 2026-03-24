@@ -3,7 +3,7 @@
  * Lets player spend points on move swaps, item swaps, or buying new Pokemon.
  * Long press on Pokemon/move/item shows detail modals.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,9 @@ import {
 } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
 import { PokemonDetailModal } from './PokemonDetailModal';
-import { colors, spacing } from '../theme';
+import { PkCard } from './shared/PkCard';
+import { PkButton } from './shared/PkButton';
+import { colors, spacing, shadows } from '../theme';
 import type { OwnPokemon } from '../../server/types';
 import type { PokemonSpecies } from '../../types';
 import movesJsonData from '../../data/moves.json';
@@ -135,9 +137,12 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
   // Detail modals
   const [detailIdx, setDetailIdx] = useState(-1);
   const [detailSource, setDetailSource] = useState<'team' | 'buy'>('team');
-  const detailList = detailSource === 'buy'
-    ? buyPool.map(b => b.species)
-    : team.map(p => ({ id: p.species.id, name: p.species.name, types: p.species.types, baseStats: p.species.baseStats, abilities: [p.ability] } as PokemonSpecies));
+  const detailList = useMemo(() =>
+    detailSource === 'buy'
+      ? buyPool.map(b => b.species)
+      : team.map(p => ({ id: p.species.id, name: p.species.name, types: p.species.types, baseStats: p.species.baseStats, abilities: [p.ability] } as PokemonSpecies)),
+    [detailSource, buyPool, team],
+  );
   const detailSpecies = detailIdx >= 0 ? detailList[detailIdx] ?? null : null;
   const openTeamDetail = (i: number) => { setDetailSource('team'); setDetailIdx(i); };
   const openBuyDetail = (i: number) => { setDetailSource('buy'); setDetailIdx(i); };
@@ -146,7 +151,10 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
 
   const canAffordMove = balance >= SWAP_MOVE_COST;
   const canAffordItem = balance >= SWAP_ITEM_COST;
-  const cheapestBuy = buyPool.length > 0 ? Math.min(...buyPool.map(b => b.cost)) : Infinity;
+  const cheapestBuy = useMemo(() =>
+    buyPool.length > 0 ? Math.min(...buyPool.map(b => b.cost)) : Infinity,
+    [buyPool],
+  );
   const canAffordBuy = balance >= cheapestBuy;
 
   // ---------- Navigation helpers ----------
@@ -202,6 +210,7 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
     <View style={styles.header}>
       <Text style={styles.title}>SHOP</Text>
       <View style={styles.balancePill}>
+        <Text style={styles.balanceLabel}>Balance</Text>
         <Text style={styles.balanceText}>{balance} pts</Text>
       </View>
     </View>
@@ -218,55 +227,79 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
   const renderMenu = () => (
     <View style={styles.menuContainer}>
       {/* Swap Move */}
-      <TouchableOpacity
-        style={[styles.optionCard, !canAffordMove && styles.optionCardDisabled]}
-        onPress={() => { if (canAffordMove) { setActive('move'); setMoveStep({ phase: 'pickPokemon' }); } }}
-        disabled={!canAffordMove}
-        activeOpacity={0.7}
+      <PkCard
+        accentColor={canAffordMove ? colors.primary : undefined}
+        padding="normal"
+        style={[styles.optionCardStyle, !canAffordMove && styles.optionCardDisabled] as any}
       >
-        <Text style={styles.optionEmoji}>{'<>'}</Text>
-        <View style={styles.optionInfo}>
-          <Text style={[styles.optionName, !canAffordMove && styles.optionNameDisabled]}>Swap Move</Text>
-          <Text style={[styles.optionDesc, !canAffordMove && styles.optionDescDisabled]}>Replace a move with one from the learnset</Text>
-        </View>
-        <View style={[styles.costBadge, !canAffordMove && styles.costBadgeDisabled]}>
-          <Text style={[styles.costText, !canAffordMove && styles.costTextDisabled]}>1 pt</Text>
-        </View>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.optionRow}
+          onPress={() => { if (canAffordMove) { setActive('move'); setMoveStep({ phase: 'pickPokemon' }); } }}
+          disabled={!canAffordMove}
+          activeOpacity={0.7}
+        >
+          <View style={styles.optionIconBox}>
+            <Text style={styles.optionIconText}>{'<>'}</Text>
+          </View>
+          <View style={styles.optionInfo}>
+            <Text style={[styles.optionName, !canAffordMove && styles.optionNameDisabled]}>Swap Move</Text>
+            <Text style={[styles.optionDesc, !canAffordMove && styles.optionDescDisabled]}>Replace a move with one from the learnset</Text>
+          </View>
+          <View style={[styles.priceBadge, !canAffordMove && styles.priceBadgeDisabled]}>
+            <Text style={[styles.priceText, !canAffordMove && styles.priceTextDisabled]}>1 pt</Text>
+          </View>
+        </TouchableOpacity>
+      </PkCard>
 
       {/* Swap Item */}
-      <TouchableOpacity
-        style={[styles.optionCard, !canAffordItem && styles.optionCardDisabled]}
-        onPress={() => { if (canAffordItem) { setActive('item'); setItemStep({ phase: 'pickPokemon' }); } }}
-        disabled={!canAffordItem}
-        activeOpacity={0.7}
+      <PkCard
+        accentColor={canAffordItem ? colors.accentGold : undefined}
+        padding="normal"
+        style={[styles.optionCardStyle, !canAffordItem && styles.optionCardDisabled] as any}
       >
-        <Text style={styles.optionEmoji}>{'[ ]'}</Text>
-        <View style={styles.optionInfo}>
-          <Text style={[styles.optionName, !canAffordItem && styles.optionNameDisabled]}>Swap Item</Text>
-          <Text style={[styles.optionDesc, !canAffordItem && styles.optionDescDisabled]}>Change a Pokemon's held item</Text>
-        </View>
-        <View style={[styles.costBadge, !canAffordItem && styles.costBadgeDisabled]}>
-          <Text style={[styles.costText, !canAffordItem && styles.costTextDisabled]}>1 pt</Text>
-        </View>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.optionRow}
+          onPress={() => { if (canAffordItem) { setActive('item'); setItemStep({ phase: 'pickPokemon' }); } }}
+          disabled={!canAffordItem}
+          activeOpacity={0.7}
+        >
+          <View style={styles.optionIconBox}>
+            <Text style={styles.optionIconText}>{'[ ]'}</Text>
+          </View>
+          <View style={styles.optionInfo}>
+            <Text style={[styles.optionName, !canAffordItem && styles.optionNameDisabled]}>Swap Item</Text>
+            <Text style={[styles.optionDesc, !canAffordItem && styles.optionDescDisabled]}>Change a Pokemon's held item</Text>
+          </View>
+          <View style={[styles.priceBadge, !canAffordItem && styles.priceBadgeDisabled]}>
+            <Text style={[styles.priceText, !canAffordItem && styles.priceTextDisabled]}>1 pt</Text>
+          </View>
+        </TouchableOpacity>
+      </PkCard>
 
       {/* Buy Pokemon */}
-      <TouchableOpacity
-        style={[styles.optionCard, (!canAffordBuy || buyPool.length === 0) && styles.optionCardDisabled]}
-        onPress={() => { if (canAffordBuy && buyPool.length > 0) { setActive('buy'); setBuyStep({ phase: 'pickBuy' }); } }}
-        disabled={!canAffordBuy || buyPool.length === 0}
-        activeOpacity={0.7}
+      <PkCard
+        accentColor={canAffordBuy && buyPool.length > 0 ? colors.hpGreen : undefined}
+        padding="normal"
+        style={[styles.optionCardStyle, (!canAffordBuy || buyPool.length === 0) && styles.optionCardDisabled] as any}
       >
-        <Text style={styles.optionEmoji}>{'+'}</Text>
-        <View style={styles.optionInfo}>
-          <Text style={[styles.optionName, !canAffordBuy && styles.optionNameDisabled]}>Buy Pokemon</Text>
-          <Text style={[styles.optionDesc, !canAffordBuy && styles.optionNameDisabled]}>Add a new Pokemon to your team</Text>
-        </View>
-        <View style={[styles.costBadge, !canAffordBuy && styles.costBadgeDisabled]}>
-          <Text style={[styles.costText, !canAffordBuy && styles.costTextDisabled]}>2-4 pts</Text>
-        </View>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.optionRow}
+          onPress={() => { if (canAffordBuy && buyPool.length > 0) { setActive('buy'); setBuyStep({ phase: 'pickBuy' }); } }}
+          disabled={!canAffordBuy || buyPool.length === 0}
+          activeOpacity={0.7}
+        >
+          <View style={styles.optionIconBox}>
+            <Text style={styles.optionIconText}>{'+'}</Text>
+          </View>
+          <View style={styles.optionInfo}>
+            <Text style={[styles.optionName, !canAffordBuy && styles.optionNameDisabled]}>Buy Pokemon</Text>
+            <Text style={[styles.optionDesc, !canAffordBuy && styles.optionNameDisabled]}>Add a new Pokemon to your team</Text>
+          </View>
+          <View style={[styles.priceBadge, !canAffordBuy && styles.priceBadgeDisabled]}>
+            <Text style={[styles.priceText, !canAffordBuy && styles.priceTextDisabled]}>2-4 pts</Text>
+          </View>
+        </TouchableOpacity>
+      </PkCard>
     </View>
   );
 
@@ -284,22 +317,27 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
         {team.map((p, i) => {
           const disabled = disabledFilter ? disabledFilter(i) : false;
           return (
-            <TouchableOpacity
+            <PkCard
               key={i}
-              style={[styles.teamCard, disabled && styles.teamCardDisabled]}
-              onPress={() => { if (!disabled) onPick(i); }}
-              onLongPress={() => openTeamDetail(i)}
-              disabled={disabled}
-              activeOpacity={0.7}
+              padding="compact"
+              style={[styles.teamCardStyle, disabled && styles.teamCardDisabled] as any}
             >
-              <PokemonSprite speciesId={p.species.id} facing="front" size={48} />
-              <Text style={[styles.teamCardName, disabled && styles.teamCardNameDisabled]} numberOfLines={1}>
-                {p.species.name}
-              </Text>
-              {p.item && (
-                <Text style={styles.teamCardItem} numberOfLines={1}>{p.item}</Text>
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.teamCardInner}
+                onPress={() => { if (!disabled) onPick(i); }}
+                onLongPress={() => openTeamDetail(i)}
+                disabled={disabled}
+                activeOpacity={0.7}
+              >
+                <PokemonSprite speciesId={p.species.id} facing="front" size={48} />
+                <Text style={[styles.teamCardName, disabled && styles.teamCardNameDisabled]} numberOfLines={1}>
+                  {p.species.name}
+                </Text>
+                {p.item && (
+                  <Text style={styles.teamCardItem} numberOfLines={1}>{p.item}</Text>
+                )}
+              </TouchableOpacity>
+            </PkCard>
           );
         })}
       </View>
@@ -322,10 +360,12 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
         <View style={styles.subView}>
           {renderBackButton('Team')}
           <Text style={styles.subTitle}>Pick the move slot to replace</Text>
-          <View style={styles.pokemonBanner}>
-            <PokemonSprite speciesId={pokemon.species.id} facing="front" size={40} />
-            <Text style={styles.pokemonBannerName}>{pokemon.species.name}</Text>
-          </View>
+          <PkCard padding="compact" style={styles.pokemonBanner}>
+            <View style={styles.pokemonBannerRow}>
+              <PokemonSprite speciesId={pokemon.species.id} facing="front" size={40} />
+              <Text style={styles.pokemonBannerName}>{pokemon.species.name}</Text>
+            </View>
+          </PkCard>
           <View style={styles.moveSlotList}>
             {pokemon.moves.map((m, i) => {
               const md = getMoveData(m.name);
@@ -406,11 +446,13 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
       <View style={styles.subView}>
         {renderBackButton('Team')}
         <Text style={styles.subTitle}>Pick a new item for {pokemon.species.name}</Text>
-        <View style={styles.pokemonBanner}>
-          <PokemonSprite speciesId={pokemon.species.id} facing="front" size={40} />
-          <Text style={styles.pokemonBannerName}>{pokemon.species.name}</Text>
-          <Text style={styles.pokemonBannerSub}>Current: {pokemon.item || 'None'}</Text>
-        </View>
+        <PkCard padding="compact" style={styles.pokemonBanner}>
+          <View style={styles.pokemonBannerRow}>
+            <PokemonSprite speciesId={pokemon.species.id} facing="front" size={40} />
+            <Text style={styles.pokemonBannerName}>{pokemon.species.name}</Text>
+            <Text style={styles.pokemonBannerSub}>Current: {pokemon.item || 'None'}</Text>
+          </View>
+        </PkCard>
         <ScrollView style={styles.itemGridScroll} contentContainerStyle={styles.itemGridContainer}>
           {HELD_ITEMS.map(itemName => {
             const isCurrent = pokemon.item === itemName;
@@ -454,27 +496,32 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
             {buyPool.map((entry, i) => {
               const affordable = balance >= entry.cost;
               return (
-                <TouchableOpacity
+                <PkCard
                   key={i}
-                  style={[styles.buyCard, !affordable && styles.buyCardDisabled]}
-                  onPress={() => { if (affordable) setBuyStep({ phase: 'pickSlot', buyPoolIdx: i }); }}
-                  onLongPress={() => openBuyDetail(i)}
-                  disabled={!affordable}
-                  activeOpacity={0.7}
+                  padding="compact"
+                  style={[styles.buyCardStyle, !affordable && styles.buyCardDisabled] as any}
                 >
-                  <PokemonSprite speciesId={entry.species.id} facing="front" size={48} />
-                  <Text style={[styles.buyCardName, !affordable && styles.buyCardNameDisabled]} numberOfLines={1}>
-                    {entry.species.name}
-                  </Text>
-                  <View style={[styles.buyCostBadge, !affordable && styles.buyCostBadgeDisabled]}>
-                    <Text style={[styles.buyCostText, !affordable && styles.buyCostTextDisabled]}>
-                      {entry.cost} pt{entry.cost !== 1 ? 's' : ''}
+                  <TouchableOpacity
+                    style={styles.buyCardInner}
+                    onPress={() => { if (affordable) setBuyStep({ phase: 'pickSlot', buyPoolIdx: i }); }}
+                    onLongPress={() => openBuyDetail(i)}
+                    disabled={!affordable}
+                    activeOpacity={0.7}
+                  >
+                    <PokemonSprite speciesId={entry.species.id} facing="front" size={48} />
+                    <Text style={[styles.buyCardName, !affordable && styles.buyCardNameDisabled]} numberOfLines={1}>
+                      {entry.species.name}
                     </Text>
-                  </View>
-                  <Text style={styles.buyTierLabel}>
-                    {entry.tier === 0 ? 'Mega' : `T${entry.tier}`}
-                  </Text>
-                </TouchableOpacity>
+                    <View style={[styles.buyCostBadge, !affordable && styles.buyCostBadgeDisabled]}>
+                      <Text style={[styles.buyCostText, !affordable && styles.buyCostTextDisabled]}>
+                        {entry.cost} pt{entry.cost !== 1 ? 's' : ''}
+                      </Text>
+                    </View>
+                    <Text style={styles.buyTierLabel}>
+                      {entry.tier === 0 ? 'Mega' : `T${entry.tier}`}
+                    </Text>
+                  </TouchableOpacity>
+                </PkCard>
               );
             })}
             {buyPool.length === 0 && (
@@ -538,25 +585,23 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.buyMoveName, isSelected && { color: colors.accent }]} numberOfLines={1}>{name}</Text>
+                  <Text style={[styles.buyMoveName, isSelected && { color: colors.primary }]} numberOfLines={1}>{name}</Text>
                   <Text style={styles.buyMovePower}>{md.power ?? '-'}</Text>
                   <Text style={styles.buyMoveType}>{md.type}</Text>
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
-          <TouchableOpacity
-            style={[styles.confirmBuyBtn, buyStep.selectedMoves.length < 4 && styles.confirmBuyBtnDisabled]}
-            disabled={buyStep.selectedMoves.length < 4}
+          <PkButton
+            title={buyStep.selectedMoves.length < 4 ? `Pick ${4 - buyStep.selectedMoves.length} more` : 'Next: Pick Item'}
+            variant="primary"
+            size="md"
             onPress={() => {
               setBuyStep({ ...buyStep, phase: 'pickItem', selectedItem: '' });
             }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.confirmBuyBtnText}>
-              {buyStep.selectedMoves.length < 4 ? `Pick ${4 - buyStep.selectedMoves.length} more` : 'Next: Pick Item'}
-            </Text>
-          </TouchableOpacity>
+            disabled={buyStep.selectedMoves.length < 4}
+            style={styles.confirmBuyBtnWrapper}
+          />
         </View>
       );
     }
@@ -575,25 +620,25 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
             {items.map(item => (
               <TouchableOpacity
                 key={item}
-                style={[styles.buyCard, buyStep.selectedItem === item && styles.buyCardSelected]}
+                style={[styles.buyItemCard, buyStep.selectedItem === item && styles.buyItemCardSelected]}
                 onPress={() => setBuyStep({ ...buyStep, selectedItem: item })}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.buyCardName, buyStep.selectedItem === item && { color: colors.accent }]} numberOfLines={2}>{item}</Text>
+                <Text style={[styles.buyItemCardName, buyStep.selectedItem === item && { color: colors.primary }]} numberOfLines={2}>{item}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
-          <TouchableOpacity
-            style={[styles.confirmBuyBtn, !buyStep.selectedItem && styles.confirmBuyBtnDisabled]}
-            disabled={!buyStep.selectedItem}
+          <PkButton
+            title="Confirm Purchase"
+            variant="primary"
+            size="md"
             onPress={() => {
               onBuyPokemon(buyStep.buyPoolIdx, buyStep.replaceIdx, buyStep.selectedMoves, buyStep.selectedItem);
               resetToMenu();
             }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.confirmBuyBtnText}>Confirm Purchase</Text>
-          </TouchableOpacity>
+            disabled={!buyStep.selectedItem}
+            style={styles.confirmBuyBtnWrapper}
+          />
         </View>
       );
     }
@@ -697,9 +742,12 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
 
       {/* Done Shopping button — always visible */}
       <View style={styles.doneBar}>
-        <TouchableOpacity style={styles.doneBtn} onPress={onDone} activeOpacity={0.7}>
-          <Text style={styles.doneText}>DONE SHOPPING</Text>
-        </TouchableOpacity>
+        <PkButton
+          title="DONE SHOPPING"
+          variant="primary"
+          size="md"
+          onPress={onDone}
+        />
       </View>
 
       {/* Modals */}
@@ -732,27 +780,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '900',
-    color: colors.accent,
-    letterSpacing: 3,
+    color: colors.primary,
+    letterSpacing: 4,
   },
   balancePill: {
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: 20,
+    paddingVertical: spacing.sm,
+    borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#4fc3f7',
+    borderColor: colors.accentGold,
+    alignItems: 'center',
+    ...shadows.glow(colors.accentGold),
+  },
+  balanceLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.textDim,
+    letterSpacing: 1,
   },
   balanceText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#4fc3f7',
+    fontSize: 18,
+    fontWeight: '900',
+    color: colors.accentGold,
   },
 
   // Body
@@ -768,25 +826,29 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
-  optionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: spacing.lg,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    gap: spacing.md,
+  optionCardStyle: {
+    // extra styling done via PkCard
   },
   optionCardDisabled: {
     opacity: 0.4,
   },
-  optionEmoji: {
-    fontSize: 22,
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  optionIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  optionIconText: {
+    fontSize: 18,
     fontWeight: '900',
-    color: colors.accent,
-    width: 40,
-    textAlign: 'center',
+    color: colors.primary,
   },
   optionInfo: {
     flex: 1,
@@ -807,24 +869,24 @@ const styles = StyleSheet.create({
   optionDescDisabled: {
     color: colors.textDim,
   },
-  costBadge: {
-    backgroundColor: 'rgba(79,195,247,0.15)',
+  priceBadge: {
+    backgroundColor: 'rgba(245,158,11,0.15)',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(79,195,247,0.3)',
+    borderColor: 'rgba(245,158,11,0.3)',
   },
-  costBadgeDisabled: {
+  priceBadgeDisabled: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  costText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#4fc3f7',
+  priceText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: colors.accentGold,
   },
-  costTextDisabled: {
+  priceTextDisabled: {
     color: colors.textDim,
   },
 
@@ -842,26 +904,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   subTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
     color: colors.text,
     marginBottom: spacing.md,
+    letterSpacing: 0.5,
   },
 
-  // Pokemon banner (compact header showing selected pokemon)
+  // Pokemon banner
   pokemonBanner: {
+    marginBottom: spacing.md,
+  },
+  pokemonBannerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.surface,
-    padding: spacing.sm,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
   },
   pokemonBannerName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
     color: colors.text,
     flex: 1,
@@ -877,18 +937,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  teamCard: {
+  teamCardStyle: {
     width: '30%',
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
   },
   teamCardDisabled: {
     opacity: 0.35,
+  },
+  teamCardInner: {
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
   },
   teamCardName: {
     fontSize: 11,
@@ -907,9 +964,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Move slot list (for picking which move to replace)
+  // Move slot list
   moveSlotList: {
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   moveSlotRow: {
     flexDirection: 'row',
@@ -917,7 +974,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
     gap: spacing.sm,
@@ -952,7 +1009,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
 
-  // Move list (for picking new move from learnset)
+  // Move list
   moveListScroll: {
     flex: 1,
   },
@@ -999,7 +1056,7 @@ const styles = StyleSheet.create({
     width: '30.5%',
     aspectRatio: 1.6,
     backgroundColor: colors.surface,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1.5,
     borderColor: colors.border,
     alignItems: 'center',
@@ -1007,8 +1064,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
   },
   itemBtnCurrent: {
-    borderColor: '#4fc3f7',
-    backgroundColor: 'rgba(79,195,247,0.1)',
+    borderColor: colors.accentGold,
+    backgroundColor: 'rgba(245,158,11,0.1)',
   },
   itemText: {
     fontSize: 11,
@@ -1017,12 +1074,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   itemTextCurrent: {
-    color: '#4fc3f7',
+    color: colors.accentGold,
   },
   itemCurrentLabel: {
     fontSize: 8,
     fontWeight: '700',
-    color: '#4fc3f7',
+    color: colors.accentGold,
     marginTop: 2,
   },
 
@@ -1036,18 +1093,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingBottom: spacing.lg,
   },
-  buyCard: {
+  buyCardStyle: {
     width: '30%',
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
   },
   buyCardDisabled: {
     opacity: 0.35,
+  },
+  buyCardInner: {
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
   },
   buyCardName: {
     fontSize: 11,
@@ -1060,22 +1114,22 @@ const styles = StyleSheet.create({
     color: colors.textDim,
   },
   buyCostBadge: {
-    backgroundColor: 'rgba(79,195,247,0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
+    backgroundColor: 'rgba(245,158,11,0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
     marginTop: spacing.xs,
     borderWidth: 1,
-    borderColor: 'rgba(79,195,247,0.3)',
+    borderColor: 'rgba(245,158,11,0.3)',
   },
   buyCostBadgeDisabled: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderColor: 'rgba(255,255,255,0.1)',
   },
   buyCostText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#4fc3f7',
+    fontSize: 11,
+    fontWeight: '900',
+    color: colors.accentGold,
   },
   buyCostTextDisabled: {
     color: colors.textDim,
@@ -1103,18 +1157,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  doneBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  doneText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
 
   // Modals (shared)
   modalOverlay: {
@@ -1124,13 +1166,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: colors.background,
-    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
     padding: spacing.lg,
     width: '85%',
     maxHeight: '70%',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.lg,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1140,7 +1183,7 @@ const styles = StyleSheet.create({
   modalBadge: {
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 4,
+    borderRadius: 6,
   },
   modalBadgeText: {
     color: '#fff',
@@ -1167,8 +1210,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   modalStatValue: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '900',
     color: colors.text,
   },
   modalDesc: {
@@ -1194,7 +1237,7 @@ const styles = StyleSheet.create({
   },
   modalSecondary: {
     fontSize: 11,
-    color: colors.accent,
+    color: colors.primary,
     fontStyle: 'italic',
   },
   selectedMoveRow: {
@@ -1202,24 +1245,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg, paddingVertical: spacing.xs,
   },
   selectedMoveChip: {
-    backgroundColor: colors.accent, paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: colors.primary, paddingHorizontal: 10, paddingVertical: 4,
     borderRadius: 8,
   },
-  selectedMoveChipText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  selectedMoveChipText: { color: '#fff', fontSize: 11, fontWeight: '700' },
   buyMoveRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: spacing.lg, paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
   },
-  buyMoveRowSelected: { backgroundColor: 'rgba(79,195,247,0.08)' },
+  buyMoveRowSelected: { backgroundColor: 'rgba(227,53,13,0.06)' },
   buyMoveName: { flex: 1, fontSize: 13, color: colors.text, fontWeight: '600' },
   buyMovePower: { fontSize: 11, color: colors.textDim, width: 30, textAlign: 'right' },
   buyMoveType: { fontSize: 10, color: colors.textSecondary, width: 50, textAlign: 'right' },
-  buyCardSelected: { borderColor: colors.accent, backgroundColor: 'rgba(233,69,96,0.1)' },
-  confirmBuyBtn: {
-    marginHorizontal: spacing.lg, marginVertical: spacing.md,
-    backgroundColor: colors.accent, paddingVertical: 14, borderRadius: 10, alignItems: 'center',
+  buyItemCard: {
+    width: '30%',
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
-  confirmBuyBtnDisabled: { backgroundColor: colors.surface, opacity: 0.5 },
-  confirmBuyBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1 },
+  buyItemCardSelected: { borderColor: colors.primary, backgroundColor: 'rgba(227,53,13,0.08)' },
+  buyItemCardName: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  confirmBuyBtnWrapper: {
+    marginHorizontal: spacing.lg,
+    marginVertical: spacing.md,
+  },
 });
