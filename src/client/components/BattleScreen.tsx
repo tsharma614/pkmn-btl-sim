@@ -34,9 +34,10 @@ import { ItemSelectScreen } from './ItemSelectScreen';
 import { ShopScreen } from './ShopScreen';
 import { GymMapScreen } from './GymMapScreen';
 import { E4LockScreen } from './E4LockScreen';
+import { PkButton } from './shared/PkButton';
 import { generateBudgetDraftOptions, MEGA_POOL, TIERS as draftTiers } from '../../engine/draft-pool';
 import { SeededRNG } from '../../utils/rng';
-import { colors, spacing } from '../theme';
+import { colors, spacing, shadows } from '../theme';
 import { getGymLeader } from '../../data/gym-leaders';
 import { getEliteFourMember } from '../../data/elite-four';
 import type { SideEffects } from '../../types';
@@ -405,13 +406,11 @@ export function BattleScreen() {
         <Text style={styles.disconnectSub}>
           Return to the app to reconnect automatically, or start a new battle.
         </Text>
-        <TouchableOpacity
-          style={styles.newBattleBtn}
+        <PkButton
+          title="NEW BATTLE"
           onPress={playAgain}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.newBattleBtnText}>New Battle</Text>
-        </TouchableOpacity>
+          style={{ marginTop: spacing.xl }}
+        />
       </SafeAreaView>
     );
   }
@@ -535,28 +534,32 @@ export function BattleScreen() {
           </View>
         )}
 
-        {/* Turn indicator */}
+        {/* Turn indicator bar */}
         <View style={styles.turnBar}>
-          <TouchableOpacity onPress={() => setShowExitConfirm(true)} hitSlop={8}>
-            <Text style={styles.exitX}>✕</Text>
+          <TouchableOpacity onPress={() => setShowExitConfirm(true)} hitSlop={8} style={styles.turnBarBtn}>
+            <Text style={styles.exitX}>{'\u2715'}</Text>
           </TouchableOpacity>
-          <Animated.Text style={[styles.turnText, { transform: [{ scale: turnScale }] }]}>
-            Turn {state.turn}
-          </Animated.Text>
-          {state.weather !== 'none' && (
-            <Text style={styles.weatherText}>
-              {WEATHER_ICONS[state.weather] || ''} {state.weather}
-            </Text>
-          )}
-          {state.phase === 'waiting_for_turn' && (
-            <>
-              <ActivityIndicator size="small" color={colors.accent} />
-              {state.gameMode === 'online' && (
-                <Text style={styles.waitingText}>Waiting...</Text>
-              )}
-            </>
-          )}
-          <TouchableOpacity onPress={() => setShowBattleLog(true)} hitSlop={8}>
+
+          <View style={styles.turnCenter}>
+            <Animated.Text style={[styles.turnText, { transform: [{ scale: turnScale }] }]}>
+              TURN {state.turn}
+            </Animated.Text>
+            {state.weather !== 'none' && (
+              <Text style={styles.weatherText}>
+                {WEATHER_ICONS[state.weather] || ''} {state.weather}
+              </Text>
+            )}
+            {state.phase === 'waiting_for_turn' && (
+              <View style={styles.waitingRow}>
+                <ActivityIndicator size="small" color={colors.accentGold} />
+                {state.gameMode === 'online' && (
+                  <Text style={styles.waitingText}>Waiting...</Text>
+                )}
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity onPress={() => setShowBattleLog(true)} hitSlop={8} style={styles.turnBarBtn}>
             <Text style={styles.logBtn}>LOG</Text>
           </TouchableOpacity>
         </View>
@@ -677,20 +680,20 @@ export function BattleScreen() {
           <View style={styles.exitModal}>
             <Text style={styles.exitTitle}>Exit Battle?</Text>
             <Text style={styles.exitSub}>This will forfeit the current battle.</Text>
-            <TouchableOpacity
-              style={styles.exitConfirmBtn}
+            <PkButton
+              title="EXIT TO MENU"
+              variant="primary"
+              size="md"
               onPress={() => { setShowExitConfirm(false); returnToMenu(); }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.exitConfirmText}>Exit to Menu</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.exitCancelBtn}
+              style={{ marginTop: spacing.lg, width: '100%' }}
+            />
+            <PkButton
+              title="CANCEL"
+              variant="ghost"
+              size="sm"
               onPress={() => setShowExitConfirm(false)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.exitCancelText}>Cancel</Text>
-            </TouchableOpacity>
+              style={{ marginTop: spacing.sm }}
+            />
           </View>
         </View>
       )}
@@ -714,16 +717,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 16,
     marginTop: spacing.lg,
-  },
-  hint: {
-    color: colors.textDim,
-    fontSize: 12,
-    marginTop: spacing.sm,
+    fontWeight: '600',
   },
   disconnectTitle: {
-    color: colors.accent,
+    color: colors.primary,
     fontSize: 24,
     fontWeight: '800',
+    letterSpacing: 1,
   },
   disconnectSub: {
     color: colors.textSecondary,
@@ -732,37 +732,39 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     lineHeight: 20,
   },
-  newBattleBtn: {
-    backgroundColor: colors.accent,
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 10,
-    marginTop: spacing.xl,
-  },
-  newBattleBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
   battlefield: {
     flex: 1,
   },
   turnBar: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: spacing.md,
     paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  turnBarBtn: {
+    padding: spacing.xs,
+  },
+  turnCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   turnText: {
-    color: colors.textSecondary,
+    color: colors.accentGold,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '800',
+    letterSpacing: 1.5,
   },
   weatherText: {
     color: colors.textDim,
     fontSize: 11,
     fontStyle: 'italic',
+  },
+  waitingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   waitingText: {
     color: colors.textDim,
@@ -799,7 +801,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(230, 80, 80, 0.9)',
+    backgroundColor: 'rgba(227, 53, 13, 0.9)',
     paddingVertical: 6,
     zIndex: 100,
     gap: 8,
@@ -840,18 +842,18 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 16,
     fontWeight: '700',
-    paddingHorizontal: 4,
   },
   logBtn: {
-    color: colors.textDim,
+    color: colors.textSecondary,
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    fontWeight: '800',
+    letterSpacing: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 4,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   exitOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -861,59 +863,44 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   exitModal: {
-    backgroundColor: colors.background,
-    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
     padding: spacing.xl,
     width: '80%',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.lg,
   },
   exitTitle: {
     color: colors.text,
     fontSize: 20,
     fontWeight: '800',
+    letterSpacing: 0.5,
   },
   exitSub: {
     color: colors.textSecondary,
     fontSize: 13,
     marginTop: spacing.sm,
     textAlign: 'center',
-  },
-  exitConfirmBtn: {
-    backgroundColor: colors.accent,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginTop: spacing.lg,
-  },
-  exitConfirmText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  exitCancelBtn: {
-    marginTop: spacing.md,
-  },
-  exitCancelText: {
-    color: colors.textDim,
-    fontSize: 14,
-    fontWeight: '600',
+    lineHeight: 18,
   },
 });
 
 const hazardStyles = StyleSheet.create({
   container: {
     alignSelf: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   text: {
     color: colors.textDim,
     fontSize: 9,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
 });

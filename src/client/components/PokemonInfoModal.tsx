@@ -1,10 +1,12 @@
-import React from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, ScrollView } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { PkModal } from './shared/PkModal';
+import { PkCard } from './shared/PkCard';
 import { PokemonSprite } from './PokemonSprite';
 import { TypeBadge } from './TypeBadge';
 import { HpBar } from './HpBar';
 import { StatusBadge } from './StatusBadge';
-import { colors, spacing, typeColors } from '../theme';
+import { colors, spacing } from '../theme';
 import abilitiesData from '../../data/abilities.json';
 import itemsData from '../../data/items.json';
 import type { OwnPokemon } from '../../server/types';
@@ -56,144 +58,136 @@ export function PokemonInfoModal({ ownPokemon, opponentPokemon, visible, onClose
 
   const isOwn = !!ownPokemon;
 
+  const ownStatEntries = useMemo(
+    () => isOwn && ownPokemon?.stats ? Object.entries(ownPokemon.stats) : [],
+    [isOwn, ownPokemon?.stats]
+  );
+
+  const baseStatEntries = useMemo(
+    () => Object.entries(pokemon.species.baseStats),
+    [pokemon.species.baseStats]
+  );
+
+  const nonZeroBoosts = useMemo(
+    () => !isOwn ? Object.entries(pokemon.boosts).filter(([_, v]) => v !== 0) : [],
+    [isOwn, pokemon.boosts]
+  );
+
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.card} onPress={e => e.stopPropagation()}>
-          <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-            {/* Header with sprite and name */}
-            <View style={styles.header}>
-              <PokemonSprite speciesId={pokemon.species.id} facing="front" size={80} />
-              <View style={styles.headerInfo}>
-                <Text style={styles.name}>{pokemon.species.name}</Text>
-                <Text style={styles.level}>Lv. {pokemon.level}</Text>
-                <View style={styles.typeRow}>
-                  {pokemon.species.types.map(t => (
-                    <TypeBadge key={t} type={t} />
-                  ))}
-                </View>
-              </View>
-            </View>
+    <PkModal visible={visible} title={pokemon.species.name} onClose={onClose}>
+      {/* Header with sprite and name */}
+      <View style={styles.header}>
+        <PokemonSprite speciesId={pokemon.species.id} facing="front" size={80} />
+        <View style={styles.headerInfo}>
+          <Text style={styles.name}>{pokemon.species.name}</Text>
+          <Text style={styles.level}>Lv. {pokemon.level}</Text>
+          <View style={styles.typeRow}>
+            {pokemon.species.types.map(t => (
+              <TypeBadge key={t} type={t} />
+            ))}
+          </View>
+        </View>
+      </View>
 
-            {/* HP Bar (if alive) */}
-            {pokemon.isAlive && (
-              <View style={styles.hpSection}>
-                <HpBar currentHp={pokemon.currentHp} maxHp={pokemon.maxHp} width={200} height={8} />
-                <Text style={styles.hpText}>
-                  {isOwn ? `${pokemon.currentHp} / ${pokemon.maxHp}` : `${Math.round((pokemon.currentHp / pokemon.maxHp) * 100)}%`}
-                </Text>
-                {pokemon.status && <StatusBadge status={pokemon.status} />}
-              </View>
-            )}
-            {!pokemon.isAlive && (
-              <Text style={styles.fainted}>FAINTED</Text>
-            )}
+      {/* HP Bar (if alive) */}
+      {pokemon.isAlive && (
+        <View style={styles.hpSection}>
+          <HpBar currentHp={pokemon.currentHp} maxHp={pokemon.maxHp} width={200} height={8} />
+          <Text style={styles.hpText}>
+            {isOwn ? `${pokemon.currentHp} / ${pokemon.maxHp}` : `${Math.round((pokemon.currentHp / pokemon.maxHp) * 100)}%`}
+          </Text>
+          {pokemon.status && <StatusBadge status={pokemon.status} />}
+        </View>
+      )}
+      {!pokemon.isAlive && (
+        <Text style={styles.fainted}>FAINTED</Text>
+      )}
 
-            {/* Ability */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>ABILITY</Text>
-              <Text style={styles.sectionValue}>{pokemon.ability}</Text>
-              {isOwn && getAbilityDesc(pokemon.ability) && (
-                <Text style={styles.desc}>{getAbilityDesc(pokemon.ability)}</Text>
-              )}
-            </View>
+      {/* Ability */}
+      <PkCard padding="compact" style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>ABILITY</Text>
+        <Text style={styles.sectionValue}>{pokemon.ability}</Text>
+        {isOwn && getAbilityDesc(pokemon.ability) && (
+          <Text style={styles.desc}>{getAbilityDesc(pokemon.ability)}</Text>
+        )}
+      </PkCard>
 
-            {/* Item (own only) */}
-            {isOwn && ownPokemon!.item && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>ITEM</Text>
-                <Text style={styles.sectionValue}>{ownPokemon!.item}</Text>
-                {getItemDesc(ownPokemon!.item) && (
-                  <Text style={styles.desc}>{getItemDesc(ownPokemon!.item)}</Text>
-                )}
-              </View>
-            )}
+      {/* Item (own only) */}
+      {isOwn && ownPokemon!.item && (
+        <PkCard padding="compact" style={styles.sectionCard}>
+          <Text style={styles.sectionLabel}>ITEM</Text>
+          <Text style={styles.sectionValue}>{ownPokemon!.item}</Text>
+          {getItemDesc(ownPokemon!.item) && (
+            <Text style={styles.desc}>{getItemDesc(ownPokemon!.item)}</Text>
+          )}
+        </PkCard>
+      )}
 
-            {/* Stats (own only) */}
-            {isOwn && ownPokemon!.stats && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>STATS</Text>
-                <View style={styles.statsGrid}>
-                  {Object.entries(ownPokemon!.stats).map(([stat, value]) => {
-                    const boost = ownPokemon!.boosts[stat] || 0;
-                    return (
-                      <View key={stat} style={styles.statRow}>
-                        <Text style={styles.statName}>{STAT_LABELS[stat] || stat.toUpperCase()}</Text>
-                        <View style={styles.statBarTrack}>
-                          <View style={[styles.statBarFill, { width: `${Math.min((value as number) / 400 * 100, 100)}%` }]} />
-                        </View>
-                        <Text style={styles.statValue}>{value as number}</Text>
-                        {boost !== 0 && (
-                          <Text style={[styles.boostText, boost > 0 ? styles.boostUp : styles.boostDown]}>
-                            {boost > 0 ? `+${boost}` : boost}
-                          </Text>
-                        )}
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-            )}
-
-            {/* Boosts for opponent (if any non-zero) */}
-            {!isOwn && Object.values(pokemon.boosts).some(v => v !== 0) && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>BOOSTS</Text>
-                <View style={styles.boostRow}>
-                  {Object.entries(pokemon.boosts).filter(([_, v]) => v !== 0).map(([stat, val]) => (
-                    <View key={stat} style={styles.boostPill}>
-                      <Text style={[styles.boostPillText, (val as number) > 0 ? styles.boostUp : styles.boostDown]}>
-                        {STAT_LABELS[stat] || stat.toUpperCase()} {(val as number) > 0 ? `+${val}` : val}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Base Stats */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>BASE STATS</Text>
-              <View style={styles.statsGrid}>
-                {Object.entries(pokemon.species.baseStats).map(([stat, value]) => (
-                  <View key={stat} style={styles.statRow}>
-                    <Text style={styles.statName}>{STAT_LABELS[stat] || stat.toUpperCase()}</Text>
-                    <View style={styles.statBarTrack}>
-                      <View style={[styles.statBarFill, {
-                        width: `${Math.min((value as number) / 255 * 100, 100)}%`,
-                        backgroundColor: (value as number) >= 100 ? colors.hpGreen : (value as number) >= 60 ? colors.hpYellow : colors.hpRed,
-                      }]} />
-                    </View>
-                    <Text style={styles.statValue}>{value as number}</Text>
+      {/* Stats (own only) */}
+      {isOwn && ownPokemon!.stats && (
+        <PkCard padding="compact" style={styles.sectionCard}>
+          <Text style={styles.sectionLabel}>STATS</Text>
+          <View style={styles.statsGrid}>
+            {ownStatEntries.map(([stat, value]) => {
+              const boost = ownPokemon!.boosts[stat] || 0;
+              return (
+                <View key={stat} style={styles.statRow}>
+                  <Text style={styles.statName}>{STAT_LABELS[stat] || stat.toUpperCase()}</Text>
+                  <View style={styles.statBarTrack}>
+                    <View style={[styles.statBarFill, { width: `${Math.min((value as number) / 400 * 100, 100)}%` }]} />
                   </View>
-                ))}
+                  <Text style={styles.statValue}>{value as number}</Text>
+                  {boost !== 0 && (
+                    <Text style={[styles.boostText, boost > 0 ? styles.boostUp : styles.boostDown]}>
+                      {boost > 0 ? `+${boost}` : boost}
+                    </Text>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        </PkCard>
+      )}
+
+      {/* Boosts for opponent (if any non-zero) */}
+      {!isOwn && nonZeroBoosts.length > 0 && (
+        <PkCard padding="compact" style={styles.sectionCard}>
+          <Text style={styles.sectionLabel}>BOOSTS</Text>
+          <View style={styles.boostRow}>
+            {nonZeroBoosts.map(([stat, val]) => (
+              <View key={stat} style={styles.boostPill}>
+                <Text style={[styles.boostPillText, (val as number) > 0 ? styles.boostUp : styles.boostDown]}>
+                  {STAT_LABELS[stat] || stat.toUpperCase()} {(val as number) > 0 ? `+${val}` : val}
+                </Text>
               </View>
+            ))}
+          </View>
+        </PkCard>
+      )}
+
+      {/* Base Stats */}
+      <PkCard padding="compact" style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>BASE STATS</Text>
+        <View style={styles.statsGrid}>
+          {baseStatEntries.map(([stat, value]) => (
+            <View key={stat} style={styles.statRow}>
+              <Text style={styles.statName}>{STAT_LABELS[stat] || stat.toUpperCase()}</Text>
+              <View style={styles.statBarTrack}>
+                <View style={[styles.statBarFill, {
+                  width: `${Math.min((value as number) / 255 * 100, 100)}%`,
+                  backgroundColor: (value as number) >= 100 ? colors.hpGreen : (value as number) >= 60 ? colors.hpYellow : colors.hpRed,
+                }]} />
+              </View>
+              <Text style={styles.statValue}>{value as number}</Text>
             </View>
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+          ))}
+        </View>
+      </PkCard>
+    </PkModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    width: '92%',
-    maxHeight: '80%',
-    borderWidth: 2,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    padding: spacing.lg,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -243,14 +237,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  section: {
-    marginBottom: spacing.md,
+  sectionCard: {
+    marginBottom: spacing.sm,
   },
   sectionLabel: {
-    color: colors.textDim,
+    color: colors.accentGold,
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
+    fontWeight: '800',
+    letterSpacing: 1.5,
     marginBottom: 4,
   },
   sectionValue: {
@@ -288,7 +282,7 @@ const styles = StyleSheet.create({
   statBarFill: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary,
   },
   statValue: {
     color: colors.textSecondary,

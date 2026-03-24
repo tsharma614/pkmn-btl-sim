@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import { PokemonSprite } from './PokemonSprite';
 import { HpBar } from './HpBar';
@@ -26,7 +26,7 @@ interface Props {
 export function PlayerPanel({ active, team, attackTrigger = 0, damageTrigger = 0, faintTrigger = 0, switchOutTrigger = 0, hpOverride, indicator, onLongPressSprite, speciesIdOverride, nameOverride }: Props) {
   const { width: screenWidth } = useWindowDimensions();
   const spriteSize = Math.round(screenWidth * 0.55);
-  const faintedCount = team.filter(p => !p.isAlive).length;
+  const faintedCount = useMemo(() => team.filter(p => !p.isAlive).length, [team]);
   const displayHp = hpOverride?.current ?? active.currentHp;
   const displayMaxHp = hpOverride?.max ?? active.maxHp;
 
@@ -61,7 +61,7 @@ export function PlayerPanel({ active, team, attackTrigger = 0, damageTrigger = 0
             currentHp={displayHp}
             maxHp={displayMaxHp}
             width={100}
-            height={6}
+            height={7}
           />
           <Text style={styles.hpText}>
             {displayHp}/{displayMaxHp}
@@ -69,7 +69,9 @@ export function PlayerPanel({ active, team, attackTrigger = 0, damageTrigger = 0
           <StatusBadge status={(nameOverride && nameOverride !== active.species.name) ? null : active.status} />
         </View>
         {active.item && (
-          <Text style={styles.item} numberOfLines={1}>@ {active.item}</Text>
+          <View style={styles.itemRow}>
+            <Text style={styles.item} numberOfLines={1}>@ {active.item}</Text>
+          </View>
         )}
       </View>
     </View>
@@ -91,12 +93,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: spacing.sm,
     alignItems: 'flex-end',
+    gap: 3,
   },
   pokeballs: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   name: {
-    color: colors.accent,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
     textAlign: 'right',
@@ -105,17 +108,23 @@ const styles = StyleSheet.create({
   hpRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 3,
+    gap: 5,
   },
   hpText: {
     color: colors.textSecondary,
     fontSize: 10,
-    marginLeft: 5,
+    fontWeight: '700',
+  },
+  itemRow: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   item: {
     color: colors.textDim,
     fontSize: 10,
+    fontWeight: '600',
     fontStyle: 'italic',
-    marginTop: 3,
   },
 });

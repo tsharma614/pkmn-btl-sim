@@ -1,5 +1,7 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { PkModal } from './shared/PkModal';
+import { PkCard } from './shared/PkCard';
 import { PokemonSprite } from './PokemonSprite';
 import { colors, spacing, typeColors } from '../theme';
 import type { PokemonSpecies } from '../../types';
@@ -17,6 +19,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   Physical: '#C92112',
   Special: '#4F5870',
   Status: '#8C888C',
+};
+
+const STAT_KEYS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const;
+const STAT_DISPLAY: Record<string, string> = {
+  hp: 'HP', atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe',
 };
 
 interface Props {
@@ -43,7 +50,10 @@ export function PokemonDetailModal({ visible, species, moves, item, ability, onC
   if (!species) return null;
 
   const { baseStats, types, abilities } = species;
-  const bst = baseStats.hp + baseStats.atk + baseStats.def + baseStats.spa + baseStats.spd + baseStats.spe;
+  const bst = useMemo(
+    () => baseStats.hp + baseStats.atk + baseStats.def + baseStats.spa + baseStats.spd + baseStats.spe,
+    [baseStats]
+  );
   const tier = TIER_LABELS[species.tier] ?? TIER_LABELS[3];
   const displayAbility = ability ?? abilities?.[0] ?? 'Unknown';
   const abilityId = displayAbility.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -51,118 +61,93 @@ export function PokemonDetailModal({ visible, species, moves, item, ability, onC
   const hasCycling = onPrev && onNext && totalCount && totalCount > 1;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.modal} onStartShouldSetResponder={() => true}>
-            {/* Cycling nav */}
-            {hasCycling && (
-              <View style={styles.cycleRow}>
-                <TouchableOpacity onPress={onPrev} style={styles.cycleBtn} hitSlop={12}>
-                  <Text style={styles.cycleBtnText}>{'<'}</Text>
-                </TouchableOpacity>
-                <Text style={styles.cycleIndicator}>{currentIndex}/{totalCount}</Text>
-                <TouchableOpacity onPress={onNext} style={styles.cycleBtn} hitSlop={12}>
-                  <Text style={styles.cycleBtnText}>{'>'}</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+    <PkModal visible={visible} title={species.name} onClose={onClose}>
+      {/* Cycling nav */}
+      {hasCycling && (
+        <View style={styles.cycleRow}>
+          <TouchableOpacity onPress={onPrev} style={styles.cycleBtn} hitSlop={12}>
+            <Text style={styles.cycleBtnText}>{'<'}</Text>
+          </TouchableOpacity>
+          <Text style={styles.cycleIndicator}>{currentIndex}/{totalCount}</Text>
+          <TouchableOpacity onPress={onNext} style={styles.cycleBtn} hitSlop={12}>
+            <Text style={styles.cycleBtnText}>{'>'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-            {/* Header: sprite + name + types + tier */}
-            <View style={styles.header}>
-              <PokemonSprite speciesId={species.id} facing="front" size={80} />
-              <View style={styles.headerInfo}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.name}>{species.name}</Text>
-                  <View style={[styles.tierBadge, { backgroundColor: tier.color }]}>
-                    <Text style={styles.tierText}>{tier.label}</Text>
-                  </View>
-                </View>
-                <View style={styles.typeRow}>
-                  {types.map(t => (
-                    <View key={t} style={[styles.typeBadge, { backgroundColor: typeColors[t] || '#666' }]}>
-                      <Text style={styles.typeText}>{t}</Text>
-                    </View>
-                  ))}
-                </View>
-                <Text style={styles.ability}>{displayAbility}</Text>
-                {abilityDesc ? <Text style={styles.abilityDesc}>{abilityDesc}</Text> : null}
-                {item && <Text style={styles.item}>Held: {item}</Text>}
-              </View>
+      {/* Header: sprite + name + types + tier */}
+      <View style={styles.header}>
+        <PokemonSprite speciesId={species.id} facing="front" size={80} />
+        <View style={styles.headerInfo}>
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{species.name}</Text>
+            <View style={[styles.tierBadge, { backgroundColor: tier.color }]}>
+              <Text style={styles.tierText}>{tier.label}</Text>
             </View>
-
-            {/* Base Stats */}
-            <Text style={styles.sectionTitle}>BASE STATS</Text>
-            <View style={styles.statsGrid}>
-              {(['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const).map(stat => {
-                const val = baseStats[stat];
-                const pct = Math.min(100, val / 1.8);
-                const barColor = val >= 100 ? '#4caf50' : val >= 70 ? '#ff9800' : '#f44336';
-                const label: Record<string, string> = { hp: 'HP', atk: 'Atk', def: 'Def', spa: 'SpA', spd: 'SpD', spe: 'Spe' };
-                return (
-                  <View key={stat} style={styles.statRow}>
-                    <Text style={styles.statLabel}>{label[stat]}</Text>
-                    <View style={styles.statBarBg}>
-                      <View style={[styles.statBar, { width: `${pct}%`, backgroundColor: barColor }]} />
-                    </View>
-                    <Text style={styles.statValue}>{val}</Text>
-                  </View>
-                );
-              })}
-              <View style={styles.statRow}>
-                <Text style={styles.statLabel}>BST</Text>
-                <View style={styles.statBarBg} />
-                <Text style={[styles.statValue, { fontWeight: '900' }]}>{bst}</Text>
-              </View>
-            </View>
-
-            {/* Moves (if provided) */}
-            {moves && moves.length > 0 && (
-              <>
-                <Text style={styles.sectionTitle}>MOVES</Text>
-                {moves.map((m, i) => (
-                  <View key={i} style={styles.moveRow}>
-                    <View style={[styles.moveCat, { backgroundColor: CATEGORY_COLORS[m.category] || '#666' }]} />
-                    <View style={[styles.moveType, { backgroundColor: typeColors[m.type] || '#666' }]}>
-                      <Text style={styles.moveTypeText}>{m.type}</Text>
-                    </View>
-                    <Text style={styles.moveName} numberOfLines={1}>{m.name}</Text>
-                    <Text style={styles.moveStat}>{m.power ?? '-'}</Text>
-                    <Text style={styles.moveStat}>{m.accuracy ? `${m.accuracy}%` : '-'}</Text>
-                  </View>
-                ))}
-              </>
-            )}
-
-            <Text style={styles.closeHint}>Tap outside to close</Text>
           </View>
-        </ScrollView>
-      </TouchableOpacity>
-    </Modal>
+          <View style={styles.typeRow}>
+            {types.map(t => (
+              <View key={t} style={[styles.typeBadge, { backgroundColor: typeColors[t] || '#666' }]}>
+                <Text style={styles.typeText}>{t}</Text>
+              </View>
+            ))}
+          </View>
+          <Text style={styles.ability}>{displayAbility}</Text>
+          {abilityDesc ? <Text style={styles.abilityDesc}>{abilityDesc}</Text> : null}
+          {item && <Text style={styles.item}>Held: {item}</Text>}
+        </View>
+      </View>
+
+      {/* Base Stats */}
+      <PkCard padding="compact" style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>BASE STATS</Text>
+        <View style={styles.statsGrid}>
+          {STAT_KEYS.map(stat => {
+            const val = baseStats[stat];
+            const pct = Math.min(100, val / 1.8);
+            const barColor = val >= 100 ? colors.hpGreen : val >= 70 ? colors.hpYellow : colors.hpRed;
+            return (
+              <View key={stat} style={styles.statRow}>
+                <Text style={styles.statLabel}>{STAT_DISPLAY[stat]}</Text>
+                <View style={styles.statBarBg}>
+                  <View style={[styles.statBar, { width: `${pct}%`, backgroundColor: barColor }]} />
+                </View>
+                <Text style={styles.statValue}>{val}</Text>
+              </View>
+            );
+          })}
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>BST</Text>
+            <View style={styles.statBarBg} />
+            <Text style={[styles.statValue, { fontWeight: '900', color: colors.accentGold }]}>{bst}</Text>
+          </View>
+        </View>
+      </PkCard>
+
+      {/* Moves (if provided) */}
+      {moves && moves.length > 0 && (
+        <PkCard padding="compact" style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>MOVES</Text>
+          {moves.map((m, i) => (
+            <View key={i} style={styles.moveRow}>
+              <View style={[styles.moveCat, { backgroundColor: CATEGORY_COLORS[m.category] || '#666' }]} />
+              <View style={[styles.moveType, { backgroundColor: typeColors[m.type] || '#666' }]}>
+                <Text style={styles.moveTypeText}>{m.type}</Text>
+              </View>
+              <Text style={styles.moveName} numberOfLines={1}>{m.name}</Text>
+              <Text style={styles.moveStat}>{m.power ?? '-'}</Text>
+              <Text style={styles.moveStat}>{m.accuracy ? `${m.accuracy}%` : '-'}</Text>
+            </View>
+          ))}
+        </PkCard>
+      )}
+
+      <Text style={styles.closeHint}>Tap outside to close</Text>
+    </PkModal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  modal: {
-    backgroundColor: colors.background,
-    borderRadius: 16,
-    padding: spacing.lg,
-    width: '100%',
-    maxWidth: 360,
-    borderWidth: 2,
-    borderColor: colors.border,
-  },
   cycleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -174,7 +159,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   cycleBtnText: {
-    color: colors.accent,
+    color: colors.primary,
     fontSize: 22,
     fontWeight: '900',
   },
@@ -232,6 +217,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+    fontWeight: '600',
   },
   abilityDesc: {
     fontSize: 10,
@@ -244,13 +230,15 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     marginTop: 2,
   },
+  sectionCard: {
+    marginBottom: spacing.sm,
+  },
   sectionTitle: {
     fontSize: 10,
     fontWeight: '800',
-    color: colors.textDim,
+    color: colors.accentGold,
     letterSpacing: 2,
     marginBottom: spacing.xs,
-    marginTop: spacing.sm,
   },
   statsGrid: {
     gap: 5,
@@ -269,7 +257,7 @@ const styles = StyleSheet.create({
   statBarBg: {
     flex: 1,
     height: 10,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 5,
     overflow: 'hidden',
   },

@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, Modal, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PkModal } from './shared/PkModal';
+import { PkCard } from './shared/PkCard';
 import { PokemonSprite } from './PokemonSprite';
 import { TypeBadge } from './TypeBadge';
 import { HpBar } from './HpBar';
@@ -30,113 +32,82 @@ export function ScoutedTeamModal({ visible, onClose, scoutedPokemon, activePokem
   }
 
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.card} onPress={e => e.stopPropagation()}>
-          <Text style={styles.title}>Opponent's Team</Text>
-          <Text style={styles.subtitle}>
-            {allScouted.filter(p => p !== null).length} / {teamSize} scouted
-            {faintedCount > 0 ? ` | ${faintedCount} fainted` : ''}
-          </Text>
+    <PkModal visible={visible} title="Opponent's Team" onClose={onClose}>
+      <Text style={styles.subtitle}>
+        {allScouted.filter(p => p !== null).length} / {teamSize} scouted
+        {faintedCount > 0 ? ` | ${faintedCount} fainted` : ''}
+      </Text>
 
-          <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-            {allScouted.map((pokemon, i) => (
-              <View key={i} style={styles.row}>
-                {pokemon ? (
-                  <>
-                    <View style={styles.spriteWrap}>
-                      <PokemonSprite speciesId={pokemon.species.id} facing="front" size={56} />
-                    </View>
-                    <View style={styles.info}>
-                      <Text style={[styles.name, !pokemon.isAlive && styles.faintedName]}>
-                        {pokemon.species.name}
-                      </Text>
-                      <View style={styles.typeRow}>
-                        {pokemon.species.types.map(t => (
-                          <TypeBadge key={t} type={t} />
-                        ))}
-                      </View>
-                      {pokemon.isAlive ? (
-                        <View style={styles.hpRow}>
-                          <HpBar
-                            currentHp={pokemon.currentHp}
-                            maxHp={pokemon.maxHp}
-                            width={80}
-                            height={5}
-                          />
-                          <Text style={styles.hpText}>
-                            {Math.round((pokemon.currentHp / pokemon.maxHp) * 100)}%
-                          </Text>
-                          <StatusBadge status={pokemon.status} />
-                        </View>
-                      ) : (
-                        <Text style={styles.fntText}>FNT</Text>
-                      )}
-                    </View>
-                    {i === 0 && activePokemon && (
-                      <View style={styles.activeBadge}>
-                        <Text style={styles.activeBadgeText}>ACTIVE</Text>
-                      </View>
-                    )}
-                  </>
+      {allScouted.map((pokemon, i) => (
+        <PkCard key={i} padding="compact" style={styles.pokemonCard}>
+          {pokemon ? (
+            <View style={styles.row}>
+              <View style={styles.spriteWrap}>
+                <PokemonSprite speciesId={pokemon.species.id} facing="front" size={56} />
+              </View>
+              <View style={styles.info}>
+                <Text style={[styles.name, !pokemon.isAlive && styles.faintedName]}>
+                  {pokemon.species.name}
+                </Text>
+                <View style={styles.typeRow}>
+                  {pokemon.species.types.map(t => (
+                    <TypeBadge key={t} type={t} small />
+                  ))}
+                </View>
+                {pokemon.isAlive ? (
+                  <View style={styles.hpRow}>
+                    <HpBar
+                      currentHp={pokemon.currentHp}
+                      maxHp={pokemon.maxHp}
+                      width={80}
+                      height={5}
+                    />
+                    <Text style={styles.hpText}>
+                      {Math.round((pokemon.currentHp / pokemon.maxHp) * 100)}%
+                    </Text>
+                    <StatusBadge status={pokemon.status} />
+                  </View>
                 ) : (
-                  <>
-                    <View style={styles.unknownSprite}>
-                      <Text style={styles.unknownText}>?</Text>
-                    </View>
-                    <View style={styles.info}>
-                      <Text style={styles.unknownName}>Unknown</Text>
-                    </View>
-                  </>
+                  <Text style={styles.fntText}>FNT</Text>
                 )}
               </View>
-            ))}
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+              {i === 0 && activePokemon && (
+                <View style={styles.activeBadge}>
+                  <Text style={styles.activeBadgeText}>ACTIVE</Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View style={styles.row}>
+              <View style={styles.unknownSprite}>
+                <Text style={styles.unknownText}>?</Text>
+              </View>
+              <View style={styles.info}>
+                <Text style={styles.unknownName}>Unknown</Text>
+              </View>
+            </View>
+          )}
+        </PkCard>
+      ))}
+    </PkModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    width: '92%',
-    maxHeight: '75%',
-    borderWidth: 2,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    padding: spacing.lg,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
   subtitle: {
     color: colors.textDim,
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
-    marginTop: 4,
     marginBottom: spacing.md,
     letterSpacing: 0.5,
+  },
+  pokemonCard: {
+    marginBottom: spacing.sm,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   spriteWrap: {
     width: 56,
@@ -177,7 +148,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   activeBadge: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -193,8 +164,10 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
   },
   unknownText: {
     color: colors.textDim,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import { ScoutedTeamModal } from './ScoutedTeamModal';
 import { PokemonSprite } from './PokemonSprite';
@@ -7,7 +7,7 @@ import { StatusBadge } from './StatusBadge';
 import { TeamIndicator } from './TeamIndicator';
 import { FloatingIndicator } from './FloatingIndicator';
 import type { IndicatorData } from '../hooks/use-event-queue';
-import { colors, spacing } from '../theme';
+import { colors, spacing, shadows } from '../theme';
 import type { TurnResultPayload } from '../../server/types';
 
 interface Props {
@@ -40,28 +40,31 @@ export function OpponentPanel({ opponentVisible, botName, attackTrigger = 0, dam
   const faintedCount = opponentVisible?.faintedCount ?? 0;
   const displayHp = hpOverride?.current ?? active?.currentHp ?? 1;
   const displayMaxHp = hpOverride?.max ?? active?.maxHp ?? 1;
-  const hpPct = displayMaxHp > 0 ? Math.round((displayHp / displayMaxHp) * 100) : 100;
+  const hpPct = useMemo(
+    () => displayMaxHp > 0 ? Math.round((displayHp / displayMaxHp) * 100) : 100,
+    [displayHp, displayMaxHp]
+  );
 
   return (
     <View style={styles.container}>
       {/* Compact info strip - left */}
       <View style={styles.infoStrip}>
-        <Text style={styles.name} numberOfLines={1}>
-          {displayName}
-        </Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.name} numberOfLines={1}>
+            {displayName}
+          </Text>
+        </View>
         <View style={styles.hpRow}>
           <HpBar
             currentHp={displayHp}
             maxHp={displayMaxHp}
             width={100}
-            height={6}
+            height={7}
           />
           <Text style={styles.hpText}>{hpPct}%</Text>
           <StatusBadge status={(nameOverride && nameOverride !== active?.species.name) ? null : (active?.status ?? null)} />
         </View>
-        <View style={styles.metaRow}>
-          <Text style={styles.trainer}>{botName}</Text>
-        </View>
+        <Text style={styles.trainer} numberOfLines={1}>{botName}</Text>
         {/* Pokeballs underneath info — long-press to see scouted team */}
         <Pressable style={styles.pokeballs} onLongPress={() => setShowScouted(true)} delayLongPress={300}>
           <TeamIndicator total={teamSize} fainted={faintedCount} />
@@ -115,9 +118,14 @@ const styles = StyleSheet.create({
   infoStrip: {
     flex: 1,
     paddingTop: spacing.sm,
+    gap: 3,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   name: {
-    color: colors.accent,
+    color: colors.text,
     fontSize: 16,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -125,24 +133,20 @@ const styles = StyleSheet.create({
   hpRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 3,
+    gap: 5,
   },
   hpText: {
     color: colors.textSecondary,
     fontSize: 10,
-    marginLeft: 5,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 3,
+    fontWeight: '700',
   },
   trainer: {
     color: colors.textDim,
     fontSize: 10,
+    fontWeight: '600',
   },
   pokeballs: {
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   spriteArea: {
     alignItems: 'center',
@@ -150,17 +154,19 @@ const styles = StyleSheet.create({
   },
   reactionBubble: {
     position: 'absolute',
-    bottom: 4,
-    left: 4,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    bottom: 8,
+    left: 8,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   reactionText: {
     color: '#fff',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
     fontStyle: 'italic',
   },
 });

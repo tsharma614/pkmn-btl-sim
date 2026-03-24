@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, Modal, Pressable, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { PkModal } from './shared/PkModal';
+import { PkCard } from './shared/PkCard';
+import { PkButton } from './shared/PkButton';
 import { PokemonSprite } from './PokemonSprite';
 import { TypeBadge } from './TypeBadge';
 import { HpBar } from './HpBar';
@@ -62,160 +65,140 @@ export function SwitchPreviewModal({ team, initialIndex, activePokemonIndex, vis
     setCurrentIndex(prev => (prev + 1) % team.length);
   };
 
+  const statEntries = useMemo(
+    () => pokemon.stats ? Object.entries(pokemon.stats) : [],
+    [pokemon.stats]
+  );
+
   return (
-    <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.card} onPress={e => e.stopPropagation()}>
-          <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-            {/* Navigation arrows + header */}
-            <View style={styles.navRow}>
-              <TouchableOpacity onPress={goLeft} style={styles.arrowBtn}>
-                <Text style={styles.arrowText}>{'<'}</Text>
-              </TouchableOpacity>
+    <PkModal visible={visible} title="Switch Pokemon" onClose={onClose}>
+      {/* Navigation arrows + header */}
+      <View style={styles.navRow}>
+        <TouchableOpacity onPress={goLeft} style={styles.arrowBtn}>
+          <Text style={styles.arrowText}>{'<'}</Text>
+        </TouchableOpacity>
 
-              <View style={styles.headerCenter}>
-                <PokemonSprite speciesId={pokemon.species.id} facing="front" size={80} />
-                <Text style={styles.name}>{pokemon.species.name}</Text>
-                <View style={styles.typeRow}>
-                  {pokemon.species.types.map(t => (
-                    <TypeBadge key={t} type={t} />
-                  ))}
+        <View style={styles.headerCenter}>
+          <PokemonSprite speciesId={pokemon.species.id} facing="front" size={80} />
+          <Text style={styles.name}>{pokemon.species.name}</Text>
+          <View style={styles.typeRow}>
+            {pokemon.species.types.map(t => (
+              <TypeBadge key={t} type={t} />
+            ))}
+          </View>
+        </View>
+
+        <TouchableOpacity onPress={goRight} style={styles.arrowBtn}>
+          <Text style={styles.arrowText}>{'>'}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Team indicator dots */}
+      <View style={styles.dotRow}>
+        {team.map((_, i) => (
+          <View
+            key={i}
+            style={[
+              styles.dot,
+              i === currentIndex && styles.dotActive,
+              !team[i].isAlive && styles.dotFainted,
+            ]}
+          />
+        ))}
+      </View>
+
+      {/* HP */}
+      {pokemon.isAlive ? (
+        <View style={styles.hpSection}>
+          <HpBar currentHp={pokemon.currentHp} maxHp={pokemon.maxHp} width={200} height={8} />
+          <Text style={styles.hpText}>{pokemon.currentHp} / {pokemon.maxHp}</Text>
+          {pokemon.status && <StatusBadge status={pokemon.status} />}
+        </View>
+      ) : (
+        <Text style={styles.fainted}>FAINTED</Text>
+      )}
+
+      {/* Ability */}
+      <PkCard padding="compact" style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>ABILITY</Text>
+        <Text style={styles.sectionValue}>{pokemon.ability}</Text>
+        {getAbilityDesc(pokemon.ability) && (
+          <Text style={styles.desc}>{getAbilityDesc(pokemon.ability)}</Text>
+        )}
+      </PkCard>
+
+      {/* Item */}
+      {pokemon.item && (
+        <PkCard padding="compact" style={styles.sectionCard}>
+          <Text style={styles.sectionLabel}>ITEM</Text>
+          <Text style={styles.sectionValue}>{pokemon.item}</Text>
+          {getItemDesc(pokemon.item) && (
+            <Text style={styles.desc}>{getItemDesc(pokemon.item)}</Text>
+          )}
+        </PkCard>
+      )}
+
+      {/* Stats */}
+      {pokemon.stats && (
+        <PkCard padding="compact" style={styles.sectionCard}>
+          <Text style={styles.sectionLabel}>STATS</Text>
+          <View style={styles.statsGrid}>
+            {statEntries.map(([stat, value]) => {
+              const boost = pokemon.boosts[stat] || 0;
+              return (
+                <View key={stat} style={styles.statRow}>
+                  <Text style={styles.statName}>{STAT_LABELS[stat] || stat.toUpperCase()}</Text>
+                  <View style={styles.statBarTrack}>
+                    <View style={[styles.statBarFill, { width: `${Math.min((value as number) / 400 * 100, 100)}%` }]} />
+                  </View>
+                  <Text style={styles.statValue}>{value as number}</Text>
+                  {boost !== 0 && (
+                    <Text style={[styles.boostText, boost > 0 ? styles.boostUp : styles.boostDown]}>
+                      {boost > 0 ? `+${boost}` : boost}
+                    </Text>
+                  )}
                 </View>
+              );
+            })}
+          </View>
+        </PkCard>
+      )}
+
+      {/* Moves */}
+      <PkCard padding="compact" style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>MOVES</Text>
+        <View style={styles.movesGrid}>
+          {pokemon.moves.map((move, i) => {
+            const bg = typeColors[move.type] || '#555';
+            return (
+              <View key={i} style={[styles.movePill, { backgroundColor: bg }]}>
+                <Text style={styles.movePillName} numberOfLines={1}>{move.name}</Text>
+                <Text style={styles.movePillPp}>{move.currentPp}/{move.maxPp}</Text>
               </View>
+            );
+          })}
+        </View>
+      </PkCard>
 
-              <TouchableOpacity onPress={goRight} style={styles.arrowBtn}>
-                <Text style={styles.arrowText}>{'>'}</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Team indicator dots */}
-            <View style={styles.dotRow}>
-              {team.map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    i === currentIndex && styles.dotActive,
-                    !team[i].isAlive && styles.dotFainted,
-                  ]}
-                />
-              ))}
-            </View>
-
-            {/* HP */}
-            {pokemon.isAlive ? (
-              <View style={styles.hpSection}>
-                <HpBar currentHp={pokemon.currentHp} maxHp={pokemon.maxHp} width={200} height={8} />
-                <Text style={styles.hpText}>{pokemon.currentHp} / {pokemon.maxHp}</Text>
-                {pokemon.status && <StatusBadge status={pokemon.status} />}
-              </View>
-            ) : (
-              <Text style={styles.fainted}>FAINTED</Text>
-            )}
-
-            {/* Ability */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>ABILITY</Text>
-              <Text style={styles.sectionValue}>{pokemon.ability}</Text>
-              {getAbilityDesc(pokemon.ability) && (
-                <Text style={styles.desc}>{getAbilityDesc(pokemon.ability)}</Text>
-              )}
-            </View>
-
-            {/* Item */}
-            {pokemon.item && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>ITEM</Text>
-                <Text style={styles.sectionValue}>{pokemon.item}</Text>
-                {getItemDesc(pokemon.item) && (
-                  <Text style={styles.desc}>{getItemDesc(pokemon.item)}</Text>
-                )}
-              </View>
-            )}
-
-            {/* Stats */}
-            {pokemon.stats && (
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>STATS</Text>
-                <View style={styles.statsGrid}>
-                  {Object.entries(pokemon.stats).map(([stat, value]) => {
-                    const boost = pokemon.boosts[stat] || 0;
-                    return (
-                      <View key={stat} style={styles.statRow}>
-                        <Text style={styles.statName}>{STAT_LABELS[stat] || stat.toUpperCase()}</Text>
-                        <View style={styles.statBarTrack}>
-                          <View style={[styles.statBarFill, { width: `${Math.min((value as number) / 400 * 100, 100)}%` }]} />
-                        </View>
-                        <Text style={styles.statValue}>{value as number}</Text>
-                        {boost !== 0 && (
-                          <Text style={[styles.boostText, boost > 0 ? styles.boostUp : styles.boostDown]}>
-                            {boost > 0 ? `+${boost}` : boost}
-                          </Text>
-                        )}
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-            )}
-
-            {/* Moves */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>MOVES</Text>
-              <View style={styles.movesGrid}>
-                {pokemon.moves.map((move, i) => {
-                  const bg = typeColors[move.type] || '#555';
-                  return (
-                    <View key={i} style={[styles.movePill, { backgroundColor: bg }]}>
-                      <Text style={styles.movePillName} numberOfLines={1}>{move.name}</Text>
-                      <Text style={styles.movePillPp}>{move.currentPp}/{move.maxPp}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Send Out button */}
-            <TouchableOpacity
-              style={[styles.sendOutBtn, !canSendOut && styles.sendOutBtnDisabled]}
-              onPress={() => {
-                if (canSendOut) {
-                  onSelectSwitch(currentIndex);
-                  onClose();
-                }
-              }}
-              disabled={!canSendOut}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.sendOutText}>
-                {isActive ? 'Already Active' : isFainted ? 'Fainted' : 'Send Out'}
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+      {/* Send Out button */}
+      <PkButton
+        title={isActive ? 'ALREADY ACTIVE' : isFainted ? 'FAINTED' : 'SEND OUT'}
+        variant={canSendOut ? 'primary' : 'secondary'}
+        size="md"
+        onPress={() => {
+          if (canSendOut) {
+            onSelectSwitch(currentIndex);
+            onClose();
+          }
+        }}
+        disabled={!canSendOut}
+        style={{ marginTop: spacing.md }}
+      />
+    </PkModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    width: '92%',
-    maxHeight: '85%',
-    borderWidth: 2,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    padding: spacing.lg,
-  },
   navRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -263,7 +246,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
   dotActive: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary,
   },
   dotFainted: {
     backgroundColor: colors.hpRed,
@@ -293,14 +276,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  section: {
-    marginBottom: spacing.md,
+  sectionCard: {
+    marginBottom: spacing.sm,
   },
   sectionLabel: {
-    color: colors.textDim,
+    color: colors.accentGold,
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
+    fontWeight: '800',
+    letterSpacing: 1.5,
     marginBottom: 4,
   },
   sectionValue: {
@@ -338,7 +321,7 @@ const styles = StyleSheet.create({
   statBarFill: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary,
   },
   statValue: {
     color: colors.textSecondary,
@@ -381,21 +364,5 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
     fontSize: 10,
     fontWeight: '600',
-  },
-  sendOutBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  sendOutBtnDisabled: {
-    backgroundColor: colors.surface,
-    opacity: 0.4,
-  },
-  sendOutText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '800',
   },
 });
