@@ -11,7 +11,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PokemonSprite } from './PokemonSprite';
 import { MatchSettingsForm } from './MatchSettingsForm';
-import { colors, spacing } from '../theme';
+import { PkButton } from './shared/PkButton';
+import { colors, spacing, shadows } from '../theme';
 import { MONOTYPE_TYPES } from '../../engine/draft-pool';
 import type { PoolSize, DraftType } from '../../engine/draft-pool';
 import { StatsScreen } from './StatsScreen';
@@ -137,6 +138,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
   if (screen === 'main') {
     return (
       <View style={styles.container}>
+        <View style={styles.gradientOverlay} pointerEvents="none" />
         {bgSprites.map((s) => (
           <View
             key={s.id}
@@ -149,45 +151,42 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
 
         <View style={styles.mainMenuInner}>
           <View style={styles.logoSection}>
-            <PokeballLogo size={100} />
+            <PokeballLogo size={110} />
+            <Text style={styles.title}>BATTLE SIM</Text>
             <Text style={styles.subtitle}>Pokemon Battle Simulator</Text>
           </View>
 
           <View style={styles.menuButtons}>
-            <TouchableOpacity
-              style={styles.menuBtn}
+            <PkButton
+              title="PLAY NOW"
+              subtitle="vs CPU"
+              variant="primary"
+              size="lg"
               onPress={() => setScreen('cpu_setup')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.menuBtnText}>PLAY NOW</Text>
-              <Text style={styles.menuBtnSub}>vs CPU</Text>
-            </TouchableOpacity>
+            />
 
-            <TouchableOpacity
-              style={styles.menuBtn}
+            <PkButton
+              title="PLAY ONLINE"
+              subtitle="vs Player"
+              variant="secondary"
+              size="lg"
               onPress={() => setScreen('online_setup')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.menuBtnText}>PLAY ONLINE</Text>
-              <Text style={styles.menuBtnSub}>vs Player</Text>
-            </TouchableOpacity>
+            />
 
-            <TouchableOpacity
-              style={styles.menuBtn}
+            <PkButton
+              title="CAMPAIGN"
+              subtitle="Gauntlet & Gym Career"
+              variant="secondary"
+              size="lg"
               onPress={() => setScreen('campaign')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.menuBtnText}>CAMPAIGN</Text>
-              <Text style={styles.menuBtnSub}>Gauntlet & Gym Career</Text>
-            </TouchableOpacity>
+            />
 
-            <TouchableOpacity
-              style={styles.menuBtn}
+            <PkButton
+              title="STATS"
+              variant="ghost"
+              size="md"
               onPress={() => setScreen('stats')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.menuBtnText}>STATS</Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
       </View>
@@ -253,8 +252,10 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
 
           <View style={{ flex: 1 }} />
 
-          <TouchableOpacity
-            style={styles.startBtn}
+          <PkButton
+            title="START BATTLE"
+            variant="primary"
+            size="lg"
             onPress={() => {
               let mono = monotype;
               if (mono === 'random') {
@@ -262,10 +263,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
               }
               onStart(displayName, itemMode, classicMode ? 4 : null, difficulty, legendaryMode, draftMode, mono || null, draftTypeMode, poolSize, megaMode, moveSelection);
             }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.startBtnText}>START BATTLE</Text>
-          </TouchableOpacity>
+          />
         </View>
       </KeyboardAvoidingView>
     );
@@ -314,8 +312,10 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
           Host's settings apply to both players.
         </Text>
 
-        <TouchableOpacity
-          style={styles.startBtn}
+        <PkButton
+          title="FIND MATCH"
+          variant="primary"
+          size="lg"
           onPress={() => {
             let mono = monotype;
             if (mono === 'random') {
@@ -323,10 +323,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
             }
             onPlayOnline(displayName, itemMode, classicMode ? 4 : null, legendaryMode, draftMode, mono || null, draftTypeMode, megaMode, moveSelection);
           }}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.startBtnText}>FIND MATCH</Text>
-        </TouchableOpacity>
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -335,40 +332,40 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
 const logoStyles = StyleSheet.create({
   container: {
     overflow: 'hidden',
-    borderColor: '#1a1a1a',
+    borderColor: '#0D0D2B',
     alignSelf: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   topHalf: {
     flex: 1,
-    backgroundColor: '#e94560',
+    backgroundColor: colors.primary,
   },
   bottomHalf: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.offWhite,
   },
   centerBand: {
     position: 'absolute',
     left: 0,
     right: 0,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0D0D2B',
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonOuter: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0D0D2B',
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonMid: {
-    backgroundColor: '#333',
+    backgroundColor: colors.surfaceLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonInner: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.offWhite,
     borderWidth: 2,
-    borderColor: '#ccc',
+    borderColor: colors.greyLight,
   },
 });
 
@@ -376,6 +373,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+    backgroundColor: 'rgba(227, 53, 13, 0.04)',
+    zIndex: 0,
   },
   bgSprite: {
     position: 'absolute',
@@ -390,42 +396,30 @@ const styles = StyleSheet.create({
   menuButtons: {
     gap: spacing.md,
   },
-  menuBtn: {
-    backgroundColor: colors.surface,
-    paddingVertical: 16,
-    borderRadius: 12,
+  logoSection: {
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    marginBottom: spacing.xl * 2,
   },
-  menuBtnText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 2,
+  title: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: colors.white,
+    letterSpacing: 6,
+    marginTop: spacing.sm,
   },
-  menuBtnSub: {
-    color: colors.textDim,
-    fontSize: 11,
-    marginTop: 2,
-    fontWeight: '600',
+  subtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
   setupInner: {
     flex: 1,
     padding: spacing.xl,
     paddingTop: spacing.xl * 1.5,
     zIndex: 1,
-  },
-  logoSection: {
-    alignItems: 'center',
-    marginBottom: spacing.xl * 2,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.xs,
-    letterSpacing: 1,
   },
   sectionCompact: {
     marginBottom: spacing.md,
@@ -452,8 +446,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleBtnActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   toggleText: {
     color: colors.textSecondary,
@@ -463,94 +457,20 @@ const styles = StyleSheet.create({
   toggleTextActive: {
     color: '#fff',
   },
-  pillRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  pill: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  pillActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  pillText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  pillTextActive: {
-    color: '#fff',
-  },
-  modifierDesc: {
-    color: colors.textDim,
-    fontSize: 11,
-    marginTop: spacing.sm,
-  },
-  typeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  typeChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    opacity: 0.7,
-  },
-  typeChipSelected: {
-    opacity: 1,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  typeChipText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  typeChipTextSelected: {
-    fontWeight: '900',
-  },
   backBtn: {
     marginBottom: spacing.lg,
   },
   backText: {
-    color: colors.accent,
+    color: colors.primary,
     fontSize: 16,
     fontWeight: '700',
   },
   setupTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: colors.accent,
+    color: colors.primary,
     letterSpacing: 3,
     marginBottom: spacing.xs,
-  },
-  startBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: spacing.lg,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  startBtnText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 2,
   },
   onlineNote: {
     color: colors.textDim,
