@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tanmay.pbs",
-      "buildNumber": "51",
+      "buildNumber": "52",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -41,7 +41,6 @@
     "owner": "tanmaysharma",
     "newArchEnabled": false,
     "plugins": [
-      "expo-image",
       "./plugins/turbo-module-crash-guard"
     ]
   }
