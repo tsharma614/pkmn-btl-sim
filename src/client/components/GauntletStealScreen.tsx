@@ -64,7 +64,7 @@ export function GauntletStealScreen({
               onLongPress={() => setDetailIdx(i)}
               activeOpacity={0.7}
             >
-              <PokemonSprite speciesId={p.species.id} facing="front" size={52} />
+              <PokemonSprite speciesId={p.species.id} facing="front" size={52} animated={false} />
               <Text style={[styles.cardName, stealIndex === i && styles.cardNameSelected]}>
                 {p.species.name}
               </Text>
@@ -85,7 +85,7 @@ export function GauntletStealScreen({
                   onPress={() => setDropIndex(i)}
                   activeOpacity={0.7}
                 >
-                  <PokemonSprite speciesId={p.species.id} facing="front" size={52} />
+                  <PokemonSprite speciesId={p.species.id} facing="front" size={52} animated={false} />
                   <Text style={[styles.cardName, dropIndex === i && { color: '#f44336' }]}>
                     {p.species.name}
                   </Text>

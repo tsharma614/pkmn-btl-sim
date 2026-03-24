@@ -205,7 +205,7 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
         {/* Current Pokemon + stats */}
         <View style={styles.movePokemonSection}>
           <View style={styles.movePokemonRow}>
-            <PokemonSprite speciesId={currentSpecies.id} facing="front" size={56} />
+            <PokemonSprite speciesId={currentSpecies.id} facing="front" size={56} animated={false} />
             <View style={styles.movePokemonInfo}>
               <Text style={styles.movePokemonName}>{currentSpecies.name}</Text>
               <View style={styles.moveTypesRow}>
@@ -303,7 +303,7 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
               }}
               activeOpacity={0.7}
             >
-              <PokemonSprite speciesId={pool[poolIdx].species.id} facing="front" size={28} />
+              <PokemonSprite speciesId={pool[poolIdx].species.id} facing="front" size={28} animated={false} />
             </TouchableOpacity>
           ))}
         </View>
@@ -396,7 +396,7 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
             <View style={styles.teamMinis}>
               {picks.map((idx, i) => (
                 <TouchableOpacity key={i} style={styles.miniSlot} onPress={() => handleTap(idx)}>
-                  <PokemonSprite speciesId={pool[idx].species.id} facing="front" size={32} />
+                  <PokemonSprite speciesId={pool[idx].species.id} facing="front" size={32} animated={false} />
                 </TouchableOpacity>
               ))}
               {Array.from({ length: 6 - picks.length }).map((_, i) => (
@@ -437,7 +437,7 @@ export function EliteFourDraftScreen({ pool, onComplete, onBack, playerName }: P
                   <View style={styles.tierDot}>
                     <View style={[styles.tierDotInner, { backgroundColor: TIER_COLORS[entry.tier] || '#666' }]} />
                   </View>
-                  <PokemonSprite speciesId={entry.species.id} facing="front" size={48} />
+                  <PokemonSprite speciesId={entry.species.id} facing="front" size={48} animated={false} />
                   <Text style={[styles.cardName, isPicked && styles.cardNamePicked]} numberOfLines={1}>
                     {entry.species.name}
                   </Text>

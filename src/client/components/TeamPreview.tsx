@@ -37,6 +37,7 @@ export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
           speciesId={p.species.id}
           facing="front"
           size={100}
+          animated={false}
         />
         <Text style={styles.detailName}>{p.species.name}</Text>
         <View style={styles.typesRow}>
@@ -82,7 +83,7 @@ export function TeamPreview({ team, onSelectLead, onExitToMenu }: Props) {
             onLongPress={() => setDetailIdx(i)}
             activeOpacity={0.7}
           >
-            <PokemonSprite speciesId={mon.species.id} facing="front" size={50} />
+            <PokemonSprite speciesId={mon.species.id} facing="front" animated={false} size={50} animated={false} />
             <Text style={styles.teamName} numberOfLines={1}>
               {mon.species.name}
             </Text>
