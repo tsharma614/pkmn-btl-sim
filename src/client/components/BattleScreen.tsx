@@ -210,7 +210,10 @@ export function BattleScreen() {
   }
 
   // --- Shop (after gym/E4 win) ---
+  // Only compute shop buy pool when actually in shop phase — was previously running on
+  // EVERY render (including budget_draft), adding unnecessary computation during gym career startup.
   const shopBuyPool = useMemo(() => {
+    if (state.phase !== 'shop') return [];
     const seed = state.campaignStage * 1000 + state.beatenGyms.filter(Boolean).length;
     const rng = new SeededRNG(seed);
     const pool: { species: any; tier: number; cost: number }[] = [];
@@ -224,7 +227,7 @@ export function BattleScreen() {
     rng.shuffle(t2);
     pool.push(...t2.slice(0, 5).map((s: any) => ({ species: s, tier: 2, cost: 2 })));
     return pool;
-  }, [state.campaignStage, state.beatenGyms]);
+  }, [state.phase, state.campaignStage, state.beatenGyms]);
 
   if (state.phase === 'shop') {
 

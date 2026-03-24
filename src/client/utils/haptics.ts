@@ -1,16 +1,8 @@
-import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
+// Haptics disabled — expo-haptics TurboModule crashes on iOS 26.
+// TODO: Replace with react-native-haptic-feedback when ready.
 
-const enabled = Platform.OS !== 'web';
+export function lightTap() {}
 
-export function lightTap() {
-  if (enabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-}
+export function mediumImpact() {}
 
-export function mediumImpact() {
-  if (enabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-}
-
-export function heavyImpact() {
-  if (enabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-}
+export function heavyImpact() {}
