@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Animated,
+  InteractionManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBattle } from '../state/battle-context';
@@ -150,14 +151,38 @@ export function BattleScreen() {
   }, [screenFlash?.key]);
 
   // --- Budget Draft (Gym Career) ---
-  // Memoize expensive draft generation — was crashing on 8GB devices due to
-  // unmemoized synchronous computation (645 Pokemon × 6 roles × 4 tiers) on every render
-  const budgetOptions = useMemo(
-    () => state.phase === 'budget_draft' ? generateBudgetDraftOptions(new SeededRNG()) : null,
-    [state.phase]
-  );
+  // Defer expensive draft generation off the render critical path.
+  // generateBudgetDraftOptions does 645 Pokemon × 6 roles × 4 tiers — running it
+  // synchronously during render causes a watchdog SIGABRT on 8GB iOS devices.
+  const [budgetOptions, setBudgetOptions] = useState<ReturnType<typeof generateBudgetDraftOptions> | null>(null);
+  const budgetPhaseRef = useRef(false);
 
-  if (state.phase === 'budget_draft' && budgetOptions) {
+  useEffect(() => {
+    if (state.phase === 'budget_draft' && !budgetPhaseRef.current) {
+      budgetPhaseRef.current = true;
+      // Defer heavy computation until after animations/transitions complete
+      const handle = InteractionManager.runAfterInteractions(() => {
+        const options = generateBudgetDraftOptions(new SeededRNG());
+        setBudgetOptions(options);
+      });
+      return () => handle.cancel();
+    } else if (state.phase !== 'budget_draft') {
+      budgetPhaseRef.current = false;
+      setBudgetOptions(null);
+    }
+  }, [state.phase]);
+
+  if (state.phase === 'budget_draft') {
+    if (!budgetOptions) {
+      return (
+        <SafeAreaView style={[styles.full, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={{ color: colors.textSecondary, marginTop: spacing.md, fontSize: 14, fontWeight: '600' }}>
+            Generating draft pool...
+          </Text>
+        </SafeAreaView>
+      );
+    }
     return (
       <SafeAreaView style={styles.full}>
         <BudgetDraftScreen
