@@ -150,6 +150,27 @@ export function BattleScreen() {
     }
   }, [screenFlash?.key]);
 
+  // --- Shop buy pool — stable for the duration of the shop phase ---
+  // (hooks must be before any early returns to satisfy Rules of Hooks)
+  const shopBuyPoolRef = useRef<{ species: any; tier: number; cost: number }[]>([]);
+  const prevPhaseRef = useRef(state.phase);
+  if (state.phase === 'shop' && prevPhaseRef.current !== 'shop') {
+    // Entering shop phase — generate a fresh pool with a new seed
+    const rng = new SeededRNG();
+    const pool: { species: any; tier: number; cost: number }[] = [];
+    const megas = [...(MEGA_POOL as any[])];
+    rng.shuffle(megas);
+    pool.push(...megas.slice(0, 5).map((s: any) => ({ species: s, tier: 0, cost: 4 })));
+    const t1 = [...(draftTiers as any)[1]];
+    rng.shuffle(t1);
+    pool.push(...t1.slice(0, 5).map((s: any) => ({ species: s, tier: 1, cost: 3 })));
+    const t2 = [...(draftTiers as any)[2]];
+    rng.shuffle(t2);
+    pool.push(...t2.slice(0, 5).map((s: any) => ({ species: s, tier: 2, cost: 2 })));
+    shopBuyPoolRef.current = pool;
+  }
+  prevPhaseRef.current = state.phase;
+
   // --- Budget Draft (Gym Career) ---
   if (state.phase === 'budget_draft') {
     const budgetOptions = generateBudgetDraftOptions(new SeededRNG());
@@ -181,21 +202,7 @@ export function BattleScreen() {
 
   // --- Shop (after gym/E4 win) ---
   if (state.phase === 'shop') {
-    // Generate buy pool inline (only when in shop phase)
-    const shopBuyPool = (() => {
-      const rng = new SeededRNG();
-      const pool: { species: any; tier: number; cost: number }[] = [];
-      const megas = [...(MEGA_POOL as any[])];
-      rng.shuffle(megas);
-      pool.push(...megas.slice(0, 5).map((s: any) => ({ species: s, tier: 0, cost: 4 })));
-      const t1 = [...(draftTiers as any)[1]];
-      rng.shuffle(t1);
-      pool.push(...t1.slice(0, 5).map((s: any) => ({ species: s, tier: 1, cost: 3 })));
-      const t2 = [...(draftTiers as any)[2]];
-      rng.shuffle(t2);
-      pool.push(...t2.slice(0, 5).map((s: any) => ({ species: s, tier: 2, cost: 2 })));
-      return pool;
-    })();
+    const shopBuyPool = shopBuyPoolRef.current;
 
     return (
       <SafeAreaView style={styles.full}>

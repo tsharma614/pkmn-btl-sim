@@ -619,6 +619,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     const healedTeam = playerTeam.map(p => ({
       ...p,
       currentHp: p.stats.hp,
+      maxHp: p.stats.hp,
       isAlive: true,
       status: null,
       volatileStatuses: new Set<string>(),
@@ -814,6 +815,20 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SHOW_GYM_MAP' });
   }, []);
 
+  /** Helper: persist current shop state to AsyncStorage */
+  const saveShopState = useCallback((serializedTeam: OwnPokemon[], newBalance: number) => {
+    const currentState = stateRef.current;
+    saveGymCareer({
+      currentStage: currentState.beatenGyms.filter(Boolean).length + currentState.beatenE4.filter(Boolean).length,
+      gymTypes: currentState.gymTypes,
+      team: serializedTeam,
+      date: new Date().toISOString(),
+      shopBalance: newBalance,
+      beatenGyms: [...currentState.beatenGyms],
+      beatenE4: [...currentState.beatenE4],
+    }).catch(e => console.error('Failed to save shop state:', e));
+  }, []);
+
   /** Shop: swap a move on a team member */
   const shopSwapMove = useCallback((pokemonIdx: number, moveSlotIdx: number, newMoveName: string) => {
     const team = campaignPlayerTeamRef.current;
@@ -839,13 +854,16 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         return { ...p, moves: updatedMoves };
       });
       campaignPlayerTeamRef.current = updatedTeam;
+      const newBalance = stateRef.current.shopBalance - 1;
+      const serializedTeam = updatedTeam.map(serializeOwnPokemon);
       dispatch({
         type: 'SET_SHOP_BALANCE',
-        balance: stateRef.current.shopBalance - 1,
-        yourTeam: updatedTeam.map(serializeOwnPokemon),
+        balance: newBalance,
+        yourTeam: serializedTeam,
       });
+      saveShopState(serializedTeam, newBalance);
     }
-  }, []);
+  }, [saveShopState]);
 
   /** Shop: swap an item on a team member */
   const shopSwapItem = useCallback((pokemonIdx: number, newItem: string) => {
@@ -856,12 +874,15 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       i === pokemonIdx ? { ...p, item: newItem } : p,
     );
     campaignPlayerTeamRef.current = updatedTeam;
+    const newBalance = stateRef.current.shopBalance - 1;
+    const serializedTeam = updatedTeam.map(serializeOwnPokemon);
     dispatch({
       type: 'SET_SHOP_BALANCE',
-      balance: stateRef.current.shopBalance - 1,
-      yourTeam: updatedTeam.map(serializeOwnPokemon),
+      balance: newBalance,
+      yourTeam: serializedTeam,
     });
-  }, []);
+    saveShopState(serializedTeam, newBalance);
+  }, [saveShopState]);
 
   /** Shop: buy a Pokemon and replace a team slot (optionally with custom moves/item) */
   const shopBuyPokemon = useCallback((species: PokemonSpecies, cost: number, replaceIdx: number, customMoves?: string[], customItem?: string) => {
@@ -878,12 +899,15 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       i === replaceIdx ? newMon : p,
     );
     campaignPlayerTeamRef.current = updatedTeam;
+    const newBalance = stateRef.current.shopBalance - cost;
+    const serializedTeam = updatedTeam.map(serializeOwnPokemon);
     dispatch({
       type: 'SET_SHOP_BALANCE',
-      balance: stateRef.current.shopBalance - cost,
-      yourTeam: updatedTeam.map(serializeOwnPokemon),
+      balance: newBalance,
+      yourTeam: serializedTeam,
     });
-  }, []);
+    saveShopState(serializedTeam, newBalance);
+  }, [saveShopState]);
 
   /** Shop: done shopping, go back to gym map or E4 locks */
   const shopDone = useCallback(async () => {
