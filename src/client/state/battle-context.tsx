@@ -826,22 +826,41 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     const moveKey = newMoveName.toLowerCase().replace(/[^a-z0-9]/g, '');
     const moveData = movesData[moveKey];
     if (moveData && pokemon.moves[moveSlotIdx]) {
-      pokemon.moves[moveSlotIdx] = {
-        data: moveData,
-        currentPp: moveData.pp,
-        maxPp: moveData.pp,
-        disabled: false,
-      };
+      // Create updated team with new move (immutable)
+      const updatedTeam = team.map((p, i) => {
+        if (i !== pokemonIdx) return p;
+        const updatedMoves = [...p.moves];
+        updatedMoves[moveSlotIdx] = {
+          data: moveData,
+          currentPp: moveData.pp,
+          maxPp: moveData.pp,
+          disabled: false,
+        };
+        return { ...p, moves: updatedMoves };
+      });
+      campaignPlayerTeamRef.current = updatedTeam;
+      dispatch({
+        type: 'SET_SHOP_BALANCE',
+        balance: stateRef.current.shopBalance - 1,
+        yourTeam: updatedTeam.map(serializeOwnPokemon),
+      });
     }
-    dispatch({ type: 'SET_SHOP_BALANCE', balance: stateRef.current.shopBalance - 1 });
   }, []);
 
   /** Shop: swap an item on a team member */
   const shopSwapItem = useCallback((pokemonIdx: number, newItem: string) => {
     const team = campaignPlayerTeamRef.current;
     if (!team || !team[pokemonIdx]) return;
-    team[pokemonIdx].item = newItem;
-    dispatch({ type: 'SET_SHOP_BALANCE', balance: stateRef.current.shopBalance - 1 });
+    // Create updated team with new item (immutable)
+    const updatedTeam = team.map((p, i) =>
+      i === pokemonIdx ? { ...p, item: newItem } : p,
+    );
+    campaignPlayerTeamRef.current = updatedTeam;
+    dispatch({
+      type: 'SET_SHOP_BALANCE',
+      balance: stateRef.current.shopBalance - 1,
+      yourTeam: updatedTeam.map(serializeOwnPokemon),
+    });
   }, []);
 
   /** Shop: buy a Pokemon and replace a team slot (optionally with custom moves/item) */
@@ -854,8 +873,16 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
     if (customItem) set.item = customItem;
     const newMon = createBattlePokemon(species, set, 100, null);
     if (customItem) newMon.item = customItem;
-    team[replaceIdx] = newMon;
-    dispatch({ type: 'SET_SHOP_BALANCE', balance: stateRef.current.shopBalance - cost });
+    // Create updated team with new Pokemon (immutable)
+    const updatedTeam = team.map((p, i) =>
+      i === replaceIdx ? newMon : p,
+    );
+    campaignPlayerTeamRef.current = updatedTeam;
+    dispatch({
+      type: 'SET_SHOP_BALANCE',
+      balance: stateRef.current.shopBalance - cost,
+      yourTeam: updatedTeam.map(serializeOwnPokemon),
+    });
   }, []);
 
   /** Shop: done shopping, go back to gym map or E4 locks */

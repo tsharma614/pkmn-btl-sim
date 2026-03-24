@@ -270,7 +270,7 @@ export type BattleAction =
   | { type: 'E4_MEMBER_BEATEN'; memberIndex: number }
   | { type: 'SHOW_SHOP'; payout: number }
   | { type: 'SHOP_DONE' }
-  | { type: 'SET_SHOP_BALANCE'; balance: number }
+  | { type: 'SET_SHOP_BALANCE'; balance: number; yourTeam?: OwnPokemon[] }
   | { type: 'GYM_CAREER_RESUME'; playerName: string; gymTypes: string[]; beatenGyms: boolean[]; beatenE4: boolean[]; shopBalance: number; yourTeam: OwnPokemon[] }
   | { type: 'GYM_WIN_ADVANCE'; gymIndex: number; payout: number }
   | { type: 'E4_WIN_ADVANCE'; memberIndex: number; payout: number }
@@ -1096,7 +1096,11 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
       };
 
     case 'SET_SHOP_BALANCE':
-      return { ...state, shopBalance: action.balance };
+      return {
+        ...state,
+        shopBalance: action.balance,
+        ...(action.yourTeam ? { yourTeam: action.yourTeam } : {}),
+      };
 
     case 'RESET':
       return {
