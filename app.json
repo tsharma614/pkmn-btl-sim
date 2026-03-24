@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tanmay.pbs",
-      "buildNumber": "50",
+      "buildNumber": "51",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

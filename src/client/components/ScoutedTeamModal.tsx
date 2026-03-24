@@ -45,7 +45,7 @@ export function ScoutedTeamModal({ visible, onClose, scoutedPokemon, activePokem
                 {pokemon ? (
                   <>
                     <View style={styles.spriteWrap}>
-                      <PokemonSprite speciesId={pokemon.species.id} facing="front" size={56} animated={false} />
+                      <PokemonSprite speciesId={pokemon.species.id} facing="front" size={56} />
                     </View>
                     <View style={styles.info}>
                       <Text style={[styles.name, !pokemon.isAlive && styles.faintedName]}>

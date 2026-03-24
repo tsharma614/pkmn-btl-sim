@@ -70,7 +70,7 @@ export function PokemonDetailModal({ visible, species, moves, item, ability, onC
 
             {/* Header: sprite + name + types + tier */}
             <View style={styles.header}>
-              <PokemonSprite speciesId={species.id} facing="front" size={80} animated={false} />
+              <PokemonSprite speciesId={species.id} facing="front" size={80} />
               <View style={styles.headerInfo}>
                 <View style={styles.nameRow}>
                   <Text style={styles.name}>{species.name}</Text>

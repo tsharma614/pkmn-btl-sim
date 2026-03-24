@@ -145,7 +145,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
             style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity }]}
             pointerEvents="none"
           >
-            <PokemonSprite speciesId={s.id} facing="front" size={s.size} animated={false} />
+            <PokemonSprite speciesId={s.id} facing="front" size={s.size} />
           </View>
         ))}
 
@@ -206,7 +206,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
             style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity * 0.5 }]}
             pointerEvents="none"
           >
-            <PokemonSprite speciesId={s.id} facing="front" size={s.size} animated={false} />
+            <PokemonSprite speciesId={s.id} facing="front" size={s.size} />
           </View>
         ))}
 
@@ -281,7 +281,7 @@ export function SetupScreen({ onStart, onPlayOnline, onStartGauntlet, onStartGym
           style={[styles.bgSprite, { left: s.x, top: s.y, opacity: s.opacity * 0.5 }]}
           pointerEvents="none"
         >
-          <PokemonSprite speciesId={s.id} facing="front" size={s.size} animated={false} />
+          <PokemonSprite speciesId={s.id} facing="front" size={s.size} />
         </View>
       ))}
 

@@ -92,7 +92,7 @@ export function DraftPreviewModal({
                 <Text style={styles.navArrow}>{'<'}</Text>
               </TouchableOpacity>
               <View style={styles.headerCenter}>
-                <PokemonSprite speciesId={species.id} facing="front" size={90} animated={false} />
+                <PokemonSprite speciesId={species.id} facing="front" size={90} />
               </View>
               <TouchableOpacity onPress={() => navigate(1)} style={styles.navBtn}>
                 <Text style={styles.navArrow}>{'>'}</Text>

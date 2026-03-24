@@ -154,7 +154,7 @@ export function DraftScreen({
               <View style={styles.teamMinis}>
                 {yourPicks.map((entry, i) => (
                   <View key={i} style={styles.miniSlot}>
-                    <PokemonSprite speciesId={entry.species.id} facing="front" size={32} animated={false} />
+                    <PokemonSprite speciesId={entry.species.id} facing="front" size={32} />
                   </View>
                 ))}
                 {Array.from({ length: 6 - yourPicks.length }).map((_, i) => (
@@ -167,7 +167,7 @@ export function DraftScreen({
               <View style={styles.teamMinis}>
                 {opponentPicks.map((entry, i) => (
                   <View key={i} style={styles.miniSlot}>
-                    <PokemonSprite speciesId={entry.species.id} facing="front" size={32} animated={false} />
+                    <PokemonSprite speciesId={entry.species.id} facing="front" size={32} />
                   </View>
                 ))}
                 {Array.from({ length: 6 - opponentPicks.length }).map((_, i) => (
@@ -221,7 +221,7 @@ export function DraftScreen({
                 <Text style={[styles.tierBadgeText, { color: tierMeta.color }]}>{tierMeta.label}</Text>
               </View>
 
-              <PokemonSprite speciesId={entry.species.id} facing="front" size={48} animated={false} />
+              <PokemonSprite speciesId={entry.species.id} facing="front" size={48} />
               <Text style={[styles.cardName, isPicked && styles.cardNamePicked]} numberOfLines={1}>
                 {entry.species.name}
               </Text>

@@ -63,7 +63,7 @@ export function PokemonInfoModal({ ownPokemon, opponentPokemon, visible, onClose
           <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
             {/* Header with sprite and name */}
             <View style={styles.header}>
-              <PokemonSprite speciesId={pokemon.species.id} facing="front" size={80} animated={false} />
+              <PokemonSprite speciesId={pokemon.species.id} facing="front" size={80} />
               <View style={styles.headerInfo}>
                 <Text style={styles.name}>{pokemon.species.name}</Text>
                 <Text style={styles.level}>Lv. {pokemon.level}</Text>

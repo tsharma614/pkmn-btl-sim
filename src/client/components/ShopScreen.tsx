@@ -292,7 +292,7 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
               disabled={disabled}
               activeOpacity={0.7}
             >
-              <PokemonSprite speciesId={p.species.id} facing="front" size={48} animated={false} />
+              <PokemonSprite speciesId={p.species.id} facing="front" size={48} />
               <Text style={[styles.teamCardName, disabled && styles.teamCardNameDisabled]} numberOfLines={1}>
                 {p.species.name}
               </Text>
@@ -323,7 +323,7 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
           {renderBackButton('Team')}
           <Text style={styles.subTitle}>Pick the move slot to replace</Text>
           <View style={styles.pokemonBanner}>
-            <PokemonSprite speciesId={pokemon.species.id} facing="front" size={40} animated={false} />
+            <PokemonSprite speciesId={pokemon.species.id} facing="front" size={40} />
             <Text style={styles.pokemonBannerName}>{pokemon.species.name}</Text>
           </View>
           <View style={styles.moveSlotList}>
@@ -407,7 +407,7 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
         {renderBackButton('Team')}
         <Text style={styles.subTitle}>Pick a new item for {pokemon.species.name}</Text>
         <View style={styles.pokemonBanner}>
-          <PokemonSprite speciesId={pokemon.species.id} facing="front" size={40} animated={false} />
+          <PokemonSprite speciesId={pokemon.species.id} facing="front" size={40} />
           <Text style={styles.pokemonBannerName}>{pokemon.species.name}</Text>
           <Text style={styles.pokemonBannerSub}>Current: {pokemon.item || 'None'}</Text>
         </View>
@@ -462,7 +462,7 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
                   disabled={!affordable}
                   activeOpacity={0.7}
                 >
-                  <PokemonSprite speciesId={entry.species.id} facing="front" size={48} animated={false} />
+                  <PokemonSprite speciesId={entry.species.id} facing="front" size={48} />
                   <Text style={[styles.buyCardName, !affordable && styles.buyCardNameDisabled]} numberOfLines={1}>
                     {entry.species.name}
                   </Text>
