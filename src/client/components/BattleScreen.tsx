@@ -151,38 +151,8 @@ export function BattleScreen() {
   }, [screenFlash?.key]);
 
   // --- Budget Draft (Gym Career) ---
-  // Defer expensive draft generation off the render critical path.
-  // generateBudgetDraftOptions does 645 Pokemon × 6 roles × 4 tiers — running it
-  // synchronously during render causes a watchdog SIGABRT on 8GB iOS devices.
-  const [budgetOptions, setBudgetOptions] = useState<ReturnType<typeof generateBudgetDraftOptions> | null>(null);
-  const budgetPhaseRef = useRef(false);
-
-  useEffect(() => {
-    if (state.phase === 'budget_draft' && !budgetPhaseRef.current) {
-      budgetPhaseRef.current = true;
-      // Defer heavy computation until after animations/transitions complete
-      const handle = InteractionManager.runAfterInteractions(() => {
-        const options = generateBudgetDraftOptions(new SeededRNG());
-        setBudgetOptions(options);
-      });
-      return () => handle.cancel();
-    } else if (state.phase !== 'budget_draft') {
-      budgetPhaseRef.current = false;
-      setBudgetOptions(null);
-    }
-  }, [state.phase]);
-
   if (state.phase === 'budget_draft') {
-    if (!budgetOptions) {
-      return (
-        <SafeAreaView style={[styles.full, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }]}>
-          <ActivityIndicator size="large" color={colors.accent} />
-          <Text style={{ color: colors.textSecondary, marginTop: spacing.md, fontSize: 14, fontWeight: '600' }}>
-            Generating draft pool...
-          </Text>
-        </SafeAreaView>
-      );
-    }
+    const budgetOptions = generateBudgetDraftOptions(new SeededRNG());
     return (
       <SafeAreaView style={styles.full}>
         <BudgetDraftScreen
@@ -210,26 +180,22 @@ export function BattleScreen() {
   }
 
   // --- Shop (after gym/E4 win) ---
-  // Only compute shop buy pool when actually in shop phase — was previously running on
-  // EVERY render (including budget_draft), adding unnecessary computation during gym career startup.
-  const shopBuyPool = useMemo(() => {
-    if (state.phase !== 'shop') return [];
-    const seed = state.campaignStage * 1000 + state.beatenGyms.filter(Boolean).length;
-    const rng = new SeededRNG(seed);
-    const pool: { species: any; tier: number; cost: number }[] = [];
-    const megas = [...(MEGA_POOL as any[])];
-    rng.shuffle(megas);
-    pool.push(...megas.slice(0, 5).map((s: any) => ({ species: s, tier: 0, cost: 4 })));
-    const t1 = [...(draftTiers as any)[1]];
-    rng.shuffle(t1);
-    pool.push(...t1.slice(0, 5).map((s: any) => ({ species: s, tier: 1, cost: 3 })));
-    const t2 = [...(draftTiers as any)[2]];
-    rng.shuffle(t2);
-    pool.push(...t2.slice(0, 5).map((s: any) => ({ species: s, tier: 2, cost: 2 })));
-    return pool;
-  }, [state.phase, state.campaignStage, state.beatenGyms]);
-
   if (state.phase === 'shop') {
+    // Generate buy pool inline (only when in shop phase)
+    const shopBuyPool = (() => {
+      const rng = new SeededRNG();
+      const pool: { species: any; tier: number; cost: number }[] = [];
+      const megas = [...(MEGA_POOL as any[])];
+      rng.shuffle(megas);
+      pool.push(...megas.slice(0, 5).map((s: any) => ({ species: s, tier: 0, cost: 4 })));
+      const t1 = [...(draftTiers as any)[1]];
+      rng.shuffle(t1);
+      pool.push(...t1.slice(0, 5).map((s: any) => ({ species: s, tier: 1, cost: 3 })));
+      const t2 = [...(draftTiers as any)[2]];
+      rng.shuffle(t2);
+      pool.push(...t2.slice(0, 5).map((s: any) => ({ species: s, tier: 2, cost: 2 })));
+      return pool;
+    })();
 
     return (
       <SafeAreaView style={styles.full}>
