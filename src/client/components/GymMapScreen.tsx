@@ -171,7 +171,7 @@ export function GymMapScreen({
             <ScrollView>
               {(team ?? []).map((p, i) => (
                 <View key={i} style={styles.teamModalRow}>
-                  <PokemonSprite speciesId={p.species.id} facing="front" size={48} />
+                  <PokemonSprite speciesId={p.species.id} facing="front" size={48} animated={false} />
                   <View style={styles.teamModalInfo}>
                     <Text style={styles.teamModalName}>{p.species.name}</Text>
                     <Text style={styles.teamModalAbility}>{p.ability} · {p.item || 'No item'}</Text>

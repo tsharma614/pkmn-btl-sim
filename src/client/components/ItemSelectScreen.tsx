@@ -133,7 +133,7 @@ export function ItemSelectScreen({ team, onComplete, onBack, playerName }: Props
       {/* Current Pokemon info */}
       <View style={styles.pokemonSection}>
         <View style={styles.pokemonRow}>
-          <PokemonSprite speciesId={pokemon.species.id} facing="front" size={56} />
+          <PokemonSprite speciesId={pokemon.species.id} facing="front" size={56} animated={false} />
           <View style={styles.pokemonInfo}>
             <Text style={styles.pokemonName}>{pokemon.species.name}</Text>
             <Text style={styles.abilityText}>
@@ -197,7 +197,7 @@ export function ItemSelectScreen({ team, onComplete, onBack, playerName }: Props
             onPress={() => setCurrentIdx(i)}
             activeOpacity={0.7}
           >
-            <PokemonSprite speciesId={p.species.id} facing="front" size={28} />
+            <PokemonSprite speciesId={p.species.id} facing="front" size={28} animated={false} />
           </TouchableOpacity>
         ))}
       </View>

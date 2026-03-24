@@ -192,7 +192,7 @@ export function BudgetDraftScreen({
                           {TIER_LABELS[opt.cost] ?? `T${opt.tier}`} {opt.cost > 0 ? `${opt.cost}pt` : 'FREE'}
                         </Text>
                       </View>
-                      <PokemonSprite speciesId={opt.species.id} facing="front" size={56} />
+                      <PokemonSprite speciesId={opt.species.id} facing="front" size={56} animated={false} />
                       <Text
                         style={[styles.cardName, disabled && styles.cardNameDisabled]}
                         numberOfLines={1}

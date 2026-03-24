@@ -42,7 +42,7 @@ export function GauntletStarterScreen({ onPick, onBack }: Props) {
             onLongPress={() => setDetailIdx(GAUNTLET_STARTERS.indexOf(id))}
             activeOpacity={0.7}
           >
-            <PokemonSprite speciesId={id} facing="front" size={64} />
+            <PokemonSprite speciesId={id} facing="front" size={64} animated={false} />
             <Text style={[styles.cardName, selected === id && styles.cardNameSelected]}>
               {id.charAt(0).toUpperCase() + id.slice(1)}
             </Text>

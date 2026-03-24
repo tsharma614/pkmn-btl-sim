@@ -397,7 +397,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
               <View style={styles.mvpRow}>
                 <Text style={styles.mvpLabel}>MVP</Text>
                 <View style={styles.mvpSpriteWrap}>
-                  <PokemonSprite speciesId={mvp.speciesId} facing="front" size={72} />
+                  <PokemonSprite speciesId={mvp.speciesId} facing="front" size={72} animated={false} />
                 </View>
                 <Text style={styles.mvpName}>{mvp.name}</Text>
                 <Text style={styles.mvpDetail}>{mvp.label}</Text>

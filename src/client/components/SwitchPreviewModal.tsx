@@ -74,7 +74,7 @@ export function SwitchPreviewModal({ team, initialIndex, activePokemonIndex, vis
               </TouchableOpacity>
 
               <View style={styles.headerCenter}>
-                <PokemonSprite speciesId={pokemon.species.id} facing="front" size={80} />
+                <PokemonSprite speciesId={pokemon.species.id} facing="front" size={80} animated={false} />
                 <Text style={styles.name}>{pokemon.species.name}</Text>
                 <View style={styles.typeRow}>
                   {pokemon.species.types.map(t => (

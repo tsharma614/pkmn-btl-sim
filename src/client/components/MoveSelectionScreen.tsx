@@ -180,7 +180,7 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
       {/* Pokemon info + stats */}
       <View style={styles.pokemonSection}>
         <View style={styles.pokemonRow}>
-          <PokemonSprite speciesId={pokemon.species.id} facing="front" size={56} />
+          <PokemonSprite speciesId={pokemon.species.id} facing="front" size={56} animated={false} />
           <View style={styles.pokemonInfo}>
             <Text style={styles.pokemonName}>{pokemon.species.name}</Text>
             <View style={styles.typesRow}>
@@ -303,7 +303,7 @@ export function MoveSelectionScreen({ team, onComplete, onBack, playerName }: Pr
             }}
             activeOpacity={0.7}
           >
-            <PokemonSprite speciesId={p.species.id} facing="front" size={28} />
+            <PokemonSprite speciesId={p.species.id} facing="front" size={28} animated={false} />
           </TouchableOpacity>
         ))}
       </View>

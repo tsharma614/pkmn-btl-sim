@@ -233,7 +233,7 @@ export function StatsScreen({ onBack }: Props) {
               <View key={p.speciesId} style={styles.leaderRow}>
                 <Text style={styles.leaderRank}>#{i + 1}</Text>
                 <View style={styles.leaderSprite}>
-                  <PokemonSprite speciesId={p.speciesId} facing="front" size={40} />
+                  <PokemonSprite speciesId={p.speciesId} facing="front" size={40} animated={false} />
                 </View>
                 <View style={styles.leaderInfo}>
                   <Text style={styles.leaderName}>{p.name}</Text>
