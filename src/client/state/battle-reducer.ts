@@ -38,7 +38,8 @@ export type BattlePhase =
   | 'item_select'
   | 'gym_map'
   | 'e4_locks'
-  | 'shop';
+  | 'shop'
+  | 'hall_of_fame';
 
 export type GameMode = 'cpu' | 'online';
 
@@ -150,6 +151,8 @@ export interface BattleState {
   beatenE4: boolean[];
   /** Gym Career: shop currency balance */
   shopBalance: number;
+  /** Hall of Fame data — shown after beating the Champion */
+  hallOfFameData: { playerName: string; team: OwnPokemon[]; stats: BattleStats } | null;
 }
 
 function emptyStats(): BattleStats {
@@ -233,6 +236,7 @@ export const initialState: BattleState = {
   beatenGyms: [],
   beatenE4: [],
   shopBalance: 0,
+  hallOfFameData: null,
 };
 
 export type BattleAction =
@@ -274,6 +278,7 @@ export type BattleAction =
   | { type: 'GYM_CAREER_RESUME'; playerName: string; gymTypes: string[]; beatenGyms: boolean[]; beatenE4: boolean[]; shopBalance: number; yourTeam: OwnPokemon[] }
   | { type: 'GYM_WIN_ADVANCE'; gymIndex: number; payout: number }
   | { type: 'E4_WIN_ADVANCE'; memberIndex: number; payout: number }
+  | { type: 'HALL_OF_FAME'; playerName: string; team: OwnPokemon[]; stats: BattleStats }
   | { type: 'RESET' };
 
 const EMPTY_SIDE: SideEffects = {
@@ -1100,6 +1105,17 @@ export function battleReducer(state: BattleState, action: BattleAction): BattleS
         ...state,
         shopBalance: action.balance,
         ...(action.yourTeam ? { yourTeam: action.yourTeam } : {}),
+      };
+
+    case 'HALL_OF_FAME':
+      return {
+        ...state,
+        phase: 'hall_of_fame',
+        hallOfFameData: {
+          playerName: action.playerName,
+          team: action.team,
+          stats: action.stats,
+        },
       };
 
     case 'RESET':

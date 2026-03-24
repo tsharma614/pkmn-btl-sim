@@ -35,6 +35,7 @@ import { ItemSelectScreen } from './ItemSelectScreen';
 import { ShopScreen } from './ShopScreen';
 import { GymMapScreen } from './GymMapScreen';
 import { E4LockScreen } from './E4LockScreen';
+import { HallOfFameScreen } from './HallOfFameScreen';
 import { PkButton } from './shared/PkButton';
 import { generateBudgetDraftOptions, MEGA_POOL, TIERS as draftTiers } from '../../engine/draft-pool';
 import { SeededRNG } from '../../utils/rng';
@@ -315,6 +316,18 @@ export function BattleScreen() {
           trainerSprite={state.campaignOpponentSprite}
         />
       </SafeAreaView>
+    );
+  }
+
+  // --- Hall of Fame (after beating Champion) ---
+  if (state.phase === 'hall_of_fame' && state.hallOfFameData) {
+    return (
+      <HallOfFameScreen
+        playerName={state.hallOfFameData.playerName}
+        team={state.hallOfFameData.team}
+        stats={state.hallOfFameData.stats}
+        onContinue={() => dispatch({ type: 'RESET' })}
+      />
     );
   }
 

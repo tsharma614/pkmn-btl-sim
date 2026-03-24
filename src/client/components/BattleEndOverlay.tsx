@@ -270,8 +270,12 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
     // New overall stats tracking
     recordBattleResult(isWinner, stats.turnsPlayed * 30);
     // Per-Pokemon KO and damage stats
+    const resolveSpeciesId = (displayName: string) => {
+      const match = data.finalState.yourTeam.find(p => p.species.name === displayName);
+      return match?.species.id ?? displayName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    };
     const pokemonEntries = Object.entries(stats.pokemonKOs).map(([name, kos]) => ({
-      speciesId: name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      speciesId: resolveSpeciesId(name),
       name,
       kos,
       damageDealt: stats.pokemonDamage[name] ?? 0,
@@ -280,7 +284,7 @@ export function BattleEndOverlay({ data, playerName, opponentName, stats, battle
     for (const [name, dmg] of Object.entries(stats.pokemonDamage)) {
       if (!stats.pokemonKOs[name]) {
         pokemonEntries.push({
-          speciesId: name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          speciesId: resolveSpeciesId(name),
           name,
           kos: 0,
           damageDealt: dmg,

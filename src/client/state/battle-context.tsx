@@ -602,8 +602,15 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         });
         clearGymCareerSave();
         cleanupAll();
+        const hofTeam = campaignPlayerTeamRef.current?.map(serializeOwnPokemon) ?? [];
+        const hofStats = { ...stateRef.current.battleStats };
         campaignPlayerTeamRef.current = null;
-        dispatch({ type: 'RESET' });
+        dispatch({
+          type: 'HALL_OF_FAME',
+          playerName: campaignPlayerNameRef.current,
+          team: hofTeam,
+          stats: hofStats,
+        });
       }
       return;
     }
@@ -641,6 +648,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
       encoreTurns: 0,
       encoreMove: null,
       flashFireActive: false,
+      itemConsumed: false,
       moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp, disabled: false })),
     }));
     campaignPlayerTeamRef.current = healedTeam;
@@ -1015,6 +1023,7 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         encoreTurns: 0,
         encoreMove: null,
         flashFireActive: false,
+        itemConsumed: false,
         moves: p.moves.map(m => ({ ...m, currentPp: m.maxPp, disabled: false })),
         battleStats: p.battleStats ? { ...p.battleStats } : { kos: 0, damageDealt: 0, timesFainted: 0 },
       }));
