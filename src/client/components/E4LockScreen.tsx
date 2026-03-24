@@ -15,6 +15,8 @@ import {
 } from 'react-native';
 import { PkCard } from './shared/PkCard';
 import { PkButton } from './shared/PkButton';
+import { PkModal } from './shared/PkModal';
+import { PokemonSprite } from './PokemonSprite';
 import { colors, spacing, shadows } from '../theme';
 
 interface Member {
@@ -55,7 +57,9 @@ export function E4LockScreen({
   onSaveQuit,
   onShop,
   shopBalance,
+  team,
 }: Props) {
+  const [showTeam, setShowTeam] = useState(false);
   // Track which cards have been "revealed" (tapped once to show trainer, second tap starts battle)
   const [revealed, setRevealed] = useState<boolean[]>(members.map(() => false));
   const [championRevealed, setChampionRevealed] = useState(false);
@@ -158,6 +162,11 @@ export function E4LockScreen({
                 <Text style={[styles.headerActionText, { color: colors.hpGreen }]}>Shop ({shopBalance ?? 0})</Text>
               </TouchableOpacity>
             )}
+            {team && team.length > 0 && (
+              <TouchableOpacity onPress={() => setShowTeam(true)} activeOpacity={0.7} style={styles.headerAction}>
+                <Text style={styles.headerActionText}>Team</Text>
+              </TouchableOpacity>
+            )}
             {onSaveQuit && (
               <TouchableOpacity onPress={onSaveQuit} activeOpacity={0.7} style={styles.headerAction}>
                 <Text style={styles.headerActionText}>Save</Text>
@@ -247,6 +256,24 @@ export function E4LockScreen({
           )}
         </TouchableOpacity>
       </PkCard>
+
+      {/* Team modal */}
+      <PkModal visible={showTeam} title="YOUR TEAM" onClose={() => setShowTeam(false)}>
+        {(team ?? []).map((p, i) => (
+          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm, borderBottomWidth: i < (team?.length ?? 0) - 1 ? StyleSheet.hairlineWidth : 0, borderBottomColor: colors.border }}>
+            <PokemonSprite speciesId={p.species.id} facing="front" size={48} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: colors.text }}>{p.species.name}</Text>
+              <Text style={{ fontSize: 11, color: colors.textDim, marginTop: 2 }}>{p.ability} · {p.item || 'No item'}</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                {p.moves.map((m, j) => (
+                  <Text key={j} style={{ fontSize: 10, color: colors.textSecondary, backgroundColor: colors.surface, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>{m.name}</Text>
+                ))}
+              </View>
+            </View>
+          </View>
+        ))}
+      </PkModal>
     </View>
   );
 }

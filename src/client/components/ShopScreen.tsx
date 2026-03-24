@@ -176,7 +176,9 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
       else { setItemStep({ phase: 'pickPokemon' }); }
     } else if (active === 'buy') {
       if (buyStep.phase === 'pickBuy') { resetToMenu(); }
-      else { setBuyStep({ phase: 'pickBuy' }); }
+      else if (buyStep.phase === 'pickSlot') { setBuyStep({ phase: 'pickBuy' }); }
+      else if (buyStep.phase === 'pickMoves') { setBuyStep({ phase: 'pickSlot', buyPoolIdx: buyStep.buyPoolIdx }); }
+      else if (buyStep.phase === 'pickItem') { setBuyStep({ ...buyStep, phase: 'pickMoves', selectedMoves: buyStep.selectedMoves } as any); }
     }
   }, [active, moveStep, itemStep, buyStep, resetToMenu]);
 
@@ -609,7 +611,7 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
     if (buyStep.phase === 'pickItem') {
       // pickItem phase — choose held item
       const chosen = buyPool[buyStep.buyPoolIdx];
-      const items = ['Leftovers', 'Life Orb', 'Choice Band', 'Choice Specs', 'Choice Scarf', 'Focus Sash',
+      const items = ['None', 'Leftovers', 'Life Orb', 'Choice Band', 'Choice Specs', 'Choice Scarf', 'Focus Sash',
         'Assault Vest', 'Rocky Helmet', 'Expert Belt', 'Heavy-Duty Boots', 'Lum Berry', 'Sitrus Berry',
         'Toxic Orb', 'Flame Orb', 'Safety Goggles', 'Scope Lens', 'Shell Bell', 'White Herb'];
       return (
@@ -624,7 +626,7 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
                 onPress={() => setBuyStep({ ...buyStep, selectedItem: item })}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.buyItemCardName, buyStep.selectedItem === item && { color: colors.primary }]} numberOfLines={2}>{item}</Text>
+                <Text style={[styles.buyItemCardName, buyStep.selectedItem === item && { color: colors.primary }]} numberOfLines={2}>{item === 'None' ? 'No Item' : item}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -633,7 +635,8 @@ export function ShopScreen({ balance, team, buyPool, onSwapMove, onSwapItem, onB
             variant="primary"
             size="md"
             onPress={() => {
-              onBuyPokemon(buyStep.buyPoolIdx, buyStep.replaceIdx, buyStep.selectedMoves, buyStep.selectedItem);
+              const finalItem = buyStep.selectedItem === 'None' ? '' : buyStep.selectedItem;
+              onBuyPokemon(buyStep.buyPoolIdx, buyStep.replaceIdx, buyStep.selectedMoves, finalItem || undefined);
               resetToMenu();
             }}
             disabled={!buyStep.selectedItem}

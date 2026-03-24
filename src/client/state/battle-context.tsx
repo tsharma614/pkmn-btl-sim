@@ -367,7 +367,10 @@ export function BattleProvider({ children }: { children: React.ReactNode }) {
         date: new Date().toISOString(),
       });
     }
-    if (currentState.campaignMode === 'gym_career') {
+    // Only clear gym career save if abandoning from an active battle phase.
+    // Don't clear when exiting from team_preview, gym_map, e4_locks, shop, etc.
+    const battlePhases = new Set(['battling', 'waiting_for_turn', 'battle_end', 'force_switch']);
+    if (currentState.campaignMode === 'gym_career' && battlePhases.has(currentState.phase)) {
       clearGymCareerSave();
     }
 
