@@ -27,6 +27,7 @@ import type { BattleAction as ReducerAction } from './state/battle-reducer';
 // so we inline a simplified version here and import the shared scoring logic.
 import { getTypeEffectiveness } from '../data/type-chart';
 import { BOT_NAMES } from '../engine/bot';
+import { chooseCpuAction, AITier } from '../engine/ai';
 import type { PokemonType } from '../types';
 
 export type BotDifficulty = 'easy' | 'normal' | 'hard';
@@ -465,70 +466,14 @@ export function createLocalBattle(options: LocalBattleOptions) {
     const available = b.getAvailableSwitches(1);
     if (available.length === 0) return 0;
 
-    const oppTypes = (botOpponent?.species.types ?? []) as PokemonType[];
-    if ((difficulty === 'hard' || difficulty === 'normal') && oppTypes.length > 0 && botState) {
-      const isHard = difficulty === 'hard';
+    // Use the new AI system for forced switches too
+    const aiTier = difficulty === 'easy' ? AITier.BASIC
+      : difficulty === 'hard' ? AITier.CHAMPION
+      : AITier.SMART;
+    const action = chooseCpuAction(b, 1, rng, aiTier);
+    if (action.type === 'switch') return action.pokemonIndex;
 
-      // Estimate how dangerous the opponent is (including boosts)
-      let oppBoosted = false;
-      if (isHard && botOpponent?.boosts) {
-        const oppAtkBoost = Math.max(botOpponent.boosts.atk ?? 0, botOpponent.boosts.spa ?? 0);
-        const oppSpeBoost = botOpponent.boosts.spe ?? 0;
-        oppBoosted = oppAtkBoost >= 1 || oppSpeBoost >= 1;
-      }
-
-      const ranked = available.map(idx => {
-        const p = botState!.team[idx];
-        const pTypes = p.species.types as PokemonType[];
-        const hpRatio = p.currentHp / p.maxHp;
-        let score = hpRatio;
-
-        // Heavily penalize nearly-dead Pokemon — never send in a 1 HP mon
-        if (hpRatio < 0.05) score -= 3.0;
-        else if (hpRatio < 0.15) score -= 1.5;
-        else if (hpRatio < 0.3) score -= 0.5;
-
-        // Offensive advantage: super-effective moves
-        for (const move of p.moves) {
-          if (move.category !== 'Status' && move.power && move.currentPp > 0) {
-            const eff = getTypeEffectiveness(move.type as PokemonType, oppTypes);
-            if (eff > 1) score += isHard ? 0.8 : 0.4;
-            if (isHard && eff > 1 && pTypes.includes(move.type as PokemonType)) score += 0.4;
-          }
-        }
-
-        // Defensive advantage: resist/immune to opponent's types
-        const totalDefEff = oppTypes.reduce((acc, oppType) => {
-          return acc * getTypeEffectiveness(oppType, pTypes);
-        }, 1);
-        if (totalDefEff < 1) score += isHard ? 1.0 : 0.4;
-        if (totalDefEff === 0) score += isHard ? 2.0 : 1.0;
-        // Heavy penalty for weakness — avoid sending in Pokemon that'll get wrecked
-        if (totalDefEff > 1) score -= isHard ? 2.0 : 1.0;
-        if (totalDefEff >= 4) score -= isHard ? 3.0 : 1.5;
-
-        if (isHard) {
-          score += (p.species.baseStats?.spe ?? 0) / 400;
-          // Against a boosted opponent, heavily prioritize defensive matchups
-          if (oppBoosted) {
-            // Extra penalty for being weak, extra bonus for resisting
-            for (const oppType of oppTypes) {
-              const eff = getTypeEffectiveness(oppType, pTypes);
-              if (eff > 1) score -= 0.5;
-              if (eff < 1) score += 0.3;
-              if (eff === 0) score += 0.8;
-            }
-            // Prioritize bulk when opponent is boosted
-            const bulkScore = ((p.species.baseStats?.hp ?? 0) + (p.species.baseStats?.def ?? 0) + (p.species.baseStats?.spd ?? 0)) / 600;
-            score += bulkScore * 0.5;
-          }
-        }
-        return { idx, score };
-      }).sort((a, b) => b.score - a.score);
-      return ranked[0].idx;
-    }
-
-    // Default (easy): pick healthiest
+    // Fallback: pick healthiest
     let bestIdx = available[0];
     let bestHp = 0;
     for (const idx of available) {
@@ -847,8 +792,11 @@ export function createLocalBattle(options: LocalBattleOptions) {
           ? { type: 'move', playerId: 'p1', moveIndex: action.index }
           : { type: 'switch', playerId: 'p1', pokemonIndex: action.index };
 
-        // Get bot's action
-        const botAction = pickBotAction();
+        // Get bot's action using the new AI system
+        const aiTier = difficulty === 'easy' ? AITier.BASIC
+          : difficulty === 'hard' ? AITier.CHAMPION
+          : AITier.SMART;
+        const botAction = chooseCpuAction(battle, 1, rng, aiTier);
 
         // Process the turn
         const events = battle.processTurn(humanAction, botAction);
