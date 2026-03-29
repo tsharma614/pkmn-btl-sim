@@ -81,6 +81,34 @@ export function evaluateSwitching(
       const switchTo = pickBestSwitchIn(battle, playerIndex, switches, opponent);
       if (switchTo !== null && rng.chance(40)) return recordSwitch(battleId, switchTo);
     }
+
+    // --- BUG 1 FIX: Proactive switching ---
+
+    // Type disadvantage: opponent has SE STAB and outspeeds us
+    if (!hasRaisedStats && !threat.iGoFirst && threat.theirBestDamagePercent > 50) {
+      const opponentHasSeStab = opponent.moves.some(m => {
+        if (m.data.category === 'Status' || m.currentPp <= 0) return false;
+        const isStab = opponent.species.types.includes(m.data.type as PokemonType);
+        const eff = getTypeEffectiveness(m.data.type as PokemonType, pokemon.species.types as PokemonType[]);
+        return isStab && eff > 1;
+      });
+      if (opponentHasSeStab) {
+        const switchTo = pickBestSwitchIn(battle, playerIndex, switches, opponent);
+        if (switchTo !== null && rng.chance(65)) return recordSwitch(battleId, switchTo);
+      }
+    }
+
+    // Badly poisoned with <50% HP — switch to a fresh mon
+    if (pokemon.status === 'toxic' && pokemon.currentHp < pokemon.maxHp * 0.5 && !hasRaisedStats) {
+      const switchTo = pickBestSwitchIn(battle, playerIndex, switches, opponent);
+      if (switchTo !== null && rng.chance(55)) return recordSwitch(battleId, switchTo);
+    }
+
+    // Can't do meaningful damage (<15% of opponent HP with best move)
+    if (threat.myBestDamagePercent < 15 && !hasRaisedStats) {
+      const switchTo = pickBestSwitchIn(battle, playerIndex, switches, opponent);
+      if (switchTo !== null && rng.chance(50)) return recordSwitch(battleId, switchTo);
+    }
   }
 
   // Don't switch if we have a super effective move (matching pokeemerald)
@@ -129,7 +157,7 @@ export function pickBestSwitchIn(
     const mon = player.team[idx];
     let score = 0;
 
-    // Defensive typing — resist opponent's STAB types
+    // Defensive typing — resist opponent's STAB types (+3 per resist, -3 per weakness per task spec)
     for (const oppType of opponent.species.types) {
       const eff = getTypeEffectiveness(oppType as PokemonType, mon.species.types as PokemonType[]);
       if (eff === 0) score += 60;
@@ -137,15 +165,40 @@ export function pickBestSwitchIn(
       else if (eff > 1) score -= 20;
     }
 
-    // Offensive typing — have SE moves
+    // BUG 4 FIX: Check if opponent has SE moves against this candidate (-3 per spec)
+    for (const oppMove of opponent.moves) {
+      if (oppMove.data.category === 'Status' || oppMove.currentPp <= 0) continue;
+      const eff = getTypeEffectiveness(oppMove.data.type as PokemonType, mon.species.types as PokemonType[]);
+      if (eff > 1) {
+        score -= 30;
+        break; // only penalize once
+      }
+    }
+
+    // Resist opponent's last used move type
+    if (opponent.lastMoveUsed) {
+      const lastMove = opponent.moves.find(m => m.data.name === opponent.lastMoveUsed);
+      if (lastMove && lastMove.data.category !== 'Status') {
+        const eff = getTypeEffectiveness(lastMove.data.type as PokemonType, mon.species.types as PokemonType[]);
+        if (eff === 0) score += 40;
+        else if (eff < 1) score += 25;
+        else if (eff > 1) score -= 15;
+      }
+    }
+
+    // Offensive typing — have SE moves (+2 per spec)
     for (const move of mon.moves) {
       if (move.data.category === 'Status') continue;
       const eff = getTypeEffectiveness(move.data.type as PokemonType, opponent.species.types as PokemonType[]);
-      if (eff > 1) score += 40;
+      if (eff > 1) { score += 40; break; }
     }
 
-    // HP factor
-    score += (mon.currentHp / mon.maxHp) * 20;
+    // HP factor (+1 per 25% bracket per spec)
+    const hpPct = mon.currentHp / mon.maxHp;
+    score += Math.floor(hpPct * 4) * 10;
+
+    // Can it outspeed? (+1 per spec)
+    if (mon.stats.spe > opponent.stats.spe) score += 10;
 
     // Don't switch to something that will just die
     if (mon.currentHp < mon.maxHp * 0.2) score -= 50;

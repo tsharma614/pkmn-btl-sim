@@ -170,9 +170,11 @@ export function checkBadMove(
       if (opponentAlive === 0) entry.score += SCORE_ELIMINATE;
     }
 
-    // === PROTECT spam prevention ===
-    if ((moveData.name === 'Protect' || moveData.name === 'Detect') && pokemon.protectedLastTurn) {
-      entry.score += SCORE_STRONG_DISCOURAGE;
+    // === PROTECT spam prevention (BUG 3 FIX: never use Protect two turns in a row) ===
+    const PROTECT_MOVES = ['Protect', 'Detect', 'Baneful Bunker', 'Spiky Shield', 'King\'s Shield', 'Obstruct', 'Silk Trap'];
+    if (PROTECT_MOVES.includes(moveData.name) &&
+        (pokemon.protectedLastTurn || (pokemon.lastMoveUsed && PROTECT_MOVES.includes(pokemon.lastMoveUsed)))) {
+      entry.score += SCORE_ELIMINATE * 2; // -20: hard eliminate, never pick consecutive protect
     }
   }
 }

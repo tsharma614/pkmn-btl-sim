@@ -60,6 +60,17 @@ export function scoreMoves(
     hpAwareScoring(scores, pokemon, opponent, battle);
   }
 
+  // BUG 5 FIX: If any move can KO, hard-penalize all non-damaging moves
+  const hasKOMove = scores.some(s => s.canKO && s.score > 50);
+  if (hasKOMove) {
+    for (const entry of scores) {
+      const move = pokemon.moves[entry.moveIndex];
+      if (move.data.category === 'Status' && entry.score > 50) {
+        entry.score -= 15; // Never setup/status when you can KO
+      }
+    }
+  }
+
   // Add small random noise to prevent perfectly predictable play
   for (const entry of scores) {
     if (entry.score > 50) {

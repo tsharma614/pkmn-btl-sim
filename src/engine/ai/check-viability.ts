@@ -32,19 +32,32 @@ export function checkViability(
       }
     }
 
-    // === SETUP / STAT BOOST MOVES ===
+    // === SETUP / STAT BOOST MOVES (BUG 2 FIX: much stricter guards) ===
     if (isSetupMove(moveData)) {
-      if (myHpPct >= 80 && !threat.canTheyKO) {
-        entry.score += 2;
-      } else if (myHpPct < 50 || threat.canTheyKO) {
-        entry.score -= 2;
+      // Hard blocks: NEVER setup in these situations
+      if (myHpPct < 40) {
+        entry.score -= 10; // Just attack at low HP
+      } else if (pokemon.status === 'toxic') {
+        entry.score -= 8; // Badly poisoned = every turn wastes HP, attack NOW
+      } else if (threat.canTheyKO) {
+        entry.score -= 8; // Opponent can KO next turn, don't waste the turn
+      } else if (myHpPct >= 80 && !threat.canTheyKO) {
+        entry.score += 2; // Safe to setup
+      } else if (myHpPct < 50) {
+        entry.score -= 4;
       }
 
+      // Diminishing returns: already boosted +2 or more in the relevant stat
       const boosts = moveData.selfBoosts || {};
       for (const [stat, stages] of Object.entries(boosts)) {
         const current = pokemon.boosts[stat as keyof typeof pokemon.boosts] ?? 0;
-        if (current >= 4) entry.score -= 2;
-        else if (current >= 2) entry.score -= 1;
+        if (current >= 4) entry.score -= 6;
+        else if (current >= 2) entry.score -= 4;
+      }
+
+      // Max 1 setup per switch-in unless safe: if turnsOnField > 0, we already had a chance
+      if (pokemon.turnsOnField > 1 && (myHpPct < 70 || threat.theirBestDamagePercent > 40)) {
+        entry.score -= 4;
       }
 
       if (hasPriorityMove(pokemon) && myHpPct > 50) {
